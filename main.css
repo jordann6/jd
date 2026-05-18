@@ -4,14 +4,14 @@
 
 :root {
   --black: #000000;
-  --bg: #2f3338;
-  --bg2: #363a40;
-  --surface: #363a40;
-  --surface-hover: #3d4148;
-  --border: #454a52;
-  --border-hover: #5a6068;
-  --text-dim: #8b9199;
-  --text-secondary: #b8bcc3;
+  --bg: #3d4148;
+  --bg2: #454a52;
+  --surface: #454a52;
+  --surface-hover: #4d525a;
+  --border: #5a6068;
+  --border-hover: #6f7680;
+  --text-dim: #9ba1aa;
+  --text-secondary: #c4c8cf;
   --text: #e8eaed;
   --white: #f0f2f4;
   --selection-bg: rgba(82, 183, 136, 0.22);
