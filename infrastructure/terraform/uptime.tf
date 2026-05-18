@@ -115,7 +115,7 @@ resource "aws_iam_role_policy" "uptime_lambda_policy" {
 
 resource "aws_lambda_function" "uptime_checker" {
   function_name = "uptime-monitor-checker"
-  runtime       = "python3.11"
+  runtime       = "python3.13"
   handler       = "uptime_checker.lambda_handler"
   role          = aws_iam_role.uptime_lambda_role.arn
   filename      = "${path.module}/../../backend/uptime_checker.zip"

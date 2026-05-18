@@ -28,15 +28,34 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
-resource "aws_iam_policy_attachment" "lambda_dynamo_access" {
-  name       = "attach-lambda-dynamo-policy"
-  roles      = [aws_iam_role.lambda_exec_role.name]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+resource "aws_iam_role_policy" "lambda_dynamo_policy" {
+  name = "lambda-dynamodb-policy"
+  role = aws_iam_role.lambda_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:UpdateItem"]
+        Resource = aws_dynamodb_table.visitor_count.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      }
+    ]
+  })
 }
 
 resource "aws_lambda_function" "visitor_counter" {
   function_name = "VisitorCounter"
-  runtime       = "python3.11"
+  runtime       = "python3.13"
   handler       = "lambda_function.lambda_handler"
   role          = aws_iam_role.lambda_exec_role.arn
   filename      = "${path.module}/../../backend/lambda_function.zip"
