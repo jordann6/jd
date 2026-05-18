@@ -65,10 +65,6 @@ button {
   color: var(--text-dim);
 }
 
-/* Global grain (disabled for clean grey readability) */
-body::before {
-  display: none;
-}
 /* Center column line */
 body::after {
   content: "";

@@ -12,8 +12,8 @@ resource "aws_cloudfront_distribution" "resume_cdn" {
     custom_origin_config {
       http_port              = 80
       https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"]
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
 
@@ -21,7 +21,7 @@ resource "aws_cloudfront_distribution" "resume_cdn" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "${var.bucket_name}.s3.us-east-1.amazonaws.com"
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "redirect-to-https"
     compress               = true
     cache_policy_id        = var.cache_policy_id
   }
