@@ -1,31 +1,32 @@
+resource "aws_cloudfront_origin_access_control" "resume" {
+  name                              = "resume-oac"
+  description                       = "OAC for resume site S3 bucket"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
 resource "aws_cloudfront_distribution" "resume_cdn" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   aliases             = [var.domain_name]
-  price_class         = "PriceClass_All"
+  price_class         = var.price_class
 
   origin {
-    domain_name = "${var.bucket_name}.s3-website-us-east-1.amazonaws.com"
-    origin_id   = "${var.bucket_name}.s3.us-east-1.amazonaws.com"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
+    domain_name              = aws_s3_bucket.resume_site.bucket_regional_domain_name
+    origin_id                = "s3-origin"
+    origin_access_control_id = aws_cloudfront_origin_access_control.resume.id
   }
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "${var.bucket_name}.s3.us-east-1.amazonaws.com"
+    target_origin_id       = "s3-origin"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
     cache_policy_id        = var.cache_policy_id
   }
-
 
   restrictions {
     geo_restriction {
