@@ -281,7 +281,7 @@ function openModal(p) {
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:36px">
           ${p.tags.map((t) => `<span class="tag">${t}</span>`).join("")}
         </div>
-        <a class="btn btn--primary" href="${p.link}" target="_blank">${p.link.includes("github") ? "View on GitHub" : "Read on Substack"} <span class="arrow">↗</span></a>
+        <a class="btn btn--primary" href="${p.link}" target="_blank" rel="noopener noreferrer">${p.link.includes("github") ? "View on GitHub" : "Read on Substack"} <span class="arrow">↗</span></a>
       </div>
     </div>`;
   const close = () => (root.innerHTML = "");
