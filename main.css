@@ -4,16 +4,16 @@
 
 :root {
   --black: #000000;
-  --bg: #3d4148;
-  --bg2: #454a52;
-  --surface: #454a52;
-  --surface-hover: #4d525a;
-  --border: #5a6068;
-  --border-hover: #6f7680;
-  --text-dim: #9ba1aa;
-  --text-secondary: #c4c8cf;
-  --text: #e8eaed;
-  --white: #f0f2f4;
+  --bg: #3a3a3a;
+  --bg2: #424242;
+  --surface: #424242;
+  --surface-hover: #4a4a4a;
+  --border: #525252;
+  --border-hover: #6a6a6a;
+  --text-dim: #9a9a9a;
+  --text-secondary: #c0c0c0;
+  --text: #e8e8e8;
+  --white: #f0f0f0;
   --selection-bg: rgba(82, 183, 136, 0.22);
 
   --accent: #2d6a4f;
@@ -72,7 +72,7 @@ body::before {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: 0.015;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 128px 128px;
   mix-blend-mode: overlay;
