@@ -105,7 +105,6 @@ body::after {
     width 0.25s var(--ease),
     height 0.25s var(--ease),
     border-color 0.25s var(--ease);
-  mix-blend-mode: difference;
 }
 .cursor-dot {
   position: fixed;
@@ -118,7 +117,6 @@ body::after {
   border-radius: 50%;
   pointer-events: none;
   transform: translate(-50%, -50%);
-  mix-blend-mode: difference;
 }
 .cursor-ring.cursor-active {
   width: 56px;
@@ -133,7 +131,6 @@ body::after {
   color: var(--text-secondary);
   letter-spacing: 0.08em;
   pointer-events: none;
-  mix-blend-mode: difference;
   transform: translate(20px, 20px);
 }
 
@@ -215,7 +212,6 @@ body::after {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 24px 80px;
-  mix-blend-mode: difference;
 }
 .nav__logo {
   font-family: var(--font-display);
