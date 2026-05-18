@@ -86,9 +86,41 @@
 const projects = [
   {
     num: "01",
+    title: "Multi-Agent AI",
+    titleOut: "Coding Orchestrator",
+    desc: "Multi-agent system that routes natural language coding tasks to specialist agents through an orchestrator, fully asynchronous so submissions return a job ID in under two seconds while the coder runs the agentic loop in the background. API Gateway's 29-second integration timeout broke sequential Anthropic tool-use calls, so the orchestrator returns 202 immediately and the coder Lambda processes the loop independently, writing results to DynamoDB with 24-hour TTL. ARN-scoped least-privilege IAM isolates blast radius: the orchestrator can invoke only the coder Lambda, status can only read DynamoDB, and the coder cannot invoke any Lambda at all. The write_code, explain_code, and debug_code tools are deterministic Python functions returning structured scaffolds and AST metadata rather than recursive LLM calls, grounding the loop in real code analysis instead of model self-talk. Three separately sized Lambda packages, Secrets Manager for the Anthropic key, CloudWatch log groups with 14-day retention, and fully provisioned in Terraform.",
+    tags: [
+      "Lambda",
+      "API Gateway",
+      "DynamoDB",
+      "Anthropic SDK",
+      "Terraform",
+      "Python",
+      "IAM",
+      "Secrets Manager",
+    ],
+    link: "https://github.com/jordann6/multi-agent-coding-orchestrator",
+  },
+  {
+    num: "02",
+    title: "Azure FinOps",
+    titleOut: "Dashboard",
+    desc: "Surfaces cloud spend trends, tagging gaps, cost anomalies, and budget forecasts before they hit the billing cycle. C# .NET 8 timer-triggered Azure Functions ingest the Cost Management API into Cosmos DB, running z-score anomaly detection against rolling baselines and 14-day linear regression forecasting per subscription. A second function scans the subscription against required tag policies, surfacing untagged resources with the specific missing tag details so cost attribution stays reliable. React frontend served from Azure Static Web Apps, all infrastructure provisioned in Terraform with system-assigned managed identity and zero stored credentials at the cost visibility layer.",
+    tags: [
+      "Azure Functions",
+      "Cosmos DB",
+      "React",
+      "C# .NET 8",
+      "Static Web Apps",
+      "Terraform",
+    ],
+    link: "https://github.com/jordann6/azure-finops-dashboard",
+  },
+  {
+    num: "03",
     title: "LLM Gateway",
     titleOut: "& Observability",
-    desc: "Cuts LLM API costs by routing requests across OpenAI and Anthropic based on cost, latency, or quality strategy. FastAPI gateway on ECS Fargate with DynamoDB caching, CloudWatch dashboards (9 widgets, 3 alarms), LLM-as-judge eval pipeline, Lambda nightly archival to S3, and scale-to-zero scheduling. 78 resources across 9 Terraform modules.",
+    desc: "Cuts LLM API costs by routing requests across OpenAI and Anthropic based on cost, latency, or quality strategy, with DynamoDB caching in front to deduplicate repeated prompts. FastAPI gateway runs on ECS Fargate behind an ALB, instrumented with a CloudWatch dashboard of 9 widgets and 3 alarms covering latency, error rate, and provider failover. An LLM-as-judge evaluation pipeline scores response quality on a nightly cadence, and a Lambda archives raw request and response pairs to S3 for replay and audit. Scale-to-zero scheduling drops the service overnight to keep idle cost near zero. 78 resources across 9 Terraform modules, deployed via GitHub Actions.",
     tags: [
       "ECS Fargate",
       "FastAPI",
@@ -100,21 +132,7 @@ const projects = [
     link: "https://github.com/jordann6/llm-gateway",
   },
   {
-    num: "02",
-    title: "Azure FinOps",
-    titleOut: "Dashboard",
-    desc: "Surfaces cloud spend trends, tagging gaps, cost anomalies, and budget forecasts. React on Azure Static Web Apps with C# .NET 8 timer-triggered Functions doing z-score anomaly detection and linear regression forecasting against Cosmos DB.",
-    tags: [
-      "Azure Functions",
-      "Cosmos DB",
-      "React",
-      "C# .NET 8",
-      "Static Web Apps",
-    ],
-    link: "https://github.com/jordann6/azure-finops-dashboard",
-  },
-  {
-    num: "03",
+    num: "04",
     title: "Azure Zero Trust",
     titleOut: "Identity Pipeline",
     desc: "A production-grade identity security pipeline built on Azure enforcing Zero Trust across authentication, privileged access, workload identity, and threat detection. Deployed across 7 Terraform modules covering Entra ID, Key Vault, Defender for Cloud, Microsoft Sentinel, Logic Apps, and Azure Monitor.",
@@ -133,7 +151,7 @@ const projects = [
     link: "https://github.com/jordann6/zero-trust-identity-pipeline",
   },
   {
-    num: "04",
+    num: "05",
     title: "Cloud Security",
     titleOut: "Lab",
     desc: "Full attack-detect-respond case study mapped to MITRE ATT&CK. Pacu kill chain simulation, OpenSearch SIEM correlation, EventBridge-to-Lambda automated remediation, Falco runtime detection on K3s, and OPA Gatekeeper policy enforcement.",
@@ -148,7 +166,7 @@ const projects = [
     link: "https://github.com/jordann6/cloud-security-lab",
   },
   {
-    num: "05",
+    num: "06",
     title: "NBA Intel",
     titleOut: "Center",
     desc: "RAG-powered prop analysis platform combining live NBA data with semantic search. FastAPI backend with Azure OpenAI GPT-4o and Qdrant vector store using text-embedding-3-small. Defensive stats, injury feeds, roster injection, and trend windows. Self-hosted on K3s homelab with Cloudflare tunnel.",
@@ -156,7 +174,7 @@ const projects = [
     link: "https://github.com/jordann6/nba-intel-center",
   },
   {
-    num: "06",
+    num: "07",
     title: "NFL Reliability",
     titleOut: "Platform",
     desc: "Enforces data quality SLOs for NFL API ingestion with automated schema validation and quarantine logic. Containerized Python service on Azure Container Apps with custom Prometheus metrics, PromQL burn-rate analysis, and Grafana dashboards.",
@@ -164,7 +182,7 @@ const projects = [
     link: "https://github.com/jordann6/nfl-data-reliability-platform",
   },
   {
-    num: "07",
+    num: "08",
     title: "Uptime",
     titleOut: "Monitor",
     desc: "Automated health monitoring for jordandesigns.io with zero ongoing cost. Weekly EventBridge schedule triggers a Python 3.11 Lambda checking HTTP status, logging to DynamoDB with 90-day TTL, and SNS email alerts on failure.",
@@ -172,7 +190,7 @@ const projects = [
     link: "https://github.com/jordann6/website-uptime-monitor",
   },
   {
-    num: "08",
+    num: "09",
     title: "Azure DevSecOps",
     titleOut: "Pipeline",
     desc: "End-to-end secure CI/CD pipeline integrating SAST, DAST, and IaC scanning gates. Automated security validation before build promotion with Azure DevOps, container image scanning, and policy-as-code enforcement.",
@@ -180,7 +198,7 @@ const projects = [
     link: "https://github.com/jordann6/azure-devsecops-project",
   },
   {
-    num: "09",
+    num: "10",
     title: "Event-Driven",
     titleOut: "AWS Remediation",
     desc: "Automated infrastructure remediation triggered by CloudWatch alarms. Lambda functions written in Python with Boto3 handle EC2 instance recovery, security group lockdowns, and resource tagging enforcement without manual intervention.",
@@ -188,7 +206,7 @@ const projects = [
     link: "https://github.com/jordann6/event-driven-aws-remediation",
   },
   {
-    num: "10",
+    num: "11",
     title: "Super Bowl",
     titleOut: "Intel Center",
     desc: "Analytics pipeline for Super Bowl LX matchup analysis. Azure OpenAI GPT-4o processes historical and real-time data to generate strategic insights, player comparisons, and game predictions.",
@@ -196,7 +214,7 @@ const projects = [
     link: "https://github.com/jordann6/sb-intel-center",
   },
   {
-    num: "11",
+    num: "12",
     title: "Cloud Resume",
     titleOut: "Challenge",
     desc: "Portfolio site served from S3 through CloudFront with TLS and custom domain via Route 53. Visitor counter powered by API Gateway, Lambda (Python), and DynamoDB. GitHub Actions CI/CD syncs to S3 and invalidates cache on push. All infrastructure defined in Terraform.",
@@ -211,7 +229,7 @@ const projects = [
     link: "https://github.com/jordann6/cloud-resume-challenge",
   },
   {
-    num: "12",
+    num: "13",
     title: "Arch Linux",
     titleOut: "Homelab",
     desc: "Repurposed a T2 MacBook into a dedicated infrastructure lab running Arch Linux with K3s. Hosts development workloads, vector databases, and project backends. Full writeup covering the build process, networking, and cluster configuration.",

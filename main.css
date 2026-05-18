@@ -4,17 +4,20 @@
 
 :root {
   --black: #000000;
-  --bg: #050505;
-  --bg2: #0c0c0c;
-  --surface: #111111;
-  --surface-hover: #161616;
-  --border: #1e1e1e;
-  --border-hover: #333333;
-  --text-dim: #555555;
-  --text-secondary: #888888;
-  --text: #e8e8e8;
-  --white: #f0f0f0;
-  --selection-bg: rgba(255, 255, 255, 0.15);
+  --bg: #2f3338;
+  --bg2: #363a40;
+  --surface: #363a40;
+  --surface-hover: #3d4148;
+  --border: #454a52;
+  --border-hover: #5a6068;
+  --text-dim: #8b9199;
+  --text-secondary: #b8bcc3;
+  --text: #e8eaed;
+  --white: #f0f2f4;
+  --selection-bg: rgba(82, 183, 136, 0.22);
+
+  --accent: #2d6a4f;
+  --accent-bright: #52b788;
 
   --font-display: "Barlow Condensed", system-ui, sans-serif;
   --font-body: "Barlow", system-ui, sans-serif;
@@ -250,7 +253,7 @@ body::after {
 }
 .nav__link:hover,
 .nav__link.active {
-  color: var(--white);
+  color: var(--accent-bright);
 }
 .nav__link .num {
   color: var(--text-dim);
@@ -259,7 +262,7 @@ body::after {
 }
 .nav__link:hover .num,
 .nav__link.active .num {
-  color: var(--white);
+  color: var(--accent-bright);
 }
 .nav__time {
   justify-self: end;
@@ -318,7 +321,7 @@ section {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--white);
+  background: var(--accent-bright);
   animation: blink 2s var(--ease) infinite;
 }
 @keyframes blink {
@@ -431,16 +434,16 @@ section {
 }
 .btn--primary:hover {
   background: transparent;
-  color: var(--white);
-  box-shadow: inset 0 0 0 1px var(--white);
+  color: var(--accent-bright);
+  box-shadow: inset 0 0 0 1px var(--accent-bright);
 }
 .btn--ghost {
   color: var(--text-secondary);
   box-shadow: inset 0 0 0 1px var(--border);
 }
 .btn--ghost:hover {
-  color: var(--white);
-  box-shadow: inset 0 0 0 1px var(--white);
+  color: var(--accent-bright);
+  box-shadow: inset 0 0 0 1px var(--accent-bright);
 }
 .btn .arrow {
   display: inline-block;
@@ -700,13 +703,13 @@ section {
   padding-right: 24px;
 }
 .proj__item:hover .proj__title {
-  color: var(--white);
+  color: var(--accent-bright);
 }
 .proj__item:hover .proj__title .out {
-  -webkit-text-fill-color: var(--white);
+  -webkit-text-fill-color: var(--accent-bright);
 }
 .proj__item:hover .proj__arrow {
-  color: var(--white);
+  color: var(--accent-bright);
   transform: translate(6px, -6px);
 }
 .proj__item:hover .proj__hover-tags {
@@ -861,7 +864,7 @@ section {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--white);
+  background: var(--accent-bright);
 }
 .cert__bottom {
   margin-top: auto;
@@ -941,7 +944,7 @@ section {
 .contact__link:hover .label,
 .contact__link:hover .val,
 .contact__link:hover .arr {
-  color: var(--white);
+  color: var(--accent-bright);
 }
 .contact__link:hover .arr {
   transform: translate(4px, -4px);
