@@ -4,17 +4,16 @@ Portfolio site built as an implementation of Forrest Brazeal's Cloud Resume Chal
 
 ## Architecture
 
-![Architecture Diagram](architecture.png)
+![Architecture](architecture.png)
 
 | Layer | Services |
 |---|---|
-| DNS & TLS | Route 53, ACM |
-| Edge | CloudFront (OAC, PriceClass_100, HTTPS-only) |
-| Storage | S3 (private bucket, OAC-only access) |
+| DNS & TLS | Route 53 · ACM (TLSv1.2+) |
+| Edge | CloudFront (OAC · HTTPS-only · compress · IPv6) |
+| Storage | S3 (private bucket · AES-256 SSE · OAC-only access) |
 | Visitor Counter | API Gateway → Lambda (Python 3.13) → DynamoDB |
-| Uptime Monitor | EventBridge (weekly) → Lambda → DynamoDB + SNS email alert |
 | CI/CD | GitHub Actions → OIDC → IAM role → S3 sync + CF invalidation |
-| IaC | Terraform |
+| IaC | Terraform (remote state: S3) |
 
 ## Project Structure
 
@@ -27,24 +26,20 @@ cloud-resume-challenge/
 ├── architecture.png            # Generated architecture diagram
 ├── assets/                     # Cert badges
 ├── backend/
-│   ├── lambda_function.py      # Visitor counter Lambda
-│   ├── lambda_function.zip
-│   ├── uptime_checker.py       # Uptime monitor Lambda
-│   └── uptime_checker.zip
+│   └── lambda_function.py      # Visitor counter Lambda
 ├── infrastructure/
 │   └── terraform/
 │       ├── main.tf             # DynamoDB, Lambda, API Gateway, IAM
 │       ├── cloudfront.tf       # CloudFront distribution + OAC
 │       ├── s3.tf               # S3 bucket + policy
-│       ├── route53.tf          # DNS records
+│       ├── route53.tf          # DNS A alias record
 │       ├── acm.tf              # TLS certificate
-│       ├── uptime.tf           # Uptime monitor resources
 │       ├── github_oidc.tf      # GitHub Actions OIDC provider + role
-│       └── variables.tf
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # CI/CD pipeline
-└── README.md
+│       ├── variables.tf
+│       └── provider.tf         # S3 backend + provider config
+└── .github/
+    └── workflows/
+        └── deploy.yml          # CI/CD pipeline
 ```
 
 ## Deployment
@@ -78,10 +73,11 @@ python3 diagram.py
 - Lambda IAM role scoped to `dynamodb:UpdateItem` on a single table
 - GitHub Actions uses short-lived OIDC tokens — no long-lived AWS credentials stored
 - CORS on the visitor counter API locked to `https://jordandesigns.io`
+- Terraform remote state stored in S3 (`tf-backend-jord-projs`)
 
 ## Tech Stack
 
-`S3` `CloudFront` `Route 53` `ACM` `API Gateway` `Lambda` `DynamoDB` `EventBridge` `SNS` `IAM` `Terraform` `GitHub Actions` `Python` `HTML/CSS/JS`
+`S3` `CloudFront` `Route 53` `ACM` `API Gateway` `Lambda` `DynamoDB` `IAM` `Terraform` `GitHub Actions` `Python` `HTML/CSS/JS`
 
 ## Contact
 
