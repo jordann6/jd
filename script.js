@@ -230,6 +230,22 @@ const projects = [
   },
   {
     num: "13",
+    title: "Azure Automated",
+    titleOut: "Backup System",
+    desc: "Blob storage backup vault with automated daily verification via Logic App (08:00 UTC). Managed identity authenticates the workflow to Blob Storage over MSI — no connection strings or API keys stored anywhere. Versioning preserves every write as a recoverable point, 7-day soft delete covers accidental removal, and a lifecycle policy automatically tiers blobs Hot → Cool (30d) → Archive (90d) → Delete (365d) to minimize storage cost over time. Optional SendGrid HTTP action sends a daily confirmation email once the blob list succeeds. All 9 resources provisioned in Terraform with an Azure Blob remote backend, deployed and validated end-to-end via GitHub Actions OIDC.",
+    tags: [
+      "Azure Blob Storage",
+      "Logic Apps",
+      "Managed Identity",
+      "RBAC",
+      "Lifecycle Management",
+      "Terraform",
+      "GitHub Actions OIDC",
+    ],
+    link: "https://github.com/jordann6/azure-backup-system",
+  },
+  {
+    num: "14",
     title: "Arch Linux",
     titleOut: "Homelab",
     desc: "Repurposed a T2 MacBook into a dedicated infrastructure lab running Arch Linux with K3s. Hosts development workloads, vector databases, and project backends. Full writeup covering the build process, networking, and cluster configuration.",
