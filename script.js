@@ -193,8 +193,8 @@ const projects = [
     num: "09",
     title: "Azure DevSecOps",
     titleOut: "Pipeline",
-    desc: "End-to-end secure CI/CD pipeline integrating SAST, DAST, and IaC scanning gates. Automated security validation before build promotion with Azure DevOps, container image scanning, and policy-as-code enforcement.",
-    tags: ["Azure DevOps", "SAST", "DAST", "Terraform", "Container Security"],
+    desc: "Four-stage security-gated CI/CD pipeline for a containerized Flask app deployed to AKS via blue/green rollout. Bandit SAST and pip-audit CVE scanning run first, then Checkov validates both Terraform and Kubernetes manifests. The Docker image is built for linux/amd64, scanned by Trivy (blocks on unfixed CRITICAL/HIGH), and pushed to ACR only after passing. OWASP ZAP then runs a baseline DAST scan against a live container before the deploy stage applies manifests to AKS via envsubst image substitution. Containers run as non-root with allowPrivilegeEscalation=false, readOnlyRootFilesystem, all capabilities dropped, and seccompProfile: RuntimeDefault. AKS has local admin disabled, AAD RBAC enforced, and OIDC issuer enabled for workload identity. GitHub Actions authenticates to Azure via OIDC — no stored credentials.",
+    tags: ["AKS", "ACR", "Bandit", "Trivy", "OWASP ZAP", "Checkov", "GitHub Actions OIDC", "Terraform"],
     link: "https://github.com/jordann6/azure-devsecops-project",
   },
   {
