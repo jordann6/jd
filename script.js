@@ -201,8 +201,8 @@ const projects = [
     num: "10",
     title: "Event-Driven",
     titleOut: "AWS Remediation",
-    desc: "Automated infrastructure remediation triggered by CloudWatch alarms. Lambda functions written in Python with Boto3 handle EC2 instance recovery, security group lockdowns, and resource tagging enforcement without manual intervention.",
-    tags: ["Lambda", "Boto3", "EC2", "CloudWatch", "Python"],
+    desc: "Fully automated remediation pipeline triggered by a CloudWatch metric alarm — no manual intervention in the hot path. When EC2 CPU utilization exceeds 80% for two consecutive 5-minute periods, CloudWatch publishes a state-change event to EventBridge, which invokes a Python Lambda directly. The Lambda routes on event type: EventBridge alarm events trigger an EC2 reboot; manual invocations with an action field route to either lockdown_sg (revokes all open-world ingress rules from the security group) or enforce_tags (applies required Environment, ManagedBy, and Monitored tags to non-compliant instances). Every execution publishes a structured result to SNS and writes a JSON audit trail to CloudWatch Logs with 14-day retention. IAM policy scopes ec2:RebootInstances to the specific instance ARN and sns:Publish to the specific topic ARN. Terraform provisions all resources including the alarm, EventBridge rule, Lambda permission, and log group. GitHub Actions deploys via OIDC with Bandit SAST and pip-audit gates before apply.",
+    tags: ["Lambda", "EventBridge", "CloudWatch", "EC2", "SNS", "Terraform", "Python", "GitHub Actions OIDC"],
     link: "https://github.com/jordann6/event-driven-aws-remediation",
   },
   {
