@@ -246,6 +246,22 @@ const projects = [
   },
   {
     num: "14",
+    title: "AWS Automated",
+    titleOut: "Backup System",
+    desc: "S3 backup vault with automated daily verification via Lambda (08:00 UTC). IAM execution role authenticates the function to S3 — no access keys or credentials stored anywhere. Versioning preserves every write as a recoverable point, noncurrent versions archive to Glacier at 7 days and expire at 90 days, and a lifecycle policy automatically tiers objects Standard → Standard-IA (30d) → Glacier (90d) → Delete (365d) to minimize storage cost over time. Optional SendGrid HTTP call sends a daily confirmation email once the object list succeeds. 15 resources provisioned in Terraform with an S3 remote backend and native state locking, deployed and validated end-to-end via GitHub Actions OIDC.",
+    tags: [
+      "S3",
+      "Lambda",
+      "EventBridge Scheduler",
+      "IAM",
+      "Lifecycle Management",
+      "Terraform",
+      "GitHub Actions OIDC",
+    ],
+    link: "https://github.com/jordann6/aws-backup-system",
+  },
+  {
+    num: "15",
     title: "Arch Linux",
     titleOut: "Homelab",
     desc: "Repurposed a T2 MacBook into a dedicated infrastructure lab running Arch Linux with K3s. Hosts development workloads, vector databases, and project backends. Full writeup covering the build process, networking, and cluster configuration.",
