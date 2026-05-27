@@ -86,6 +86,23 @@
 const projects = [
   {
     num: "01",
+    title: "Cost Intelligence",
+    titleOut: "Dashboard",
+    desc: "Lambda ingester pulls 90 days of Cost Explorer data into a DynamoDB single-table store daily, running z-score anomaly detection per service against a 30-day rolling baseline (threshold 2.5σ) and generating a 14-day linear regression forecast on aggregate spend. A second Lambda scans all account resources via the Resource Groups Tagging API and flags missing required tags. Results are served through an API Gateway HTTP API to a React frontend on S3 behind CloudFront with Origin Access Control. Three separate IAM execution roles enforce least-privilege access at each layer: ingester (ce:GetCostAndUsage, tag:GetResources, DynamoDB write), analyzer (DynamoDB read/write, SNS publish), and API (DynamoDB read only). SNS alert fires on every anomaly detection run that finds outliers. EventBridge Scheduler triggers ingestion at 01:00 UTC and analysis at 02:00 UTC. 34 resources provisioned in Terraform with S3 remote backend and native state locking, deployed via GitHub Actions OIDC.",
+    tags: [
+      "Lambda",
+      "Cost Explorer",
+      "DynamoDB",
+      "API Gateway",
+      "CloudFront",
+      "React",
+      "EventBridge Scheduler",
+      "Terraform",
+    ],
+    link: "https://github.com/jordann6/aws-cost-intelligence-dashboard",
+  },
+  {
+    num: "02",
     title: "Multi-Agent AI",
     titleOut: "Coding Orchestrator",
     desc: "Multi-agent system that routes natural language coding tasks to specialist agents through an orchestrator, fully asynchronous so submissions return a job ID in under two seconds while the coder runs the agentic loop in the background. API Gateway's 29-second integration timeout broke sequential Anthropic tool-use calls, so the orchestrator returns 202 immediately and the coder Lambda processes the loop independently, writing results to DynamoDB with 24-hour TTL. ARN-scoped least-privilege IAM isolates blast radius: the orchestrator can invoke only the coder Lambda, status can only read DynamoDB, and the coder cannot invoke any Lambda at all. The write_code, explain_code, and debug_code tools are deterministic Python functions returning structured scaffolds and AST metadata rather than recursive LLM calls, grounding the loop in real code analysis instead of model self-talk. Three separately sized Lambda packages, Secrets Manager for the Anthropic key, CloudWatch log groups with 14-day retention, and fully provisioned in Terraform.",
@@ -102,7 +119,7 @@ const projects = [
     link: "https://github.com/jordann6/multi-agent-coding-orchestrator",
   },
   {
-    num: "02",
+    num: "03",
     title: "Azure FinOps",
     titleOut: "Dashboard",
     desc: "Surfaces cloud spend trends, tagging gaps, cost anomalies, and budget forecasts before they hit the billing cycle. C# .NET 8 timer-triggered Azure Functions ingest the Cost Management API into Cosmos DB, running z-score anomaly detection against rolling baselines and 14-day linear regression forecasting per subscription. A second function scans the subscription against required tag policies, surfacing untagged resources with the specific missing tag details so cost attribution stays reliable. React frontend served from Azure Static Web Apps, all infrastructure provisioned in Terraform with system-assigned managed identity and zero stored credentials at the cost visibility layer.",
@@ -117,7 +134,7 @@ const projects = [
     link: "https://github.com/jordann6/azure-finops-dashboard",
   },
   {
-    num: "03",
+    num: "04",
     title: "LLM Gateway",
     titleOut: "& Observability",
     desc: "Cuts LLM API costs by routing requests across OpenAI and Anthropic based on cost, latency, or quality strategy, with DynamoDB caching in front to deduplicate repeated prompts. FastAPI gateway runs on ECS Fargate behind an ALB, instrumented with a CloudWatch dashboard of 9 widgets and 3 alarms covering latency, error rate, and provider failover. An LLM-as-judge evaluation pipeline scores response quality on a nightly cadence, and a Lambda archives raw request and response pairs to S3 for replay and audit. Scale-to-zero scheduling drops the service overnight to keep idle cost near zero. 78 resources across 9 Terraform modules, deployed via GitHub Actions.",
@@ -132,7 +149,7 @@ const projects = [
     link: "https://github.com/jordann6/llm-gateway",
   },
   {
-    num: "04",
+    num: "05",
     title: "Azure Zero Trust",
     titleOut: "Identity Pipeline",
     desc: "Seven-module Terraform pipeline enforcing Zero Trust across authentication, privileged access, workload identity, and threat detection on Azure. The identity layer provisions Entra ID users, groups, app registration, and managed identity with RBAC scoped to data plane resources — Key Vault carries no access policies and Storage Account has no shared keys. Five Conditional Access policies cover MFA enforcement, legacy auth blocking, device compliance, and risk-based sign-in controls. Defender for Cloud enabled at Standard tier across Key Vault, Storage, and ARM. Microsoft Sentinel onboarded with five scheduled analytics rules mapped to MITRE ATT&CK: brute force (T1110), unfamiliar sign-in location (T1078), PIM activation outside business hours, Key Vault access from unknown IP (T1552), and bulk user deletion (T1531). A Logic App playbook handles incident response via HTTP webhook. GitHub Actions authenticates via OIDC federated credential — no secrets stored anywhere in the pipeline.",
@@ -149,7 +166,7 @@ const projects = [
     link: "https://github.com/jordann6/zero-trust-identity-pipeline",
   },
   {
-    num: "05",
+    num: "06",
     title: "Cloud Security",
     titleOut: "Lab",
     desc: "End-to-end attack, detect, and respond case study across AWS and Kubernetes — 62 Terraform resources across 7 modules. The attack layer uses Pacu to execute a full MITRE ATT&CK kill chain: leaked IAM credentials → permission enumeration → privilege escalation from 1,039 to 15,319 permissions via policy attachment → S3 exfiltration of staged PII → lateral movement via STS role assumption. On the detection side, CloudTrail and VPC Flow Logs feed into an OpenSearch SIEM with a kill chain correlation dashboard. GuardDuty findings on IAM threats trigger an EventBridge rule that fires a Lambda to automatically disable compromised access keys. On Kubernetes, Falco runs as a DaemonSet with four custom rules catching 100% of simulated runtime attacks: shell spawning, sensitive file reads, unauthorized binary execution, and container escape via host mount. OPA Gatekeeper enforces three constraint templates blocking privileged containers, host namespace access, and root execution across all non-system namespaces.",
@@ -166,7 +183,7 @@ const projects = [
     link: "https://github.com/jordann6/cloud-security-lab",
   },
   {
-    num: "06",
+    num: "07",
     title: "NBA Intel",
     titleOut: "Center",
     desc: "RAG-powered prop analysis platform combining live NBA data with semantic search. FastAPI backend with Azure OpenAI GPT-4o and Qdrant vector store using text-embedding-3-small. Defensive stats, injury feeds, roster injection, and trend windows. Self-hosted on K3s homelab with Cloudflare tunnel.",
@@ -174,7 +191,7 @@ const projects = [
     link: "https://github.com/jordann6/nba-intel-center",
   },
   {
-    num: "07",
+    num: "08",
     title: "NFL Reliability",
     titleOut: "Platform",
     desc: "Treats a public NFL sports API as a production data source and wraps ingestion with SRE-style observability. A Python ingestor service runs on Azure Container Apps, writing raw payloads to Blob Storage and routing schema failures to a quarantine container. The ingestor exposes custom Prometheus metrics — ingestion_runs_total, schema_validity_total, data_freshness_seconds, and ingestion_last_success_timestamp_seconds — scraped by a second container app running Prometheus. Azure Managed Grafana surfaces dashboards built on those SLIs. Managed identity grants the ingestor Storage Blob Data Contributor without credentials. ACR holds the ingestor image, Key Vault holds integration secrets, and Terraform modules provision every resource. Runbooks and PromQL burn-rate examples are documented under ops/.",
@@ -182,7 +199,7 @@ const projects = [
     link: "https://github.com/jordann6/nfl-data-reliability-platform",
   },
   {
-    num: "08",
+    num: "09",
     title: "Uptime",
     titleOut: "Monitor",
     desc: "Active health monitoring for jordandesigns.io running every five minutes via EventBridge. Each check runs three validations in a single Lambda invocation: HTTP status code, response body content match, and SSL certificate expiry. A failed check retries once before firing an SNS alert to avoid noise from transient blips. Results are logged to DynamoDB with 90-day TTL and published as CloudWatch custom metrics — IsHealthy, LatencyMs, and SSLDaysRemaining. Two alarms gate on those metrics: site-down triggers on two consecutive failures, high-latency triggers when average response exceeds three seconds across three periods. A CloudWatch dashboard surfaces all four signals with threshold annotations. SSL alerts fire at 30 days warning and 7 days critical. Optional SMS subscription (conditional on a phone number variable) adds a second alert channel alongside email.",
@@ -190,7 +207,7 @@ const projects = [
     link: "https://github.com/jordann6/website-uptime-monitor",
   },
   {
-    num: "09",
+    num: "10",
     title: "Azure DevSecOps",
     titleOut: "Pipeline",
     desc: "Four-stage security-gated CI/CD pipeline for a containerized Flask app deployed to AKS via blue/green rollout. Bandit SAST and pip-audit CVE scanning run first, then Checkov validates both Terraform and Kubernetes manifests. The Docker image is built for linux/amd64, scanned by Trivy (blocks on unfixed CRITICAL/HIGH), and pushed to ACR only after passing. OWASP ZAP then runs a baseline DAST scan against a live container before the deploy stage applies manifests to AKS via envsubst image substitution. Containers run as non-root with allowPrivilegeEscalation=false, readOnlyRootFilesystem, all capabilities dropped, and seccompProfile: RuntimeDefault. AKS has local admin disabled, AAD RBAC enforced, and OIDC issuer enabled for workload identity. GitHub Actions authenticates to Azure via OIDC — no stored credentials.",
@@ -198,7 +215,7 @@ const projects = [
     link: "https://github.com/jordann6/azure-devsecops-project",
   },
   {
-    num: "10",
+    num: "11",
     title: "Event-Driven",
     titleOut: "AWS Remediation",
     desc: "Fully automated remediation pipeline triggered by a CloudWatch metric alarm — no manual intervention in the hot path. When EC2 CPU utilization exceeds 80% for two consecutive 5-minute periods, CloudWatch publishes a state-change event to EventBridge, which invokes a Python Lambda directly. The Lambda routes on event type: EventBridge alarm events trigger an EC2 reboot; manual invocations with an action field route to either lockdown_sg (revokes all open-world ingress rules from the security group) or enforce_tags (applies required Environment, ManagedBy, and Monitored tags to non-compliant instances). Every execution publishes a structured result to SNS and writes a JSON audit trail to CloudWatch Logs with 14-day retention. IAM policy scopes ec2:RebootInstances to the specific instance ARN and sns:Publish to the specific topic ARN. Terraform provisions all resources including the alarm, EventBridge rule, Lambda permission, and log group. GitHub Actions deploys via OIDC with Bandit SAST and pip-audit gates before apply.",
@@ -206,7 +223,7 @@ const projects = [
     link: "https://github.com/jordann6/event-driven-aws-remediation",
   },
   {
-    num: "11",
+    num: "12",
     title: "Super Bowl",
     titleOut: "Intel Center",
     desc: "Cloud-native scouting report pipeline built for Super Bowl LX. Python extracts and processes NFLverse datasets, with manual override logic to handle API synchronization lags that would otherwise produce stale prop line comparisons. Azure OpenAI GPT-4o analyzes player prop lines against seasonal averages to generate automated performance reports. Infrastructure provisioned in Terraform: Azure OpenAI resource, Key Vault for the API key, and managed identity for keyless access. The service is containerized in Docker for environment parity between local dev and cloud, with images built and pushed to GitHub Container Registry via GitHub Actions.",
@@ -214,7 +231,7 @@ const projects = [
     link: "https://github.com/jordann6/sb-intel-center",
   },
   {
-    num: "12",
+    num: "13",
     title: "Cloud Resume",
     titleOut: "Challenge",
     desc: "Portfolio site served from S3 through CloudFront with TLS and custom domain via Route 53. Visitor counter powered by API Gateway, Lambda (Python), and DynamoDB. GitHub Actions CI/CD syncs to S3 and invalidates cache on push. All infrastructure defined in Terraform.",
@@ -229,7 +246,7 @@ const projects = [
     link: "https://github.com/jordann6/cloud-resume-challenge",
   },
   {
-    num: "13",
+    num: "14",
     title: "Azure Automated",
     titleOut: "Backup System",
     desc: "Blob storage backup vault with automated daily verification via Logic App (08:00 UTC). Managed identity authenticates the workflow to Blob Storage over MSI — no connection strings or API keys stored anywhere. Versioning preserves every write as a recoverable point, 7-day soft delete covers accidental removal, and a lifecycle policy automatically tiers blobs Hot → Cool (30d) → Archive (90d) → Delete (365d) to minimize storage cost over time. Optional SendGrid HTTP action sends a daily confirmation email once the blob list succeeds. All 9 resources provisioned in Terraform with an Azure Blob remote backend, deployed and validated end-to-end via GitHub Actions OIDC.",
@@ -245,7 +262,7 @@ const projects = [
     link: "https://github.com/jordann6/azure-backup-system",
   },
   {
-    num: "14",
+    num: "15",
     title: "AWS Automated",
     titleOut: "Backup System",
     desc: "S3 backup vault with automated daily verification via Lambda (08:00 UTC). IAM execution role authenticates the function to S3 — no access keys or credentials stored anywhere. Versioning preserves every write as a recoverable point, noncurrent versions archive to Glacier at 7 days and expire at 90 days, and a lifecycle policy automatically tiers objects Standard → Standard-IA (30d) → Glacier (90d) → Delete (365d) to minimize storage cost over time. Optional SendGrid HTTP call sends a daily confirmation email once the object list succeeds. 15 resources provisioned in Terraform with an S3 remote backend and native state locking, deployed and validated end-to-end via GitHub Actions OIDC.",
@@ -261,7 +278,7 @@ const projects = [
     link: "https://github.com/jordann6/aws-backup-system",
   },
   {
-    num: "15",
+    num: "16",
     title: "Arch Linux",
     titleOut: "Homelab",
     desc: "Repurposed a T2 MacBook into a dedicated infrastructure lab running Arch Linux with K3s. Hosts development workloads, vector databases, and project backends. Full writeup covering the build process, networking, and cluster configuration.",
