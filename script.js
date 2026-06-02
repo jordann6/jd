@@ -309,6 +309,39 @@ const projects = [
     tags: ["Arch Linux", "K3s", "Kubernetes", "Networking", "Homelab"],
     link: "https://substack.com/@jordann6/p-183075828",
   },
+  {
+    num: "20",
+    title: "AWS Developer",
+    titleOut: "Platform",
+    desc: "Internal Developer Platform on EKS that gives application teams a paved road. ArgoCD app-of-apps GitOps reconciles every platform component from Git. Crossplane with an IRSA-authenticated AWS provider exposes a self-service Bucket API: a developer's one-line claim provisions a real S3 bucket hardened by default with AES256 encryption, versioning, all four public-access-block settings, and an owning-team tag, with no static credentials anywhere. Kyverno enforces an owning-team label as admission policy in flagged namespaces. A Backstage golden-path template scaffolds a new service complete with a Dockerfile, a hardened Helm chart, and an ArgoCD Application so it is GitOps-deployable the moment it exists. EKS, VPC, OIDC, and the scoped IRSA role provisioned in Terraform with an S3 remote state backend. Verified end to end against real AWS, then torn down clean.",
+    tags: [
+      "EKS",
+      "ArgoCD",
+      "Crossplane",
+      "Kyverno",
+      "Backstage",
+      "IRSA",
+      "Terraform",
+      "GitOps",
+    ],
+    link: "https://github.com/jordann6/aws-developer-platform",
+  },
+  {
+    num: "21",
+    title: "Azure Developer",
+    titleOut: "Platform",
+    desc: "Internal Developer Platform on AKS, the Azure counterpart to the AWS platform built on a different toolchain to show the paved-road pattern is not cloud or tool specific. Flux reconciles the platform from Git via GitRepository, Kustomization, and HelmRelease. Crossplane with an Azure provider authenticated through Azure Workload Identity exposes a self-service StorageAccount API: a claim provisions a real storage account hardened by default with TLS1_2 minimum, HTTPS-only traffic, public blob access disabled, and infrastructure encryption, with no client secrets. Kyverno enforces owning-team labels as admission policy. AKS with OIDC issuer and workload identity, plus a federated user-assigned managed identity, provisioned in Terraform with an Azure Storage state backend. Verified end to end against real Azure, then torn down clean.",
+    tags: [
+      "AKS",
+      "Flux",
+      "Crossplane",
+      "Workload Identity",
+      "Kyverno",
+      "Terraform",
+      "GitOps",
+    ],
+    link: "https://github.com/jordann6/azure-developer-platform",
+  },
 ];
 
 (function () {
