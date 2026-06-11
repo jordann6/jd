@@ -1,5 +1,7 @@
 # Cloud Resume Challenge — [jordandesigns.io](https://jordandesigns.io)
 
+[![CI](https://github.com/jordann6/cloud-resume-challenge/actions/workflows/deploy.yml/badge.svg)](https://github.com/jordann6/cloud-resume-challenge/actions/workflows/deploy.yml)
+
 Portfolio site built as an implementation of Forrest Brazeal's Cloud Resume Challenge. Serverless architecture on AWS with automated deployments, real-time visitor tracking, and all infrastructure defined as code in Terraform.
 
 ## Architecture
