@@ -342,6 +342,21 @@ const projects = [
     ],
     link: "https://github.com/jordann6/azure-developer-platform",
   },
+  {
+    num: "22",
+    title: "Azure Landing",
+    titleOut: "Zone",
+    desc: "Enterprise-grade Azure landing zone built entirely in Terraform. Establishes the governance foundation that workload subscriptions inherit: a four-level management group hierarchy (org root, Platform, Workloads, Sandbox), three custom Azure Policy definitions assigned at the Workloads management group scope (require owner tag, deny public IPs, allowed locations), and a hub-spoke network. Hub VNet carries correctly-named and minimum-sized reserved subnets for Azure Firewall, VPN Gateway, and Bastion alongside an active management subnet with an internet-deny NSG. A reusable Terraform module vends new spokes with a single call: it provisions the spoke resource group, spoke VNet, workload subnet, and both directions of VNet peering. Two spokes (Platform, Sandbox) demonstrated. Verified end to end against real Azure, then torn down clean.",
+    tags: [
+      "Management Groups",
+      "Azure Policy",
+      "Hub-Spoke",
+      "VNet Peering",
+      "Terraform",
+      "Governance",
+    ],
+    link: "https://github.com/jordann6/azure-landing-zone",
+  },
 ];
 
 (function () {
