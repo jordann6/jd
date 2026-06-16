@@ -6,6 +6,28 @@ resource "aws_cloudfront_origin_access_control" "resume" {
   signing_protocol                  = "sigv4"
 }
 
+# Rewrites directory-style URIs (e.g. /work/slug/) to their index.html so the
+# Next.js static export's nested pages resolve over the private-bucket OAC origin,
+# which (unlike the S3 website endpoint) does not do directory indexing.
+resource "aws_cloudfront_function" "rewrite_index" {
+  name    = "resume-rewrite-index"
+  runtime = "cloudfront-js-2.0"
+  comment = "Append index.html for directory-style URIs"
+  publish = true
+  code    = <<-EOT
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+      if (uri.endsWith('/')) {
+        request.uri += 'index.html';
+      } else if (!uri.includes('.')) {
+        request.uri += '/index.html';
+      }
+      return request;
+    }
+  EOT
+}
+
 resource "aws_cloudfront_distribution" "resume_cdn" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -26,6 +48,11 @@ resource "aws_cloudfront_distribution" "resume_cdn" {
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
     cache_policy_id        = var.cache_policy_id
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.rewrite_index.arn
+    }
   }
 
   restrictions {
