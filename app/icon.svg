@@ -1,0 +1,6 @@
+<svg viewBox="0 0 72 48" xmlns="http://www.w3.org/2000/svg">
+  <rect width="72" height="48" fill="#ffffff"/>
+  <path d="M22 41 C 13 41, 7 34, 9.5 27 C 4.5 22, 9 13, 16.5 14.5 C 18.5 6.5, 29 4.5, 34 11 C 38.5 5.5, 49 8, 49 17 C 56.5 17, 60 26.5, 53 32 C 55.5 38.5, 48.5 43, 42 41 Z" fill="none" stroke="#111111" stroke-width="2.4" stroke-linejoin="round"/>
+  <rect x="30" y="12" width="3" height="3" fill="#111111"/>
+  <text x="33" y="35" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="21" letter-spacing="-0.02em" fill="#111111" text-anchor="middle">jd</text>
+</svg>
