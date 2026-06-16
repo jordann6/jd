@@ -1,3 +1,7 @@
+data "aws_cloudfront_response_headers_policy" "security" {
+  name = "Managed-SecurityHeadersPolicy"
+}
+
 resource "aws_cloudfront_origin_access_control" "resume" {
   name                              = "resume-oac"
   description                       = "OAC for resume site S3 bucket"
@@ -46,8 +50,9 @@ resource "aws_cloudfront_distribution" "resume_cdn" {
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "s3-origin"
     viewer_protocol_policy = "redirect-to-https"
-    compress               = true
-    cache_policy_id        = var.cache_policy_id
+    compress                   = true
+    cache_policy_id            = var.cache_policy_id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security.id
 
     function_association {
       event_type   = "viewer-request"
