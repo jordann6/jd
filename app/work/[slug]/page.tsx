@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { caseStudies, getCaseStudy } from "@/lib/caseStudies";
+import { getDiagram } from "@/lib/diagrams";
+import CaseDiagram from "@/components/CaseDiagram";
 
 export function generateStaticParams() {
   return caseStudies.map((c) => ({ slug: c.slug }));
@@ -29,6 +31,7 @@ export default async function CaseStudyPage({
   const { slug } = await params;
   const cs = getCaseStudy(slug);
   if (!cs) notFound();
+  const diagram = getDiagram(slug);
 
   return (
     <article className="cs">
@@ -55,6 +58,8 @@ export default async function CaseStudyPage({
           </div>
         ))}
       </div>
+
+      {diagram && <CaseDiagram diagram={diagram} />}
 
       {cs.blocks.map((b) => (
         <section className="cs__block" key={b.num}>
