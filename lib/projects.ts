@@ -275,4 +275,13 @@ export const projects: Project[] = [
     categories: ["Azure", "AI", "Platform"],
     link: "https://github.com/jordann6/azure-incident-responder",
   },
+  {
+    num: "25",
+    title: "Azure VM",
+    titleOut: "Hardening",
+    desc: "Immutable golden-image pipeline that bakes a CIS-style hardening baseline into an Ubuntu 22.04 image, then deploys a hardened jump host from it, filling the VM config-management gap in an otherwise serverless and Kubernetes portfolio. An Ansible role applies the baseline across sshd (no root login, no password auth, strong ciphers and key exchange), auditd, fail2ban, sysctl kernel parameters, PAM password policy, and filesystem module blacklisting, with every control toggleable. Molecule tests the role in a container on every push via GitHub Actions (converge, verify, idempotence), so a broken control fails CI before it is ever baked into an image. Packer's azure-arm builder runs the role as a provisioner against a transient build VM and captures a managed image, authenticated through the Azure CLI so no secret ever touches a file. Terraform then deploys a jump host from that image into a Z1-style management subnet behind an internet-deny NSG that allows SSH from a single source, with a use_existing_hub switch to drop the host into a live azure-landing-zone hub instead. Terraform owns every cloud resource and Ansible does in-OS configuration only, keeping the tool boundary clean. Built to deploy, demo, and destroy for under a dollar.",
+    tags: ["Packer", "Ansible", "Molecule", "Terraform", "Azure VM", "CIS"],
+    categories: ["Azure", "Platform"],
+    link: "https://github.com/jordann6/azure-vm-hardening",
+  },
 ];
