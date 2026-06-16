@@ -750,6 +750,49 @@ section {
   transition: all 0.4s var(--ease);
 }
 
+/* Work index / category pages */
+.work {
+  padding-top: 160px;
+  padding-bottom: 120px;
+}
+.work .cs__back {
+  margin-bottom: 48px;
+}
+.work__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  padding: 28px 0;
+  margin-bottom: 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.work__cats a {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  transition: color 0.3s var(--ease);
+  cursor: none;
+}
+.work__cats a:hover {
+  color: var(--accent-bright);
+}
+.proj__more {
+  margin-top: 48px;
+}
+@media (max-width: 768px) {
+  .work {
+    padding-top: 110px;
+    padding-bottom: 64px;
+  }
+  .work__cats {
+    gap: 16px;
+  }
+}
+
 /* Project filter chips (new) */
 .proj__filters {
   display: flex;
