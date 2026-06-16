@@ -14,6 +14,44 @@ export interface Project {
 
 export const CATEGORIES: Category[] = ["AWS", "Azure", "AI", "Platform"];
 
+export const categoryMeta: Record<
+  Category,
+  { slug: string; title: string; blurb: string }
+> = {
+  AWS: {
+    slug: "aws",
+    title: "AWS",
+    blurb:
+      "Serverless, security, FinOps, and platform work on AWS, all defined in Terraform and shipped through GitHub Actions OIDC pipelines.",
+  },
+  Azure: {
+    slug: "azure",
+    title: "Azure",
+    blurb:
+      "Azure builds across identity, governance, FinOps, and AKS platforms, credential-free with managed identity and Workload Identity.",
+  },
+  AI: {
+    slug: "ai",
+    title: "AI",
+    blurb:
+      "AI-integrated systems: agent orchestration, RAG, LLM gateways, and Bedrock and Anthropic-backed automation on real cloud infrastructure.",
+  },
+  Platform: {
+    slug: "platform",
+    title: "Platform",
+    blurb:
+      "Platform engineering: Kubernetes, GitOps, internal developer platforms, and SRE-style observability across both clouds.",
+  },
+};
+
+export function categoryFromSlug(slug: string): Category | undefined {
+  return CATEGORIES.find((c) => categoryMeta[c].slug === slug);
+}
+
+export function projectsByCategory(cat: Category): Project[] {
+  return projects.filter((p) => p.categories.includes(cat));
+}
+
 export const projects: Project[] = [
   {
     num: "01",
