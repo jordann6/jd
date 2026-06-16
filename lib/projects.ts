@@ -171,7 +171,7 @@ export const projects: Project[] = [
     desc: "This site. Served from S3 through CloudFront with TLS and custom domain via Route 53, now a Next.js static export. Visitor counter powered by API Gateway, Lambda (Python), and DynamoDB. GitHub Actions CI/CD builds the site, syncs to S3, and invalidates cache on push. All infrastructure defined in Terraform with a private bucket locked to CloudFront via Origin Access Control.",
     tags: ["S3", "CloudFront", "Lambda", "DynamoDB", "Next.js", "Terraform", "GitHub Actions"],
     categories: ["AWS"],
-    link: "https://github.com/jordann6/cloud-resume-challenge",
+    link: "https://github.com/jordann6/jd",
   },
   {
     num: "14",
