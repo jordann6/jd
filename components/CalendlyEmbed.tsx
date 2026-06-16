@@ -18,7 +18,7 @@ export default function CalendlyEmbed() {
   return (
     <div
       className="calendly-inline-widget calendly-embed"
-      data-url={`${CALENDLY_URL}?hide_gdpr_banner=1&background_color=ffffff&text_color=222222&primary_color=2d6a4f`}
+      data-url={`${CALENDLY_URL}?hide_gdpr_banner=1`}
     />
   );
 }
