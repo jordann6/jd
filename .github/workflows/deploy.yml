@@ -17,6 +17,20 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
       - name: Deploy to S3
-        run: aws s3 sync . s3://jordandesigns.io --delete --cache-control "max-age=60,public"
+        run: |
+          aws s3 sync . s3://jordandesigns.io --delete \
+            --cache-control "max-age=60,public" \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "infrastructure/*" \
+            --exclude "backend/*" \
+            --exclude "preview/*" \
+            --exclude "ui_kits/*" \
+            --exclude "*.tf" \
+            --exclude "*.py" \
+            --exclude "*.json" \
+            --exclude ".gitignore" \
+            --exclude "README.md" \
+            --exclude "LICENSE"
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
