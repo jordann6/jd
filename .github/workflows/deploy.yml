@@ -3,6 +3,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+# Opt JavaScript actions into the Node.js 24 runtime (Node 20 is deprecated on runners).
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 jobs:
   deploy:
     runs-on: ubuntu-latest
