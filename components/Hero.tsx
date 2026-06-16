@@ -1,0 +1,52 @@
+import Link from "next/link";
+import VisitorCount from "./VisitorCount";
+
+export default function Hero() {
+  return (
+    <section id="hero" className="hero stage">
+      <div className="hero__top">
+        <span className="hero__eyebrow">
+          <span className="blink" /> Open to Full-Time &amp; Contract (1099)
+        </span>
+        <span className="hero__loc">
+          <strong>Chicago, IL — USA</strong>
+          <br />
+          Currently · Snorkel AI / DevOps Eng.
+          <br />
+          <VisitorCount /> Views
+        </span>
+      </div>
+
+      <h1 className="hero__name">
+        <span className="first">
+          Jordan<span className="punct">.</span>
+        </span>
+      </h1>
+
+      <div className="hero__bottom">
+        <div className="hero__role">
+          <div className="meta">↳ Discipline</div>
+          <div className="title">
+            Multi-Cloud
+            <br />
+            Engineer
+          </div>
+        </div>
+        <div className="hero__desc">
+          <span className="meta">↳ Practice</span>
+          Platforms, infrastructure, and automation across AWS and Azure.
+          AI-integrated systems, cloud security, FinOps, and production
+          observability, all defined as code.
+        </div>
+        <div className="hero__cta">
+          <Link href="/#projects" className="btn btn--primary">
+            View Work <span className="arrow">→</span>
+          </Link>
+          <Link href="/#contact" className="btn btn--ghost">
+            Schedule a Call <span className="arrow">↗</span>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
