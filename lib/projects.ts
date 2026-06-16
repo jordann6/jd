@@ -284,4 +284,22 @@ export const projects: Project[] = [
     categories: ["Azure", "Platform"],
     link: "https://github.com/jordann6/azure-vm-hardening",
   },
+  {
+    num: "26",
+    title: "AWS Observability",
+    titleOut: "Stack (EKS)",
+    desc: "Kubernetes observability platform on EKS, the AWS half of a multi-cloud stack where the same kube-prometheus-stack runs on both clouds so the only real difference is the cluster provisioning. Terraform stands up a VPC with a single NAT gateway to hold cost down and an EKS cluster with a two-node t3.medium managed node group, then Helm installs Prometheus, Grafana, AlertManager, node-exporter, and kube-state-metrics. A sample workload exposes Prometheus metrics through a ServiceMonitor so the dashboards carry real data, and three custom PrometheusRule alerts (sample-app target down, pod crashlooping, node memory pressure) route to AlertManager with a null receiver by default so no external endpoint is required for the demo. The demo script port-forwards Grafana, Prometheus, and AlertManager, then scales the sample app to zero to trip the target-down alert on cue. Verified against the live Prometheus API with both scrape targets reporting up, then torn down clean with zero residual billing. Built as a deploy, demo, destroy with idempotent scripts driven by a single cloud argument.",
+    tags: ["EKS", "Prometheus", "Grafana", "AlertManager", "Helm", "kube-prometheus-stack", "ServiceMonitor", "Terraform"],
+    categories: ["AWS", "Platform"],
+    link: "https://github.com/jordann6/observability-stack",
+  },
+  {
+    num: "27",
+    title: "Azure Observability",
+    titleOut: "Stack (AKS)",
+    desc: "The Azure half of the multi-cloud observability stack, running the identical kube-prometheus-stack on AKS so the same Helm values and alert rules carry over unchanged and the only difference from the AWS build is the cluster layer. Terraform provisions a resource group and an AKS cluster with a two-node Standard_B2s pool and a system-assigned managed identity, so there are no stored credentials anywhere in the build. Helm installs Prometheus, Grafana, AlertManager, node-exporter, and kube-state-metrics, a sample workload is scraped through a ServiceMonitor, and the same three custom PrometheusRule alerts route to AlertManager. Verified against the live Prometheus API with both scrape targets reporting up, then torn down through the shared destroy path that removes the resource group, AKS cluster, and node VMSS together for zero residual billing. Demonstrates true cross-cloud parity from one shared monitoring and alerting configuration.",
+    tags: ["AKS", "Prometheus", "Grafana", "AlertManager", "Helm", "Managed Identity", "ServiceMonitor", "Terraform"],
+    categories: ["Azure", "Platform"],
+    link: "https://github.com/jordann6/observability-stack",
+  },
 ];
