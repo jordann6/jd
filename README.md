@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/jordann6/jd/actions/workflows/deploy.yml/badge.svg)](https://github.com/jordann6/jd/actions/workflows/deploy.yml)
 
-Portfolio site built as an implementation of Forrest Brazeal's Cloud Resume Challenge. Serverless architecture on AWS with automated deployments, real-time visitor tracking, and all infrastructure defined as code in Terraform.
+Portfolio site, an evolution of Forrest Brazeal's Cloud Resume Challenge. Built with Next.js (App Router) as a static export on a serverless AWS backend, with automated deployments, real-time visitor tracking, and all infrastructure defined as code in Terraform.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ Portfolio site built as an implementation of Forrest Brazeal's Cloud Resume Chal
 | Layer | Services |
 |---|---|
 | DNS & TLS | Route 53 · ACM (TLSv1.2+) |
-| Edge | CloudFront (OAC · HTTPS-only · compress · IPv6) |
+| Edge | CloudFront (OAC · HTTPS-only · compress · IPv6 · security headers · index-rewrite function) |
 | Storage | S3 (private bucket · AES-256 SSE · OAC-only access) |
 | Visitor Counter | API Gateway → Lambda (Python 3.13) → DynamoDB |
 | CI/CD | GitHub Actions → OIDC → IAM role → S3 sync + CF invalidation |
@@ -20,28 +20,36 @@ Portfolio site built as an implementation of Forrest Brazeal's Cloud Resume Chal
 ## Project Structure
 
 ```
-jd/
-├── index.html                  # Portfolio site
-├── main.css                    # Styling
-├── script.js                   # Visitor counter + UI logic
-├── diagram.py                  # Architecture diagram (diagrams-as-code)
-├── architecture.png            # Generated architecture diagram
-├── assets/                     # Cert badges
+jd/                                    # Next.js (App Router), static export
+├── app/
+│   ├── layout.tsx                     # Root layout: fonts, site chrome, metadata
+│   ├── page.tsx                       # Home (hero, index, skills, certs, contact)
+│   ├── globals.css                    # Editorial design system + styles
+│   ├── icon.svg                       # jd favicon
+│   ├── not-found.tsx                  # 404 page
+│   └── work/
+│       ├── page.tsx                   # Full project index
+│       ├── [slug]/page.tsx            # Deep case-study pages
+│       └── category/[cat]/page.tsx    # Shareable per-category pages (aws/azure/ai/platform)
+├── components/                        # Hero, Nav, ProjectIndex, CaseDiagram, Cursor, ...
+├── lib/                               # projects, caseStudies, diagrams, site data
 ├── backend/
-│   └── lambda_function.py      # Visitor counter Lambda
+│   └── lambda_function.py             # Visitor counter Lambda
 ├── infrastructure/
 │   └── terraform/
-│       ├── main.tf             # DynamoDB, Lambda, API Gateway, IAM
-│       ├── cloudfront.tf       # CloudFront distribution + OAC
-│       ├── s3.tf               # S3 bucket + policy
-│       ├── route53.tf          # DNS A alias record
-│       ├── acm.tf              # TLS certificate
-│       ├── github_oidc.tf      # GitHub Actions OIDC provider + role
+│       ├── main.tf                    # DynamoDB, Lambda, API Gateway, IAM
+│       ├── cloudfront.tf              # CloudFront: OAC, index-rewrite fn, security headers
+│       ├── s3.tf                      # Private S3 bucket + policy
+│       ├── route53.tf                 # DNS A alias record
+│       ├── acm.tf                     # TLS certificate
+│       ├── github_oidc.tf             # GitHub Actions OIDC provider + role
 │       ├── variables.tf
-│       └── provider.tf         # S3 backend + provider config
+│       └── provider.tf                # S3 backend + provider config
+├── diagram.py                         # Architecture diagram (diagrams-as-code)
+├── next.config.mjs                    # output: 'export'
 └── .github/
     └── workflows/
-        └── deploy.yml          # CI/CD pipeline
+        └── deploy.yml                 # CI/CD: build → S3 sync → CF invalidation
 ```
 
 ## Deployment
@@ -49,8 +57,9 @@ jd/
 Every push to `main` triggers the CI/CD pipeline:
 
 1. GitHub Actions assumes the `github-actions-deploy` IAM role via OIDC (no stored AWS keys)
-2. `aws s3 sync` uploads changed files to S3 with `max-age=60` cache headers
-3. CloudFront cache invalidation ensures visitors see the latest content immediately
+2. `npm ci && npm run build` produces the static export in `out/`
+3. `aws s3 sync` uploads `out/` to S3 (immutable long cache on hashed assets, short cache on HTML)
+4. CloudFront cache invalidation ensures visitors see the latest content immediately
 
 To deploy infrastructure changes:
 
@@ -79,7 +88,7 @@ python3 diagram.py
 
 ## Tech Stack
 
-`S3` `CloudFront` `Route 53` `ACM` `API Gateway` `Lambda` `DynamoDB` `IAM` `Terraform` `GitHub Actions` `Python` `HTML/CSS/JS`
+`Next.js` `React` `TypeScript` `S3` `CloudFront` `Route 53` `ACM` `API Gateway` `Lambda` `DynamoDB` `IAM` `Terraform` `GitHub Actions` `Python`
 
 ## Contact
 
