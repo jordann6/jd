@@ -6,14 +6,18 @@ import {
   projects,
   CATEGORIES,
   categoryMeta,
+  caseStudyMeta,
+  CASE_STUDY_FILTER,
   type Category,
   type Project,
 } from "@/lib/projects";
 
-type Filter = Category | "All";
+type Filter = Category | "All" | typeof CASE_STUDY_FILTER;
 
 function hrefFor(f: Filter): string {
-  return f === "All" ? "/work/" : `/work/category/${categoryMeta[f].slug}/`;
+  if (f === "All") return "/work/";
+  if (f === CASE_STUDY_FILTER) return `/work/${caseStudyMeta.slug}/`;
+  return `/work/category/${categoryMeta[f].slug}/`;
 }
 
 /**
@@ -34,22 +38,23 @@ export default function ProjectIndex({
   const active: Filter = linked ? initial : filter;
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { All: projects.length };
+    const c: Record<string, number> = {
+      All: projects.length,
+      [CASE_STUDY_FILTER]: projects.filter((p) => p.caseStudy).length,
+    };
     CATEGORIES.forEach((cat) => {
       c[cat] = projects.filter((p) => p.categories.includes(cat)).length;
     });
     return c;
   }, []);
 
-  const visible = useMemo(
-    () =>
-      active === "All"
-        ? projects
-        : projects.filter((p) => p.categories.includes(active as Category)),
-    [active],
-  );
+  const visible = useMemo(() => {
+    if (active === "All") return projects;
+    if (active === CASE_STUDY_FILTER) return projects.filter((p) => p.caseStudy);
+    return projects.filter((p) => p.categories.includes(active as Category));
+  }, [active]);
 
-  const filters = ["All", ...CATEGORIES] as Filter[];
+  const filters = ["All", ...CATEGORIES, CASE_STUDY_FILTER] as Filter[];
 
   return (
     <>

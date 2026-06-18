@@ -52,6 +52,20 @@ export function projectsByCategory(cat: Category): Project[] {
   return projects.filter((p) => p.categories.includes(cat));
 }
 
+/** Label used by the "Case Study" filter chip; not a real Category. */
+export const CASE_STUDY_FILTER = "Case Study" as const;
+
+export const caseStudyMeta = {
+  slug: "case-studies",
+  title: "Case Studies",
+  blurb:
+    "Deep-dive write-ups on selected builds: the architecture decisions, the trade-offs, and how each system was deployed, demoed, and destroyed.",
+};
+
+export function caseStudyProjects(): Project[] {
+  return projects.filter((p) => p.caseStudy);
+}
+
 export const projects: Project[] = [
   {
     num: "01",
