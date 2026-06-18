@@ -302,4 +302,22 @@ export const projects: Project[] = [
     categories: ["Azure", "Platform"],
     link: "https://github.com/jordann6/observability-stack",
   },
+  {
+    num: "28",
+    title: "Azure Event-Driven",
+    titleOut: "Remediation",
+    desc: "Deterministic policy remediation triggered by an Azure Monitor metric alert, the Azure counterpart to the AWS event-driven remediation build. When the target VM's Percentage CPU holds at or above 80% over a 10-minute window, the alert fires an action group that both notifies the operator by email and SMS and invokes a Python function on Flex Consumption. The function routes on the request body: a common alert schema payload restarts the VM, while manual invocations run lockdown_nsg, which deletes inbound NSG rules whose source is Internet, wildcard, or 0.0.0.0/0, or enforce_tags, which applies required environment, managedBy, and monitored tags. It authenticates with a system-assigned managed identity bound to a custom RBAC role scoped to exactly the VM restart, VM write, and NSG security-rule delete actions on the resource group, with no broader access. Unlike the n8n and Claude incident responder, this runbook is pure code with no AI or workflow engine. All resources provisioned in Terraform with an azurerm state backend. Verified end to end against real Azure, with restart, NSG lockdown, and tag enforcement all confirmed.",
+    tags: ["Azure Functions", "Flex Consumption", "Azure Monitor", "Action Groups", "Managed Identity", "Custom RBAC", "Terraform", "Python"],
+    categories: ["Azure"],
+    link: "https://github.com/jordann6/azure-event-driven-remediation",
+  },
+  {
+    num: "29",
+    title: "Azure Uptime",
+    titleOut: "Monitor",
+    desc: "Serverless uptime monitoring for jordandesigns.io, the Azure counterpart to the AWS uptime monitor. A timer-triggered Python function on Flex Consumption runs every five minutes and performs three checks in one invocation: HTTP status, response body content match, and SSL certificate expiry, retrying once before recording a failure to suppress transient blips. Each result is written to Cosmos DB serverless on the SQL API with a 90-day container TTL and logged to Application Insights, where three KQL scheduled-query alerts (site-down on two consecutive failures, high-latency on sustained slow responses, and SSL expiry within seven days) route to an action group delivering email and SMS. The function reaches Cosmos through a managed identity granted the built-in data-plane contributor role, so no keys live anywhere in config. An Application Insights workbook charts health, latency, and SSL days remaining. All infrastructure provisioned in Terraform with an azurerm state backend. Verified end to end against real Azure with live checks reporting healthy.",
+    tags: ["Azure Functions", "Cosmos DB", "Application Insights", "Azure Monitor", "Action Groups", "Managed Identity", "Terraform", "Python"],
+    categories: ["Azure"],
+    link: "https://github.com/jordann6/azure-website-uptime-monitor",
+  },
 ];
