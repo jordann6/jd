@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { projects, CATEGORIES, categoryMeta } from "@/lib/projects";
+import { projects, CATEGORIES, categoryMeta, caseStudyMeta } from "@/lib/projects";
 import ProjectIndex from "@/components/ProjectIndex";
 
 export const metadata: Metadata = {
@@ -35,6 +35,7 @@ export default function WorkIndex() {
             {c}
           </Link>
         ))}
+        <Link href={`/work/${caseStudyMeta.slug}/`}>{caseStudyMeta.title}</Link>
       </div>
 
       <ProjectIndex initial="All" linked />
