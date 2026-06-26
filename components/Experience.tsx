@@ -29,11 +29,6 @@ export default function Experience() {
             </div>
             <div className="body">
               <div className="role">{row.role}</div>
-              <ul>
-                {row.bullets.map((b, k) => (
-                  <li key={k}>{b}</li>
-                ))}
-              </ul>
               <div className="stack">
                 {row.stack.map((t) => (
                   <span className="tag" key={t}>
