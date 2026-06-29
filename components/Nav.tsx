@@ -72,6 +72,13 @@ export default function Nav() {
         <span>
           <span className="label">Status</span>Available
         </span>
+        <Link
+          href="/#contact"
+          className="nav__cta"
+          onClick={(e) => handleClick(e, "contact")}
+        >
+          Let&apos;s Talk <span className="arrow">→</span>
+        </Link>
       </div>
     </nav>
   );

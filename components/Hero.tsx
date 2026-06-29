@@ -45,6 +45,28 @@ export default function Hero() {
           <Link href="/#contact" className="btn btn--ghost">
             Schedule a Call <span className="arrow">↗</span>
           </Link>
+          <div className="hero__reach">
+            <span className="meta">↳ Reach me</span>
+            <div className="hero__reach-links">
+              <a href="mailto:jordandn6@outlook.com">jordandn6@outlook.com</a>
+              <span className="sep">·</span>
+              <a
+                href="https://linkedin.com/in/jordan-nelson-aa0828165"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                LinkedIn
+              </a>
+              <span className="sep">·</span>
+              <a
+                href="https://github.com/jordann6"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
