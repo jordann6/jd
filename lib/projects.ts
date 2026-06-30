@@ -334,4 +334,13 @@ export const projects: Project[] = [
     categories: ["Azure"],
     link: "https://github.com/jordann6/azure-website-uptime-monitor",
   },
+  {
+    num: "30",
+    title: "AWS SCP",
+    titleOut: "Governance",
+    desc: "Multi-account AWS Organization with a five-OU hierarchy and six Service Control Policies enforcing least-privilege guardrails at every level. SCPs are layered so child OUs inherit parent restrictions automatically: deny-leave-org and deny-root-user at the root, region-lockdown (us-east-1 only) at Sandbox and Workloads OUs, require-s3-encryption at Workloads, and deny-cloudtrail-tampering plus deny-public-s3 at Prod. Three member accounts across Sandbox, Dev, and Prod OUs validate that each policy blocks what it should. The validation script assumes the OrganizationAccountAccessRole into each member account and confirms that denied actions return explicit SCP denies while allowed actions succeed, plus verifies the management account is SCP-exempt by design. 22 resources provisioned in Terraform with an S3 remote backend, deployed via GitHub Actions OIDC.",
+    tags: ["AWS Organizations", "SCPs", "IAM", "CloudTrail", "S3", "SNS", "Terraform", "GitHub Actions OIDC"],
+    categories: ["AWS"],
+    link: "https://github.com/jordann6/aws-scp-governance",
+  },
 ];
