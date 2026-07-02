@@ -16,6 +16,26 @@ export interface Diagram {
 // Hand-authored left-to-right architecture flows, keyed by case-study slug.
 // A column with multiple nodes renders them stacked (a branch / fan-out).
 export const diagrams: Record<string, Diagram> = {
+  "multi-region-failover": {
+    caption: "One failure, two clocks: DNS shifts traffic in seconds while EventBridge crosses regions to promote the replica",
+    cols: [
+      { nodes: [{ label: "Route 53", sub: "health check · 10s" }] },
+      {
+        nodes: [
+          { label: "DNS Failover", sub: "standby answers ~60s" },
+          { label: "CloudWatch", sub: "alarm · us-east-1" },
+        ],
+      },
+      { nodes: [{ label: "EventBridge", sub: "cross-region bus" }] },
+      {
+        nodes: [
+          { label: "Failover Lambda", sub: "PromoteReadReplica", accent: true },
+          { label: "SNS", sub: "operator notify" },
+        ],
+      },
+      { nodes: [{ label: "RDS Replica", sub: "promoted · writable", accent: true }] },
+    ],
+  },
   "aws-developer-platform": {
     caption: "Self-service paved road — claim to hardened AWS resource, no static credentials",
     cols: [
