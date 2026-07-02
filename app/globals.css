@@ -11,7 +11,7 @@
   --surface-hover: #e8e8e8;
   --border: #d8d8d8;
   --border-hover: #b0b0b0;
-  --text-dim: #aaaaaa;
+  --text-dim: #8f8f8f;
   --text-secondary: #555555;
   --text: #222222;
   --white: #111111;
@@ -247,7 +247,7 @@ body::after {
 }
 .nav__link:hover,
 .nav__link.active {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 .nav__link .num {
   color: var(--text-dim);
@@ -256,7 +256,7 @@ body::after {
 }
 .nav__link:hover .num,
 .nav__link.active .num {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 .nav__time {
   justify-self: end;
@@ -288,8 +288,8 @@ body::after {
 }
 .nav__cta:hover {
   background: transparent;
-  color: var(--accent-bright);
-  box-shadow: inset 0 0 0 1px var(--accent-bright);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .nav__cta .arrow {
   display: inline-block;
@@ -382,8 +382,8 @@ section {
   display: block;
 }
 .hero__name .punct {
-  color: var(--text-dim);
-  -webkit-text-fill-color: var(--text-dim);
+  color: var(--accent-bright);
+  -webkit-text-fill-color: var(--accent-bright);
   -webkit-text-stroke: 0;
 }
 .hero__bottom {
@@ -455,7 +455,7 @@ section {
   transition: color 0.3s var(--ease);
 }
 .hero__reach-links a:hover {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 .hero__reach-links .sep {
   color: var(--text-dim);
@@ -482,16 +482,16 @@ section {
 }
 .btn--primary:hover {
   background: transparent;
-  color: var(--accent-bright);
-  box-shadow: inset 0 0 0 1px var(--accent-bright);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .btn--ghost {
   color: var(--text-secondary);
   box-shadow: inset 0 0 0 1px var(--border);
 }
 .btn--ghost:hover {
-  color: var(--accent-bright);
-  box-shadow: inset 0 0 0 1px var(--accent-bright);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .btn .arrow {
   display: inline-block;
@@ -753,13 +753,13 @@ section {
   padding-right: 24px;
 }
 .proj__item:hover .proj__title {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 .proj__item:hover .proj__title .out {
-  -webkit-text-fill-color: var(--accent-bright);
+  -webkit-text-fill-color: var(--accent);
 }
 .proj__item:hover .proj__arrow {
-  color: var(--accent-bright);
+  color: var(--accent);
   transform: translate(6px, -6px);
 }
 .proj__item:hover .proj__hover-tags {
@@ -838,7 +838,7 @@ section {
   cursor: none;
 }
 .work__cats a:hover {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 .proj__more {
   margin-top: 48px;
@@ -874,8 +874,8 @@ section {
   gap: 8px;
 }
 .filter-chip:hover {
-  color: var(--accent-bright);
-  box-shadow: inset 0 0 0 1px var(--accent-bright);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .filter-chip.active {
   color: var(--bg);
@@ -1056,7 +1056,7 @@ section {
   -webkit-text-fill-color: transparent;
 }
 .contact__head .punct {
-  color: var(--text-dim);
+  color: var(--accent-bright);
 }
 .contact__sub {
   font-family: var(--font-body);
@@ -1089,7 +1089,7 @@ section {
 .contact__link:hover .label,
 .contact__link:hover .val,
 .contact__link:hover .arr {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 .contact__link:hover .arr {
   transform: translate(4px, -4px);
@@ -1267,7 +1267,7 @@ section {
   transition: color 0.3s var(--ease);
 }
 .cs__back:hover {
-  color: var(--accent-bright);
+  color: var(--accent);
 }
 .cs__eyebrow {
   font-family: var(--font-mono);
@@ -1806,5 +1806,170 @@ section {
   }
   .proj__arrow {
     display: none;
+  }
+}
+
+/* ── Design polish: motion, focus, telemetry, receipts ───────── */
+
+/* Staggered project list reveal. The parent keeps only the fade so the
+   per-item animation carries the motion. */
+.proj__list.reveal {
+  transform: none;
+}
+.proj__list.reveal .proj__item {
+  opacity: 0;
+}
+.proj__list.reveal.in .proj__item {
+  animation: proj-in 0.6s var(--ease) both;
+}
+.proj__list.reveal.in .proj__item:nth-child(1) { animation-delay: 0.05s; }
+.proj__list.reveal.in .proj__item:nth-child(2) { animation-delay: 0.1s; }
+.proj__list.reveal.in .proj__item:nth-child(3) { animation-delay: 0.15s; }
+.proj__list.reveal.in .proj__item:nth-child(4) { animation-delay: 0.2s; }
+.proj__list.reveal.in .proj__item:nth-child(5) { animation-delay: 0.25s; }
+.proj__list.reveal.in .proj__item:nth-child(6) { animation-delay: 0.3s; }
+.proj__list.reveal.in .proj__item:nth-child(7) { animation-delay: 0.35s; }
+.proj__list.reveal.in .proj__item:nth-child(n + 8) { animation-delay: 0.4s; }
+@keyframes proj-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Underline slide on inline text links */
+.hero__reach-links a,
+.telemetry a {
+  background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
+  transition:
+    background-size 0.35s var(--ease),
+    color 0.3s var(--ease);
+  padding-bottom: 2px;
+}
+.hero__reach-links a:hover,
+.telemetry a:hover {
+  background-size: 100% 1px;
+}
+
+/* Keyboard focus. The custom cursor hides the pointer, so focus must be
+   unmistakable for keyboard users. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Telemetry strip: the site reporting on itself */
+.telemetry {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 22px 80px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 44px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.telemetry .cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.telemetry .k {
+  color: var(--text-dim);
+}
+.telemetry .ok {
+  color: var(--accent);
+}
+.telemetry .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-bright);
+}
+.telemetry .dot.err {
+  background: var(--text-dim);
+}
+
+/* Case study run receipt */
+.cs__receipt {
+  margin-top: 72px;
+  padding: 28px 32px;
+  border: 1px dashed var(--border-hover);
+  background: var(--bg2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.cs__receipt .rhead {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px dashed var(--border-hover);
+  text-transform: uppercase;
+  color: var(--text);
+}
+.cs__receipt .row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 24px;
+  padding: 7px 0;
+}
+.cs__receipt .row .k {
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.cs__receipt .rtotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-hover);
+  text-transform: uppercase;
+  color: var(--text);
+}
+.cs__receipt .rtotal .v {
+  color: var(--accent);
+}
+@media (max-width: 768px) {
+  .telemetry {
+    padding: 18px 24px;
+    gap: 10px 28px;
+  }
+  .cs__receipt .row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+/* Reduced motion: keep everything readable, drop the choreography */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal,
+  .proj__list.reveal .proj__item {
+    opacity: 1;
+    transform: none;
   }
 }
