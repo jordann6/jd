@@ -89,6 +89,16 @@ export const projects: Project[] = [
   },
   {
     num: "03",
+    title: "Multi-Region",
+    titleOut: "Failover Manager",
+    desc: "Automated regional disaster recovery built around the fact that failover runs on two clocks: stateless traffic shifts in seconds via DNS while stateful promotion needs orchestration. An identical serverless order API (API Gateway v2 and Lambda in private-subnet-only VPCs with no IGW or NAT) runs in us-east-1 and us-west-2 over an RDS PostgreSQL primary with an encrypted cross-region read replica. A Route 53 health check probes the primary /health endpoint every 10 seconds, and failover routing answers with the standby endpoint the moment it fails. A CloudWatch alarm on the health check metric (which only exists in us-east-1) emits a state change that EventBridge forwards cross-region to the standby default bus, where a failover Lambda verifies the replica is promotable, calls PromoteReadReplica idempotently, and publishes what it did to SNS. Every response component lives in the standby region, so the machinery that answers a regional failure never depends on the failing region. Until promotion completes, the standby serves reads and returns an honest 409 on writes, which makes the promotion itself observable. Credentials live in Secrets Manager with cross-region replication reached through interface endpoints, TLS to PostgreSQL is verified against the RDS CA bundle, and the failover role can promote exactly one ARN. CI gates on Bandit, Checkov, and Trivy, with an OIDC-authenticated plan job and zero static keys. Verified end to end against real AWS: the primary was broken live, DNS answered with the standby region in about 60 seconds, the alarm-to-promotion automation fired in about 100 seconds, and the promoted standby accepted the write it had correctly refused minutes earlier. The whole stack was then destroyed the same night with zero residual billing, about a quarter for the full session.",
+    tags: ["Route 53", "RDS PostgreSQL", "Lambda", "EventBridge", "API Gateway v2", "Secrets Manager", "SNS", "Terraform"],
+    categories: ["AWS", "Platform"],
+    caseStudy: "multi-region-failover",
+    link: "https://github.com/jordann6/multi-region-failover-manager",
+  },
+  {
+    num: "04",
     title: "Azure FinOps",
     titleOut: "Dashboard",
     desc: "Surfaces cloud spend trends, tagging gaps, cost anomalies, and budget forecasts before they hit the billing cycle. C# .NET 8 timer-triggered Azure Functions ingest the Cost Management API into Cosmos DB, running z-score anomaly detection against rolling baselines and 14-day linear regression forecasting per subscription. A second function scans the subscription against required tag policies, surfacing untagged resources with the specific missing tag details so cost attribution stays reliable. React frontend served from Azure Static Web Apps, all infrastructure provisioned in Terraform with system-assigned managed identity and zero stored credentials at the cost visibility layer.",
@@ -97,7 +107,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-finops-dashboard",
   },
   {
-    num: "04",
+    num: "05",
     title: "LLM Gateway",
     titleOut: "& Observability",
     desc: "Cuts LLM API costs by routing requests across OpenAI and Anthropic based on cost, latency, or quality strategy, with DynamoDB caching in front to deduplicate repeated prompts. FastAPI gateway runs on ECS Fargate behind an ALB, instrumented with a CloudWatch dashboard of 9 widgets and 3 alarms covering latency, error rate, and provider failover. An LLM-as-judge evaluation pipeline scores response quality on a nightly cadence, and a Lambda archives raw request and response pairs to S3 for replay and audit. Scale-to-zero scheduling drops the service overnight to keep idle cost near zero. 78 resources across 9 Terraform modules, deployed via GitHub Actions.",
@@ -106,7 +116,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/llm-gateway",
   },
   {
-    num: "05",
+    num: "06",
     title: "Azure Zero Trust",
     titleOut: "Identity Pipeline",
     desc: "Seven-module Terraform pipeline enforcing Zero Trust across authentication, privileged access, workload identity, and threat detection on Azure. The identity layer provisions Entra ID users, groups, app registration, and managed identity with RBAC scoped to data plane resources — Key Vault carries no access policies and Storage Account has no shared keys. Five Conditional Access policies cover MFA enforcement, legacy auth blocking, device compliance, and risk-based sign-in controls. Defender for Cloud enabled at Standard tier across Key Vault, Storage, and ARM. Microsoft Sentinel onboarded with five scheduled analytics rules mapped to MITRE ATT&CK: brute force (T1110), unfamiliar sign-in location (T1078), PIM activation outside business hours, Key Vault access from unknown IP (T1552), and bulk user deletion (T1531). A Logic App playbook handles incident response via HTTP webhook. GitHub Actions authenticates via OIDC federated credential — no secrets stored anywhere in the pipeline.",
@@ -115,7 +125,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/zero-trust-identity-pipeline",
   },
   {
-    num: "06",
+    num: "07",
     title: "Cloud Security",
     titleOut: "Lab",
     desc: "End-to-end attack, detect, and respond case study across AWS and Kubernetes — 62 Terraform resources across 7 modules. The attack layer uses Pacu to execute a full MITRE ATT&CK kill chain: leaked IAM credentials → permission enumeration → privilege escalation from 1,039 to 15,319 permissions via policy attachment → S3 exfiltration of staged PII → lateral movement via STS role assumption. On the detection side, CloudTrail and VPC Flow Logs feed into an OpenSearch SIEM with a kill chain correlation dashboard. GuardDuty findings on IAM threats trigger an EventBridge rule that fires a Lambda to automatically disable compromised access keys. On Kubernetes, Falco runs as a DaemonSet with four custom rules catching 100% of simulated runtime attacks: shell spawning, sensitive file reads, unauthorized binary execution, and container escape via host mount. OPA Gatekeeper enforces three constraint templates blocking privileged containers, host namespace access, and root execution across all non-system namespaces.",
@@ -125,7 +135,7 @@ export const projects: Project[] = [
     caseStudy: "cloud-security-lab",
   },
   {
-    num: "07",
+    num: "08",
     title: "NBA Intel",
     titleOut: "Center",
     desc: "RAG-powered prop analysis platform combining live NBA data with semantic search. FastAPI backend with Azure OpenAI GPT-4o and Qdrant vector store using text-embedding-3-small. Defensive stats, injury feeds, roster injection, and trend windows. Self-hosted on K3s homelab with Cloudflare tunnel.",
@@ -134,7 +144,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/nba-intel-center",
   },
   {
-    num: "08",
+    num: "09",
     title: "NFL Reliability",
     titleOut: "Platform",
     desc: "Treats a public NFL sports API as a production data source and wraps ingestion with SRE-style observability. A Python ingestor service runs on Azure Container Apps, writing raw payloads to Blob Storage and routing schema failures to a quarantine container. The ingestor exposes custom Prometheus metrics — ingestion_runs_total, schema_validity_total, data_freshness_seconds, and ingestion_last_success_timestamp_seconds — scraped by a second container app running Prometheus. Azure Managed Grafana surfaces dashboards built on those SLIs. Managed identity grants the ingestor Storage Blob Data Contributor without credentials. ACR holds the ingestor image, Key Vault holds integration secrets, and Terraform modules provision every resource. Runbooks and PromQL burn-rate examples are documented under ops/.",
@@ -143,7 +153,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/nfl-data-reliability-platform",
   },
   {
-    num: "09",
+    num: "10",
     title: "Uptime",
     titleOut: "Monitor",
     desc: "Active health monitoring for jordandesigns.io running every five minutes via EventBridge. Each check runs three validations in a single Lambda invocation: HTTP status code, response body content match, and SSL certificate expiry. A failed check retries once before firing an SNS alert to avoid noise from transient blips. Results are logged to DynamoDB with 90-day TTL and published as CloudWatch custom metrics — IsHealthy, LatencyMs, and SSLDaysRemaining. Two alarms gate on those metrics: site-down triggers on two consecutive failures, high-latency triggers when average response exceeds three seconds across three periods. A CloudWatch dashboard surfaces all four signals with threshold annotations. SSL alerts fire at 30 days warning and 7 days critical. Optional SMS subscription (conditional on a phone number variable) adds a second alert channel alongside email.",
@@ -152,7 +162,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/website-uptime-monitor",
   },
   {
-    num: "10",
+    num: "11",
     title: "Azure DevSecOps",
     titleOut: "Pipeline",
     desc: "Four-stage security-gated CI/CD pipeline for a containerized Flask app deployed to AKS via blue/green rollout. Bandit SAST and pip-audit CVE scanning run first, then Checkov validates both Terraform and Kubernetes manifests. The Docker image is built for linux/amd64, scanned by Trivy (blocks on unfixed CRITICAL/HIGH), and pushed to ACR only after passing. OWASP ZAP then runs a baseline DAST scan against a live container before the deploy stage applies manifests to AKS via envsubst image substitution. Containers run as non-root with allowPrivilegeEscalation=false, readOnlyRootFilesystem, all capabilities dropped, and seccompProfile: RuntimeDefault. AKS has local admin disabled, AAD RBAC enforced, and OIDC issuer enabled for workload identity. GitHub Actions authenticates to Azure via OIDC — no stored credentials.",
@@ -161,7 +171,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-devsecops-project",
   },
   {
-    num: "11",
+    num: "12",
     title: "Event-Driven",
     titleOut: "AWS Remediation",
     desc: "Fully automated remediation pipeline triggered by a CloudWatch metric alarm — no manual intervention in the hot path. When EC2 CPU utilization exceeds 80% for two consecutive 5-minute periods, CloudWatch publishes a state-change event to EventBridge, which invokes a Python Lambda directly. The Lambda routes on event type: EventBridge alarm events trigger an EC2 reboot; manual invocations with an action field route to either lockdown_sg (revokes all open-world ingress rules from the security group) or enforce_tags (applies required Environment, ManagedBy, and Monitored tags to non-compliant instances). Every execution publishes a structured result to SNS and writes a JSON audit trail to CloudWatch Logs with 14-day retention. IAM policy scopes ec2:RebootInstances to the specific instance ARN and sns:Publish to the specific topic ARN. Terraform provisions all resources including the alarm, EventBridge rule, Lambda permission, and log group. GitHub Actions deploys via OIDC with Bandit SAST and pip-audit gates before apply.",
@@ -170,7 +180,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/event-driven-aws-remediation",
   },
   {
-    num: "12",
+    num: "13",
     title: "Super Bowl",
     titleOut: "Intel Center",
     desc: "Cloud-native scouting report pipeline built for Super Bowl LX. Python extracts and processes NFLverse datasets, with manual override logic to handle API synchronization lags that would otherwise produce stale prop line comparisons. Azure OpenAI GPT-4o analyzes player prop lines against seasonal averages to generate automated performance reports. Infrastructure provisioned in Terraform: Azure OpenAI resource, Key Vault for the API key, and managed identity for keyless access. The service is containerized in Docker for environment parity between local dev and cloud, with images built and pushed to GitHub Container Registry via GitHub Actions.",
@@ -179,7 +189,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/sb-intel-center",
   },
   {
-    num: "13",
+    num: "14",
     title: "Cloud Resume",
     titleOut: "Challenge",
     desc: "This site. Served from S3 through CloudFront with TLS and custom domain via Route 53, now a Next.js static export. Visitor counter powered by API Gateway, Lambda (Python), and DynamoDB. GitHub Actions CI/CD builds the site, syncs to S3, and invalidates cache on push. All infrastructure defined in Terraform with a private bucket locked to CloudFront via Origin Access Control.",
@@ -188,7 +198,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/jd",
   },
   {
-    num: "14",
+    num: "15",
     title: "Azure Automated",
     titleOut: "Backup System",
     desc: "Blob storage backup vault with automated daily verification via Logic App (08:00 UTC). Managed identity authenticates the workflow to Blob Storage over MSI — no connection strings or API keys stored anywhere. Versioning preserves every write as a recoverable point, 7-day soft delete covers accidental removal, and a lifecycle policy automatically tiers blobs Hot → Cool (30d) → Archive (90d) → Delete (365d) to minimize storage cost over time. Optional SendGrid HTTP action sends a daily confirmation email once the blob list succeeds. All 9 resources provisioned in Terraform with an Azure Blob remote backend, deployed and validated end-to-end via GitHub Actions OIDC.",
@@ -197,7 +207,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-backup-system",
   },
   {
-    num: "15",
+    num: "16",
     title: "AWS Automated",
     titleOut: "Backup System",
     desc: "S3 backup vault with automated daily verification via Lambda (08:00 UTC). IAM execution role authenticates the function to S3 — no access keys or credentials stored anywhere. Versioning preserves every write as a recoverable point, noncurrent versions archive to Glacier at 7 days and expire at 90 days, and a lifecycle policy automatically tiers objects Standard → Standard-IA (30d) → Glacier (90d) → Delete (365d) to minimize storage cost over time. Optional SendGrid HTTP call sends a daily confirmation email once the object list succeeds. 15 resources provisioned in Terraform with an S3 remote backend and native state locking, deployed and validated end-to-end via GitHub Actions OIDC.",
@@ -206,7 +216,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/aws-backup-system",
   },
   {
-    num: "16",
+    num: "17",
     title: "Arch Linux",
     titleOut: "Homelab",
     desc: "Repurposed a T2 MacBook into a dedicated infrastructure lab running Arch Linux with K3s. Hosts development workloads, vector databases, and project backends. Full writeup covering the build process, networking, and cluster configuration.",
@@ -215,7 +225,7 @@ export const projects: Project[] = [
     link: "https://substack.com/@jordann6/p-183075828",
   },
   {
-    num: "17",
+    num: "18",
     title: "AI Inventory",
     titleOut: "Tracker",
     desc: "Serverless inventory management REST API with on-demand AI analysis powered by Amazon Bedrock. Lambda routes GET, POST, and DELETE requests against a DynamoDB table. POST /items/{id}/analyze sends item data — name, SKU, category, quantity, and reorder threshold — to Claude 3.5 Haiku via InvokeModel, returning a structured JSON recommendation with stock status (ok / low / critical), a one-sentence reorder suggestion, and a suggested reorder quantity. IAM execution role scoped to exact DynamoDB actions and the specific Bedrock model ARN — no broader permissions granted. API Gateway v2 HTTP API with five explicit routes at payload format 2.0. All infrastructure provisioned in Terraform with S3 remote backend, deployed via GitHub Actions OIDC with no stored credentials.",
@@ -224,7 +234,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/aws-ai-inventory-tracker",
   },
   {
-    num: "18",
+    num: "19",
     title: "Serverless Document",
     titleOut: "Intelligence",
     desc: "Event-driven document extraction pipeline on Azure Functions triggered by Blob Storage uploads. Dropping any file into the raw container fires a Python 3.11 blob trigger, which submits the document to Azure AI Document Intelligence (prebuilt-document model), extracts key-value pairs and raw content, writes a structured JSON result to a processed container, and upserts a metadata row to Table Storage for fast querying — all without touching the raw blob. Two storage accounts isolate the Functions runtime from document storage. System-assigned Managed Identity with six scoped RBAC role assignments handles all service-to-service auth — no connection strings or API keys anywhere in application config. All infrastructure provisioned in Terraform with an Azure Blob remote backend, deployed via GitHub Actions federated credentials.",
@@ -233,7 +243,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-document-intelligence",
   },
   {
-    num: "19",
+    num: "20",
     title: "Customer Inquiry",
     titleOut: "Manager",
     desc: "Serverless customer inquiry intake API with automated dual-notification on every new submission. POST /inquiries stores the inquiry in DynamoDB and synchronously fires two SES emails — an internal alert to the support team and a confirmation to the customer — via a sender-scoped IAM policy condition (ses:FromAddress). GET /inquiries supports a ?status= query parameter backed by a DynamoDB Global Secondary Index on status + created_at, enabling efficient filtered queries without a table scan. PATCH /inquiries/{id}/status moves inquiries through a defined lifecycle: open → in-progress → resolved → closed. API Gateway v2 HTTP API with four explicit routes, Lambda proxy integration at payload format 2.0, and least-privilege IAM execution role scoped to DynamoDB CRUD and the GSI. All infrastructure provisioned in Terraform with S3 remote backend, deployed via GitHub Actions OIDC.",
@@ -242,7 +252,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/aws-customer-inquiry-manager",
   },
   {
-    num: "20",
+    num: "21",
     title: "AWS Developer",
     titleOut: "Platform",
     desc: "Internal Developer Platform on EKS that gives application teams a paved road. ArgoCD app-of-apps GitOps reconciles every platform component from Git. Crossplane with an IRSA-authenticated AWS provider exposes a self-service Bucket API: a developer's one-line claim provisions a real S3 bucket hardened by default with AES256 encryption, versioning, all four public-access-block settings, and an owning-team tag, with no static credentials anywhere. Kyverno enforces an owning-team label as admission policy in flagged namespaces. A Backstage golden-path template scaffolds a new service complete with a Dockerfile, a hardened Helm chart, and an ArgoCD Application so it is GitOps-deployable the moment it exists. EKS, VPC, OIDC, and the scoped IRSA role provisioned in Terraform with an S3 remote state backend. Verified end to end against real AWS, then torn down clean.",
@@ -252,7 +262,7 @@ export const projects: Project[] = [
     caseStudy: "aws-developer-platform",
   },
   {
-    num: "21",
+    num: "22",
     title: "Azure Developer",
     titleOut: "Platform",
     desc: "Internal Developer Platform on AKS, the Azure counterpart to the AWS platform built on a different toolchain to show the paved-road pattern is not cloud or tool specific. Flux reconciles the platform from Git via GitRepository, Kustomization, and HelmRelease. Crossplane with an Azure provider authenticated through Azure Workload Identity exposes a self-service StorageAccount API: a claim provisions a real storage account hardened by default with TLS1_2 minimum, HTTPS-only traffic, public blob access disabled, and infrastructure encryption, with no client secrets. Kyverno enforces owning-team labels as admission policy. AKS with OIDC issuer and workload identity, plus a federated user-assigned managed identity, provisioned in Terraform with an Azure Storage state backend. Verified end to end against real Azure, then torn down clean.",
@@ -262,7 +272,7 @@ export const projects: Project[] = [
     caseStudy: "azure-developer-platform",
   },
   {
-    num: "22",
+    num: "23",
     title: "Azure Landing",
     titleOut: "Zone",
     desc: "Enterprise-grade Azure landing zone built entirely in Terraform. Establishes the governance foundation that workload subscriptions inherit: a four-level management group hierarchy (org root, Platform, Workloads, Sandbox), three custom Azure Policy definitions assigned at the Workloads management group scope (require owner tag, deny public IPs, allowed locations), and a hub-spoke network. Hub VNet carries correctly-named and minimum-sized reserved subnets for Azure Firewall, VPN Gateway, and Bastion alongside an active management subnet with an internet-deny NSG. A reusable Terraform module vends new spokes with a single call: it provisions the spoke resource group, spoke VNet, workload subnet, and both directions of VNet peering. Two spokes (Platform, Sandbox) demonstrated. Verified end to end against real Azure, then torn down clean.",
@@ -271,7 +281,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-landing-zone",
   },
   {
-    num: "23",
+    num: "24",
     title: "AWS Incident",
     titleOut: "Responder",
     desc: "Automated incident response where the runbook is an n8n workflow rather than glue code. A CloudWatch alarm on a target EC2 instance (CPUUtilization at or above 80% for two 5-minute periods) publishes to an SNS topic, which delivers over HTTPS to n8n running on ECS Fargate behind an ALB with an ACM certificate on a Route 53 subdomain. The workflow confirms its own SNS subscription programmatically, asks Claude Haiku for a plain-English incident summary and recommended next step, posts an incident card to Slack, reboots the instance via the EC2 API signed with SigV4, then waits and re-checks the alarm with DescribeAlarms to either mark the incident resolved or escalate. Remediation runs under a least-privilege IAM user scoped to RebootInstances on the single target ARN plus read-only enrichment, and n8n secrets are pulled from SSM SecureString parameters at task start so nothing sensitive lives in Terraform state. The deliberate counterpart to the Lambda-glued event-driven-aws-remediation project: same incident class, a visual and version-controlled runbook instead of code. Built to deploy, demo, and destroy for about a dollar a day.",
@@ -281,7 +291,7 @@ export const projects: Project[] = [
     caseStudy: "aws-incident-responder",
   },
   {
-    num: "24",
+    num: "25",
     title: "Azure Incident",
     titleOut: "Responder",
     desc: "The Azure counterpart to the AWS incident responder, built on a deliberately different toolchain to show cross-cloud range. An Azure Monitor metric alert on a target VM (Percentage CPU at or above 80% over a 5-minute window) fires through an action group webhook, posting the common alert schema to n8n running on Azure Container Apps, which serves a publicly trusted HTTPS endpoint with no load balancer or certificate to manage. The runbook asks Claude Haiku for a plain-English incident summary, posts an incident card to Slack, restarts the VM through the Azure Management API authenticated with an OAuth2 client-credentials service principal scoped to Virtual Machine Contributor on the single target, then waits and re-queries the Percentage CPU metric to mark the incident resolved or escalate. n8n credentials are generated by Terraform and held only in the private azurerm state backend, so nothing sensitive is committed. Same runbook-as-workflow pattern as the AWS build, mapped onto Azure Monitor, Container Apps, and Entra service principals. Built to deploy, demo, and destroy for about a dollar a day.",
@@ -290,7 +300,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-incident-responder",
   },
   {
-    num: "25",
+    num: "26",
     title: "Azure VM",
     titleOut: "Hardening",
     desc: "Immutable golden-image pipeline that bakes a CIS-style hardening baseline into an Ubuntu 22.04 image, then deploys a hardened jump host from it, filling the VM config-management gap in an otherwise serverless and Kubernetes portfolio. An Ansible role applies the baseline across sshd (no root login, no password auth, strong ciphers and key exchange), auditd, fail2ban, sysctl kernel parameters, PAM password policy, and filesystem module blacklisting, with every control toggleable. Molecule tests the role in a container on every push via GitHub Actions (converge, verify, idempotence), so a broken control fails CI before it is ever baked into an image. Packer's azure-arm builder runs the role as a provisioner against a transient build VM and captures a managed image, authenticated through the Azure CLI so no secret ever touches a file. Terraform then deploys a jump host from that image into a Z1-style management subnet behind an internet-deny NSG that allows SSH from a single source, with a use_existing_hub switch to drop the host into a live azure-landing-zone hub instead. Terraform owns every cloud resource and Ansible does in-OS configuration only, keeping the tool boundary clean. Built to deploy, demo, and destroy for under a dollar.",
@@ -299,7 +309,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-vm-hardening",
   },
   {
-    num: "26",
+    num: "27",
     title: "AWS Observability",
     titleOut: "Stack (EKS)",
     desc: "Kubernetes observability platform on EKS, the AWS half of a multi-cloud stack where the same kube-prometheus-stack runs on both clouds so the only real difference is the cluster provisioning. Terraform stands up a VPC with a single NAT gateway to hold cost down and an EKS cluster with a two-node t3.medium managed node group, then Helm installs Prometheus, Grafana, AlertManager, node-exporter, and kube-state-metrics. A sample workload exposes Prometheus metrics through a ServiceMonitor so the dashboards carry real data, and three custom PrometheusRule alerts (sample-app target down, pod crashlooping, node memory pressure) route to AlertManager with a null receiver by default so no external endpoint is required for the demo. The demo script port-forwards Grafana, Prometheus, and AlertManager, then scales the sample app to zero to trip the target-down alert on cue. Verified against the live Prometheus API with both scrape targets reporting up, then torn down clean with zero residual billing. Built as a deploy, demo, destroy with idempotent scripts driven by a single cloud argument.",
@@ -308,7 +318,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/observability-stack",
   },
   {
-    num: "27",
+    num: "28",
     title: "Azure Observability",
     titleOut: "Stack (AKS)",
     desc: "The Azure half of the multi-cloud observability stack, running the identical kube-prometheus-stack on AKS so the same Helm values and alert rules carry over unchanged and the only difference from the AWS build is the cluster layer. Terraform provisions a resource group and an AKS cluster with a two-node Standard_B2s pool and a system-assigned managed identity, so there are no stored credentials anywhere in the build. Helm installs Prometheus, Grafana, AlertManager, node-exporter, and kube-state-metrics, a sample workload is scraped through a ServiceMonitor, and the same three custom PrometheusRule alerts route to AlertManager. Verified against the live Prometheus API with both scrape targets reporting up, then torn down through the shared destroy path that removes the resource group, AKS cluster, and node VMSS together for zero residual billing. Demonstrates true cross-cloud parity from one shared monitoring and alerting configuration.",
@@ -317,7 +327,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/observability-stack",
   },
   {
-    num: "28",
+    num: "29",
     title: "Azure Event-Driven",
     titleOut: "Remediation",
     desc: "Deterministic policy remediation triggered by an Azure Monitor metric alert, the Azure counterpart to the AWS event-driven remediation build. When the target VM's Percentage CPU holds at or above 80% over a 10-minute window, the alert fires an action group that both notifies the operator by email and SMS and invokes a Python function on Flex Consumption. The function routes on the request body: a common alert schema payload restarts the VM, while manual invocations run lockdown_nsg, which deletes inbound NSG rules whose source is Internet, wildcard, or 0.0.0.0/0, or enforce_tags, which applies required environment, managedBy, and monitored tags. It authenticates with a system-assigned managed identity bound to a custom RBAC role scoped to exactly the VM restart, VM write, and NSG security-rule delete actions on the resource group, with no broader access. Unlike the n8n and Claude incident responder, this runbook is pure code with no AI or workflow engine. All resources provisioned in Terraform with an azurerm state backend. Verified end to end against real Azure, with restart, NSG lockdown, and tag enforcement all confirmed.",
@@ -326,7 +336,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-event-driven-remediation",
   },
   {
-    num: "29",
+    num: "30",
     title: "Azure Uptime",
     titleOut: "Monitor",
     desc: "Serverless uptime monitoring for jordandesigns.io, the Azure counterpart to the AWS uptime monitor. A timer-triggered Python function on Flex Consumption runs every five minutes and performs three checks in one invocation: HTTP status, response body content match, and SSL certificate expiry, retrying once before recording a failure to suppress transient blips. Each result is written to Cosmos DB serverless on the SQL API with a 90-day container TTL and logged to Application Insights, where three KQL scheduled-query alerts (site-down on two consecutive failures, high-latency on sustained slow responses, and SSL expiry within seven days) route to an action group delivering email and SMS. The function reaches Cosmos through a managed identity granted the built-in data-plane contributor role, so no keys live anywhere in config. An Application Insights workbook charts health, latency, and SSL days remaining. All infrastructure provisioned in Terraform with an azurerm state backend. Verified end to end against real Azure with live checks reporting healthy.",
@@ -335,21 +345,12 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-website-uptime-monitor",
   },
   {
-    num: "30",
+    num: "31",
     title: "AWS SCP",
     titleOut: "Governance",
     desc: "Multi-account AWS Organization with a five-OU hierarchy and six Service Control Policies enforcing least-privilege guardrails at every level. SCPs are layered so child OUs inherit parent restrictions automatically: deny-leave-org and deny-root-user at the root, region-lockdown (us-east-1 only) at Sandbox and Workloads OUs, require-s3-encryption at Workloads, and deny-cloudtrail-tampering plus deny-public-s3 at Prod. Three member accounts across Sandbox, Dev, and Prod OUs validate that each policy blocks what it should. The validation script assumes the OrganizationAccountAccessRole into each member account and confirms that denied actions return explicit SCP denies while allowed actions succeed, plus verifies the management account is SCP-exempt by design. 22 resources provisioned in Terraform with an S3 remote backend, deployed via GitHub Actions OIDC.",
     tags: ["AWS Organizations", "SCPs", "IAM", "CloudTrail", "S3", "SNS", "Terraform", "GitHub Actions OIDC"],
     categories: ["AWS"],
     link: "https://github.com/jordann6/aws-scp-governance",
-  },
-  {
-    num: "31",
-    title: "Multi-Region",
-    titleOut: "Failover Manager",
-    desc: "Automated regional disaster recovery built around the fact that failover runs on two clocks: stateless traffic shifts in seconds via DNS while stateful promotion needs orchestration. An identical serverless order API (API Gateway v2 and Lambda in private-subnet-only VPCs with no IGW or NAT) runs in us-east-1 and us-west-2 over an RDS PostgreSQL primary with an encrypted cross-region read replica. A Route 53 health check probes the primary /health endpoint every 10 seconds, and failover routing answers with the standby endpoint the moment it fails. A CloudWatch alarm on the health check metric (which only exists in us-east-1) emits a state change that EventBridge forwards cross-region to the standby default bus, where a failover Lambda verifies the replica is promotable, calls PromoteReadReplica idempotently, and publishes what it did to SNS. Every response component lives in the standby region, so the machinery that answers a regional failure never depends on the failing region. Until promotion completes, the standby serves reads and returns an honest 409 on writes, which makes the promotion itself observable. Credentials live in Secrets Manager with cross-region replication reached through interface endpoints, TLS to PostgreSQL is verified against the RDS CA bundle, and the failover role can promote exactly one ARN. CI gates on Bandit, Checkov, and Trivy, with an OIDC-authenticated plan job and zero static keys. Built to deploy, demo, and destroy for about a quarter.",
-    tags: ["Route 53", "RDS PostgreSQL", "Lambda", "EventBridge", "API Gateway v2", "Secrets Manager", "SNS", "Terraform"],
-    categories: ["AWS", "Platform"],
-    link: "https://github.com/jordann6/multi-region-failover-manager",
   },
 ];
