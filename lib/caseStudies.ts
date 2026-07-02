@@ -22,8 +22,69 @@ export interface CaseStudy {
 
 export const caseStudies: CaseStudy[] = [
   {
+    slug: "multi-region-failover",
+    num: "03",
+    title: "Multi-Region",
+    titleOut: "Failover Manager",
+    category: "AWS · Platform · SRE",
+    lede: "Automated regional disaster recovery that treats failover as two problems on two clocks: DNS shifts traffic in about a minute while orchestration promotes the database behind it, demonstrated live against real AWS and torn down the same night.",
+    meta: [
+      { k: "Role", v: "Cloud / SRE" },
+      { k: "Cloud", v: "AWS" },
+      { k: "Regions", v: "us-east-1 + us-west-2" },
+      { k: "Resources", v: "70 (Terraform)" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "Stateless failover is a DNS feature. Stateful failover is not: a cross-region read replica keeps the data close, but something still has to decide the primary is gone and promote the standby to writable. Those two mechanisms run on different clocks, and gating traffic on the slower one extends the outage for no reason.",
+          "The goal was a system where traffic shifts in seconds, the database promotes itself in minutes, and the window in between is honest and observable rather than hidden.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "Approach",
+        bullets: [
+          "An identical serverless order API (API Gateway v2 and Lambda in private-subnet-only VPCs, no IGW or NAT) runs in us-east-1 and us-west-2 over an RDS PostgreSQL primary with an encrypted cross-region read replica.",
+          "A Route 53 health check probes the primary /health endpoint every 10 seconds, and failover routing answers with the standby endpoint the moment it fails, with no automation in the traffic path.",
+          "A CloudWatch alarm on the health check metric emits a state change that EventBridge forwards cross-region to the standby bus, where a failover Lambda verifies the replica is promotable, calls PromoteReadReplica idempotently, and publishes what it did to SNS.",
+          "Until promotion completes, the standby serves reads and returns an honest 409 on writes, which makes the promotion itself observable as a behavior change rather than a log line.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "Architecture",
+        paragraphs: [
+          "Every response component lives in the standby region on purpose: the machinery that answers a regional failure must not depend on the failing region. The health check metric only exists in us-east-1, which is exactly why the alarm's consequences are shipped out of that region immediately.",
+          "Credentials live in Secrets Manager with cross-region replication reached through interface endpoints, TLS to PostgreSQL is verified against the RDS CA bundle, and the failover role can promote exactly one ARN. CI gates on Bandit, Checkov, and Trivy, with an OIDC-authenticated plan job and zero static keys.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "Outcome",
+        paragraphs: [
+          "Demonstrated live: the primary was broken deliberately, DNS answered with the standby region in about 60 seconds, and the alarm-to-promotion automation fired about 100 seconds after the failure began. The promoted standby then accepted the same write it had correctly refused minutes earlier.",
+          "All 70 resources were destroyed the same night, with every leftover check across both regions coming back empty. Total session cost was about a quarter.",
+        ],
+      },
+    ],
+    stack: ["Route 53", "RDS PostgreSQL", "Lambda", "EventBridge", "API Gateway v2", "Secrets Manager", "SNS", "Terraform"],
+    repo: "https://github.com/jordann6/multi-region-failover-manager",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "70 resources across two regions, RDS primary plus encrypted cross-region replica, all Terraform" },
+        { k: "Demo", v: "Primary broken live: DNS flipped in ~60s, alarm-to-promotion automation fired in ~100s" },
+        { k: "Proof", v: "Standby returned 409 on writes as a replica, then 201 once promoted" },
+        { k: "Destroy", v: "Torn down the same night, all leftover checks empty, zero residual billing" },
+      ],
+      total: { k: "Session cost", v: "About $0.25" },
+    },
+  },
+  {
     slug: "aws-developer-platform",
-    num: "20",
+    num: "21",
     title: "AWS Developer",
     titleOut: "Platform",
     category: "AWS · Platform",
@@ -85,7 +146,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "azure-developer-platform",
-    num: "21",
+    num: "22",
     title: "Azure Developer",
     titleOut: "Platform",
     category: "Azure · Platform",
@@ -145,7 +206,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "aws-incident-responder",
-    num: "23",
+    num: "24",
     title: "AWS Incident",
     titleOut: "Responder",
     category: "AWS · Platform · AI",
@@ -266,7 +327,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "cloud-security-lab",
-    num: "06",
+    num: "07",
     title: "Cloud Security",
     titleOut: "Lab",
     category: "AWS · Platform · Security",
