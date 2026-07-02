@@ -16,6 +16,8 @@ export interface CaseStudy {
   blocks: CaseBlock[];
   stack: string[];
   repo: string;
+  /** Terminal-styled run receipt: what was provisioned, proven, and torn down */
+  receipt?: { rows: { k: string; v: string }[]; total: { k: string; v: string } };
 }
 
 export const caseStudies: CaseStudy[] = [
@@ -71,6 +73,15 @@ export const caseStudies: CaseStudy[] = [
     ],
     stack: ["EKS", "ArgoCD", "Crossplane", "Kyverno", "Backstage", "IRSA", "Terraform", "GitOps"],
     repo: "https://github.com/jordann6/aws-developer-platform",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "EKS, VPC, OIDC provider, scoped IRSA role, Terraform with S3 remote state" },
+        { k: "Demo", v: "One-line Crossplane claim returned a hardened, tagged S3 bucket with zero credential handling" },
+        { k: "Policy", v: "Kyverno admission rejected unlabeled workloads at the API server" },
+        { k: "Destroy", v: "Torn down clean after end-to-end verification against real AWS" },
+      ],
+      total: { k: "Lifecycle", v: "Deploy · Demo · Destroy" },
+    },
   },
   {
     slug: "azure-developer-platform",
@@ -122,6 +133,15 @@ export const caseStudies: CaseStudy[] = [
     ],
     stack: ["AKS", "Flux", "Crossplane", "Workload Identity", "Kyverno", "Terraform", "GitOps"],
     repo: "https://github.com/jordann6/azure-developer-platform",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "AKS with OIDC issuer, workload identity, federated managed identity, Terraform with Azure Storage state" },
+        { k: "Demo", v: "StorageAccount claim provisioned hardened storage, TLS 1.2 minimum, no client secrets anywhere" },
+        { k: "Policy", v: "Kyverno enforced owning-team labels as admission policy" },
+        { k: "Destroy", v: "Torn down clean after end-to-end verification against real Azure" },
+      ],
+      total: { k: "Lifecycle", v: "Deploy · Demo · Destroy" },
+    },
   },
   {
     slug: "aws-incident-responder",
@@ -174,6 +194,15 @@ export const caseStudies: CaseStudy[] = [
     ],
     stack: ["ECS Fargate", "n8n", "CloudWatch", "SNS", "Claude Haiku", "ALB", "ACM", "Terraform"],
     repo: "https://github.com/jordann6/aws-incident-responder",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "n8n on ECS Fargate behind an ALB with ACM and Route 53, CloudWatch alarm, SNS, all Terraform" },
+        { k: "Demo", v: "CPU alarm fired, Claude summarized the incident, Slack card posted, EC2 rebooted via SigV4, alarm re-checked to resolution" },
+        { k: "IAM", v: "Remediation scoped to RebootInstances on a single instance ARN" },
+        { k: "Destroy", v: "Torn down clean" },
+      ],
+      total: { k: "Run cost", v: "About a dollar a day" },
+    },
   },
   {
     slug: "cost-intelligence-dashboard",
@@ -225,6 +254,15 @@ export const caseStudies: CaseStudy[] = [
     ],
     stack: ["Lambda", "Cost Explorer", "DynamoDB", "API Gateway", "CloudFront", "React", "EventBridge Scheduler", "Terraform"],
     repo: "https://github.com/jordann6/aws-cost-intelligence-dashboard",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "34 resources in Terraform with S3 remote backend and native state locking" },
+        { k: "Demo", v: "Z-score anomaly detection and a 14-day forecast over 90 days of live Cost Explorer data" },
+        { k: "IAM", v: "Three execution roles, least privilege at each layer" },
+        { k: "Deploy", v: "GitHub Actions OIDC, no static keys" },
+      ],
+      total: { k: "Stack", v: "Serverless end to end" },
+    },
   },
   {
     slug: "cloud-security-lab",
@@ -276,6 +314,15 @@ export const caseStudies: CaseStudy[] = [
     ],
     stack: ["GuardDuty", "OpenSearch", "Falco", "OPA Gatekeeper", "EventBridge", "Lambda", "Pacu", "Terraform"],
     repo: "https://github.com/jordann6/cloud-security-lab",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "62 Terraform resources across 7 modules, AWS plus Kubernetes" },
+        { k: "Attack", v: "Pacu kill chain escalated 1,039 to 15,319 permissions and exfiltrated staged PII" },
+        { k: "Detect", v: "Falco caught 100% of simulated runtime attacks, OpenSearch correlated the kill chain" },
+        { k: "Respond", v: "GuardDuty finding fired EventBridge, Lambda disabled the compromised key" },
+      ],
+      total: { k: "Coverage", v: "Attack · Detect · Respond" },
+    },
   },
   {
     slug: "multi-agent-coding-orchestrator",
@@ -325,6 +372,15 @@ export const caseStudies: CaseStudy[] = [
     ],
     stack: ["Lambda", "API Gateway", "DynamoDB", "Anthropic SDK", "Terraform", "Python", "IAM", "Secrets Manager"],
     repo: "https://github.com/jordann6/multi-agent-coding-orchestrator",
+    receipt: {
+      rows: [
+        { k: "Submit", v: "202 and a job ID returned in under two seconds" },
+        { k: "Run", v: "Coder Lambda executes the agentic tool-use loop asynchronously" },
+        { k: "Store", v: "Results land in DynamoDB with a 24-hour TTL" },
+        { k: "IAM", v: "Orchestrator can invoke only the coder, the coder can invoke nothing" },
+      ],
+      total: { k: "Pattern", v: "Async agentic pipeline" },
+    },
   },
 ];
 
