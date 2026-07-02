@@ -80,6 +80,25 @@ export default async function CaseStudyPage({
         </section>
       ))}
 
+      {cs.receipt && (
+        <div className="cs__receipt">
+          <div className="rhead">
+            <span>↳ Run Receipt</span>
+            <span>/{cs.num}</span>
+          </div>
+          {cs.receipt.rows.map((r) => (
+            <div className="row" key={r.k}>
+              <span className="k">{r.k}</span>
+              <span>{r.v}</span>
+            </div>
+          ))}
+          <div className="rtotal">
+            <span>{cs.receipt.total.k}</span>
+            <span className="v">{cs.receipt.total.v}</span>
+          </div>
+        </div>
+      )}
+
       <div className="cs__stack">
         {cs.stack.map((t) => (
           <span className="tag" key={t}>
