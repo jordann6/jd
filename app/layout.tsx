@@ -18,8 +18,22 @@ export const metadata: Metadata = {
     url: "https://jordandesigns.io",
     siteName: "jordandesigns.io",
     type: "website",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Jordan, Multi-Cloud Engineer",
+      },
+    ],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    title: "Jordan — Multi-Cloud Engineer",
+    description:
+      "Platforms, infrastructure, and automation across AWS and Azure.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
