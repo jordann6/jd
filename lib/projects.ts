@@ -343,4 +343,13 @@ export const projects: Project[] = [
     categories: ["AWS"],
     link: "https://github.com/jordann6/aws-scp-governance",
   },
+  {
+    num: "31",
+    title: "Multi-Region",
+    titleOut: "Failover Manager",
+    desc: "Automated regional disaster recovery built around the fact that failover runs on two clocks: stateless traffic shifts in seconds via DNS while stateful promotion needs orchestration. An identical serverless order API (API Gateway v2 and Lambda in private-subnet-only VPCs with no IGW or NAT) runs in us-east-1 and us-west-2 over an RDS PostgreSQL primary with an encrypted cross-region read replica. A Route 53 health check probes the primary /health endpoint every 10 seconds, and failover routing answers with the standby endpoint the moment it fails. A CloudWatch alarm on the health check metric (which only exists in us-east-1) emits a state change that EventBridge forwards cross-region to the standby default bus, where a failover Lambda verifies the replica is promotable, calls PromoteReadReplica idempotently, and publishes what it did to SNS. Every response component lives in the standby region, so the machinery that answers a regional failure never depends on the failing region. Until promotion completes, the standby serves reads and returns an honest 409 on writes, which makes the promotion itself observable. Credentials live in Secrets Manager with cross-region replication reached through interface endpoints, TLS to PostgreSQL is verified against the RDS CA bundle, and the failover role can promote exactly one ARN. CI gates on Bandit, Checkov, and Trivy, with an OIDC-authenticated plan job and zero static keys. Built to deploy, demo, and destroy for about a quarter.",
+    tags: ["Route 53", "RDS PostgreSQL", "Lambda", "EventBridge", "API Gateway v2", "Secrets Manager", "SNS", "Terraform"],
+    categories: ["AWS", "Platform"],
+    link: "https://github.com/jordann6/multi-region-failover-manager",
+  },
 ];
