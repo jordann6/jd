@@ -353,4 +353,13 @@ export const projects: Project[] = [
     categories: ["AWS"],
     link: "https://github.com/jordann6/aws-scp-governance",
   },
+  {
+    num: "32",
+    title: "AWS Landing Zone",
+    titleOut: "Automator",
+    desc: "Terraform account vending machine that turns a bare AWS Organization into a SOC 2 ready multi-account foundation, built for the gap between one shared account with a root login and a full Control Tower deployment. One apply stands up the OU hierarchy (Security, Workloads/Prod, Workloads/NonProd, Sandbox), four SCP guardrails (root-user deny, leave-org deny, region allowlist, CloudTrail tamper protection), IAM Identity Center groups and permission sets, an organization CloudTrail flowing into an SSE-KMS, versioned, object-locked bucket in a dedicated log-archive account, and per-account AWS Budgets alarms. After that, every new account is one block in a tfvars map: the vending module creates it in the right OU with owner and cost-center tags, assumes into it to apply an IAM baseline (account alias, strict password policy, scoped smoke-test role, default VPC removed in every region), and wires SSO assignments. The apply is two-stage because Terraform provider configurations must resolve at plan time, so cross-account assume-role ARNs come from variables filled by a helper script after the accounts exist. Deployed live against a real Organization: the SCP check returned an explicit service control policy deny for API calls outside the region allowlist, org CloudTrail delivered per-account logs within minutes, SSO group assignments granted Developer on nonprod with nothing on the management account, and vended accounts came up with zero VPCs. CI gates on checkov, tflint, and gitleaks with an OIDC-authenticated plan job and zero static keys; all real tfvars stay gitignored so emails and account IDs never reach the repo. The same workflow reads three ways: SOC 2 foundation for startups, account vending for SaaS platform teams, client onboarding for MSPs.",
+    tags: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "KMS", "S3 Object Lock", "AWS Budgets", "Terraform"],
+    categories: ["AWS", "Platform"],
+    link: "https://github.com/jordann6/landing-zone-automator",
+  },
 ];
