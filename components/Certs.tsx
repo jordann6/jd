@@ -4,7 +4,7 @@ export default function Certs() {
   return (
     <section id="certs" className="stage certs">
       <div className="sec-head reveal">
-        <span className="sec-head__num">/05</span>
+        <span className="sec-head__num">/06</span>
         <h2 className="sec-head__title">Certified</h2>
         <span className="sec-head__meta">
           Credentials
@@ -21,7 +21,7 @@ export default function Certs() {
                 <span className="sub">{c.sub}</span>
               </div>
               <span
-                className={`cert__status${c.status === "Expired" ? " expired" : ""}`}
+                className={`cert__status${c.status === "Expired" ? " expired" : ""}${c.status === "In Progress" ? " progress" : ""}`}
               >
                 <span className="dot" />
                 {c.status}

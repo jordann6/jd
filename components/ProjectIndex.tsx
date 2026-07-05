@@ -21,17 +21,20 @@ function hrefFor(f: Filter): string {
 }
 
 /**
- * Shared project index used in two modes:
- * - interactive (homepage): chips toggle a client-side filter.
+ * Shared project index used in three modes:
+ * - featured (homepage): curated Selected Work tier, no filter chips.
+ * - interactive: chips toggle a client-side filter.
  * - linked (route pages): chips are real links to /work/category/<cat>, and the
  *   visible filter is fixed by the page's `initial` prop so the page is shareable.
  */
 export default function ProjectIndex({
   initial = "All",
   linked = false,
+  featuredOnly = false,
 }: {
   initial?: Filter;
   linked?: boolean;
+  featuredOnly?: boolean;
 }) {
   const [filter, setFilter] = useState<Filter>(initial);
   const [modal, setModal] = useState<Project | null>(null);
@@ -49,15 +52,17 @@ export default function ProjectIndex({
   }, []);
 
   const visible = useMemo(() => {
+    if (featuredOnly) return projects.filter((p) => p.featured);
     if (active === "All") return projects;
     if (active === CASE_STUDY_FILTER) return projects.filter((p) => p.caseStudy);
     return projects.filter((p) => p.categories.includes(active as Category));
-  }, [active]);
+  }, [active, featuredOnly]);
 
   const filters = ["All", ...CATEGORIES, CASE_STUDY_FILTER] as Filter[];
 
   return (
     <>
+      {!featuredOnly && (
       <div className="proj__filters reveal">
         {filters.map((f) =>
           linked ? (
@@ -79,6 +84,7 @@ export default function ProjectIndex({
           ),
         )}
       </div>
+      )}
 
       <div className="proj__list reveal">
         {visible.map((p) =>
