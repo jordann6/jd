@@ -4,7 +4,7 @@ export default function Experience() {
   return (
     <section id="experience" className="stage exp">
       <div className="sec-head reveal">
-        <span className="sec-head__num">/02</span>
+        <span className="sec-head__num">/03</span>
         <h2 className="sec-head__title">Work</h2>
         <span className="sec-head__meta">
           Selected positions
