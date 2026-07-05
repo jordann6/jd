@@ -585,16 +585,8 @@ section {
   gap: 80px;
   padding-bottom: 120px;
 }
-.about__lead {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 28px;
-  line-height: 1.2;
-  letter-spacing: -0.005em;
-  color: var(--white);
-}
-.about__lead .dim {
-  color: var(--text-dim);
+.about__body {
+  grid-column: 2;
 }
 .about__body p {
   font-family: var(--font-body);
@@ -1705,8 +1697,8 @@ section {
     gap: 32px;
     padding-bottom: 64px;
   }
-  .about__lead {
-    font-size: 22px;
+  .about__body {
+    grid-column: auto;
   }
   .about__body .stats {
     grid-template-columns: repeat(2, 1fr);
