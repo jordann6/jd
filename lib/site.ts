@@ -51,12 +51,74 @@ export interface Cert {
   sub: string;
   name: string;
   provider: string;
-  status: "Active" | "Expired";
+  status: "Active" | "Expired" | "In Progress";
 }
 
 export const certs: Cert[] = [
   { sigil: "AWS", sub: "SAA—C03", name: "Solutions Architect Associate", provider: "Amazon Web Services", status: "Active" },
+  { sigil: "AWS", sub: "SCS—C02", name: "Security Specialty", provider: "Amazon Web Services", status: "In Progress" },
   { sigil: "AZ", sub: "—104", name: "Azure Administrator Associate", provider: "Microsoft Azure", status: "Expired" },
+];
+
+export interface CapabilityProof {
+  label: string;
+  href: string;
+  /** internal case-study routes render with next/link */
+  internal?: boolean;
+}
+
+export interface Capability {
+  num: string;
+  title: string;
+  blurb: string;
+  proofs: CapabilityProof[];
+}
+
+export const capabilities: Capability[] = [
+  {
+    num: "A",
+    title: "Cloud Foundations & Governance",
+    blurb:
+      "Multi-account and multi-subscription foundations built in Terraform: OU and management group hierarchies, SCP and Azure Policy guardrails, hub-spoke networking, account vending, and centralized audit logging.",
+    proofs: [
+      { label: "AWS Landing Zone Automator", href: "https://github.com/jordann6/landing-zone-automator" },
+      { label: "Azure Landing Zone", href: "https://github.com/jordann6/azure-landing-zone" },
+      { label: "AWS SCP Governance", href: "https://github.com/jordann6/aws-scp-governance" },
+    ],
+  },
+  {
+    num: "B",
+    title: "FinOps & Cost Engineering",
+    blurb:
+      "Cost visibility built as software on both clouds: anomaly detection against rolling baselines, spend forecasting, tagging compliance for attribution, and scale-to-zero patterns that keep idle cost near nothing.",
+    proofs: [
+      { label: "Cost Intelligence Dashboard", href: "/work/cost-intelligence-dashboard/", internal: true },
+      { label: "Azure FinOps Dashboard", href: "https://github.com/jordann6/azure-finops-dashboard" },
+      { label: "LLM Gateway Cost Routing", href: "https://github.com/jordann6/llm-gateway" },
+    ],
+  },
+  {
+    num: "C",
+    title: "Resilience & Incident Response",
+    blurb:
+      "Systems that answer failure without a human in the hot path: cross-region failover with automated database promotion, alarm-driven remediation, and AI-assisted incident runbooks, all verified against live cloud breakage.",
+    proofs: [
+      { label: "Multi-Region Failover Manager", href: "/work/multi-region-failover/", internal: true },
+      { label: "AWS Incident Responder", href: "/work/aws-incident-responder/", internal: true },
+      { label: "Azure Event-Driven Remediation", href: "https://github.com/jordann6/azure-event-driven-remediation" },
+    ],
+  },
+  {
+    num: "D",
+    title: "Platform & DevSecOps",
+    blurb:
+      "Paved roads on Kubernetes across both clouds: GitOps reconciliation, self-service infrastructure APIs, admission policy, and CI/CD pipelines gated on SAST, container scanning, and DAST before anything deploys.",
+    proofs: [
+      { label: "AWS Developer Platform", href: "/work/aws-developer-platform/", internal: true },
+      { label: "Cloud Security Lab", href: "/work/cloud-security-lab/", internal: true },
+      { label: "Azure DevSecOps Pipeline", href: "https://github.com/jordann6/azure-devsecops-project" },
+    ],
+  },
 ];
 
 export const marqueeItems = [

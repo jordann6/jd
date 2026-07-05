@@ -10,6 +10,8 @@ export interface Project {
   link: string;
   /** present when this project has a dedicated deep case-study page */
   caseStudy?: string;
+  /** curated into the homepage Selected Work tier */
+  featured?: boolean;
 }
 
 export const CATEGORIES: Category[] = ["AWS", "Azure", "AI", "Platform"];
@@ -66,6 +68,10 @@ export function caseStudyProjects(): Project[] {
   return projects.filter((p) => p.caseStudy);
 }
 
+export function featuredProjects(): Project[] {
+  return projects.filter((p) => p.featured);
+}
+
 export const projects: Project[] = [
   {
     num: "01",
@@ -75,6 +81,7 @@ export const projects: Project[] = [
     tags: ["Lambda", "Cost Explorer", "DynamoDB", "API Gateway", "CloudFront", "React", "EventBridge Scheduler", "Terraform"],
     categories: ["AWS"],
     link: "https://github.com/jordann6/aws-cost-intelligence-dashboard",
+    featured: true,
     caseStudy: "cost-intelligence-dashboard",
   },
   {
@@ -85,6 +92,7 @@ export const projects: Project[] = [
     tags: ["Lambda", "API Gateway", "DynamoDB", "Anthropic SDK", "Terraform", "Python", "IAM", "Secrets Manager"],
     categories: ["AWS", "AI"],
     link: "https://github.com/jordann6/multi-agent-coding-orchestrator",
+    featured: true,
     caseStudy: "multi-agent-coding-orchestrator",
   },
   {
@@ -96,6 +104,7 @@ export const projects: Project[] = [
     categories: ["AWS", "Platform"],
     caseStudy: "multi-region-failover",
     link: "https://github.com/jordann6/multi-region-failover-manager",
+    featured: true,
   },
   {
     num: "04",
@@ -105,6 +114,7 @@ export const projects: Project[] = [
     tags: ["Azure Functions", "Cosmos DB", "React", "C# .NET 8", "Static Web Apps", "Terraform"],
     categories: ["Azure"],
     link: "https://github.com/jordann6/azure-finops-dashboard",
+    featured: true,
   },
   {
     num: "05",
@@ -132,6 +142,7 @@ export const projects: Project[] = [
     tags: ["GuardDuty", "OpenSearch", "Falco", "OPA Gatekeeper", "EventBridge", "Lambda", "Pacu", "Terraform"],
     categories: ["AWS", "Platform"],
     link: "https://github.com/jordann6/cloud-security-lab",
+    featured: true,
     caseStudy: "cloud-security-lab",
   },
   {
@@ -259,6 +270,7 @@ export const projects: Project[] = [
     tags: ["EKS", "ArgoCD", "Crossplane", "Kyverno", "Backstage", "IRSA", "Terraform", "GitOps"],
     categories: ["AWS", "Platform"],
     link: "https://github.com/jordann6/aws-developer-platform",
+    featured: true,
     caseStudy: "aws-developer-platform",
   },
   {
@@ -279,6 +291,7 @@ export const projects: Project[] = [
     tags: ["Management Groups", "Azure Policy", "Hub-Spoke", "VNet Peering", "Terraform", "Governance"],
     categories: ["Azure", "Platform"],
     link: "https://github.com/jordann6/azure-landing-zone",
+    featured: true,
   },
   {
     num: "24",
@@ -361,5 +374,6 @@ export const projects: Project[] = [
     tags: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "KMS", "S3 Object Lock", "AWS Budgets", "Terraform"],
     categories: ["AWS", "Platform"],
     link: "https://github.com/jordann6/landing-zone-automator",
+    featured: true,
   },
 ];
