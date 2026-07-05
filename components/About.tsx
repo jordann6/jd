@@ -11,13 +11,6 @@ export default function About() {
         </span>
       </div>
       <div className="about reveal">
-        <p className="about__lead">
-          From help desk to <strong>Multi-Cloud Engineer</strong> through
-          deliberate practice —{" "}
-          <span className="dim">
-            treating learning as a continuous discipline, not a phase.
-          </span>
-        </p>
         <div className="about__body">
           <p>
             After leaving law school, I redirected toward software engineering
