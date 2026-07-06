@@ -350,8 +350,8 @@ export const caseStudies: CaseStudy[] = [
         num: "/02",
         heading: "Attack",
         bullets: [
-          "Pacu executes a full MITRE ATT&CK kill chain: leaked IAM credentials, permission enumeration, privilege escalation from 1,039 to 15,319 permissions via policy attachment.",
-          "Then S3 exfiltration of staged PII and lateral movement via STS role assumption.",
+          "The full MITRE ATT&CK kill chain is scripted under attack/ so it runs identically every time and always under the leaked credential rather than an admin identity: initial access, permission enumeration, then privilege escalation from 1,039 to 15,319 permissions via policy attachment.",
+          "Then S3 exfiltration of staged PII and lateral movement via STS role assumption, with Pacu and ScoutSuite available for deeper manual exploration.",
         ],
       },
       {
@@ -360,20 +360,29 @@ export const caseStudies: CaseStudy[] = [
         bullets: [
           "CloudTrail and VPC Flow Logs feed an OpenSearch SIEM with a kill-chain correlation dashboard.",
           "GuardDuty findings on IAM threats trigger an EventBridge rule that fires a Lambda to automatically disable compromised access keys.",
-          "On Kubernetes, Falco runs as a DaemonSet with four custom rules catching 100% of simulated runtime attacks: shell spawning, sensitive file reads, unauthorized binary execution, and container escape via host mount.",
-          "OPA Gatekeeper enforces three constraint templates blocking privileged containers, host namespace access, and root execution across all non-system namespaces.",
+          "On Kubernetes, Falco runs as a DaemonSet catching runtime attacks: shell spawning, sensitive file reads, unauthorized binary execution, and container escape via host mount.",
+          "OPA Gatekeeper blocks privileged containers, host namespace access, and root execution across all non-system namespaces.",
         ],
       },
       {
         num: "/04",
+        heading: "Detection as Code",
+        bullets: [
+          "The Gatekeeper admission policies are unit-tested with gator against known-good and known-bad pods, so a broken policy fails CI before it ever reaches a cluster.",
+          "CI gates selectively against a codebase that is vulnerable on purpose: the defensive modules are held to a Checkov baseline that blocks new misconfigurations, the intentionally-vulnerable surface is scanned informationally, and secret scanning blocks everywhere.",
+          "The exercised techniques are captured as an importable MITRE ATT&CK Navigator layer.",
+        ],
+      },
+      {
+        num: "/05",
         heading: "Outcome",
         paragraphs: [
-          "A closed loop from exploitation to automated containment, with every control demonstrated against a live attack rather than described in the abstract.",
+          "A closed loop from exploitation to automated containment, with every control demonstrated against a live, reproducible attack rather than described in the abstract.",
           "62 Terraform resources across 7 modules, deployable and destroyable on demand.",
         ],
       },
     ],
-    stack: ["GuardDuty", "OpenSearch", "Falco", "OPA Gatekeeper", "EventBridge", "Lambda", "Pacu", "Terraform"],
+    stack: ["GuardDuty", "OpenSearch", "Falco", "OPA Gatekeeper", "gator", "EventBridge", "Lambda", "Pacu", "Checkov", "Terraform"],
     repo: "https://github.com/jordann6/cloud-security-lab",
     receipt: {
       rows: [
