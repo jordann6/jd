@@ -452,6 +452,77 @@ export const caseStudies: CaseStudy[] = [
       total: { k: "Pattern", v: "Async agentic pipeline" },
     },
   },
+  {
+    slug: "azure-aks-runtime-security",
+    num: "33",
+    title: "Azure AKS",
+    titleOut: "Runtime Security",
+    category: "Azure · Platform · Security",
+    lede: "Defense in depth for a running AKS cluster: admission control, runtime detection, and cloud-native container security layered so an attack that evades one is caught by the next, proven end to end against real Azure and torn down the same session.",
+    meta: [
+      { k: "Role", v: "Cloud Security" },
+      { k: "Cloud", v: "Azure + AKS" },
+      { k: "Layers", v: "Admission · Runtime · Cloud" },
+      { k: "Framework", v: "MITRE ATT&CK" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "Kubernetes security is usually pitched as a single control: an admission policy, or a runtime agent, or a cloud scanner. Each one has a gap. Admission control stops a bad pod from being created but sees nothing once a workload is running. A runtime agent watches behavior but cannot prevent the deploy. A cloud scanner knows the control plane and the image supply chain but not the syscalls on the node.",
+          "The goal was to run all three on one cluster and show, against live attacks, that the layers overlap: what one misses, the next catches.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "Approach",
+        bullets: [
+          "Admission (Kyverno): four Enforce-mode ClusterPolicies reject unsafe pods before they run, blocking privileged containers, host namespaces, hostPath volumes, and containers that do not set runAsNonRoot.",
+          "Runtime (Falco): a modern-eBPF DaemonSet with five custom rules, each tagged with a MITRE ATT&CK technique, covering shell spawning, sensitive file reads, container escape via mount, dropped-binary execution, and Azure IMDS credential theft.",
+          "Cloud (Defender for Containers): a subscription-level plan wired to the same Log Analytics workspace as AKS diagnostics, adding agentless image CVE scanning and control-plane threat alerts.",
+          "Kyverno was chosen over OPA Gatekeeper, used in the AWS cloud-security-lab, specifically to demonstrate range across both dominant Kubernetes policy engines.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "Architecture",
+        paragraphs: [
+          "One Terraform stack provisions the resource group, a Log Analytics workspace, and an AKS cluster with the OIDC issuer and workload identity enabled, the Azure Monitor and Defender add-ons attached, and a system-assigned managed identity so no credentials are stored anywhere.",
+          "Every Kyverno policy is unit-tested offline with the Kyverno CLI against known-good and known-bad pods, and that test gates CI before any policy is enforced on a cluster. The exercised techniques are also captured as an importable MITRE ATT&CK Navigator layer.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "Proving It Live",
+        bullets: [
+          "A scripted attack driver first applies the vulnerable pod to a policed namespace, where Kyverno denies it with all four policies firing. That is the admission proof.",
+          "The same pod then runs in a deliberately exempt break-glass namespace, and the driver executes each attack technique in turn while Falco is tailed.",
+          "Against the live cluster Falco caught all five techniques, including the CRITICAL container escape via host mount and the Azure IMDS credential-access rule, confirming the runtime layer catches what the exemption let through.",
+          "The deploy surfaced and fixed four real defects (Kubernetes versions aged into LTS-only, a missing namespace exemption, an admission check defeated by shell pipefail, and attack commands that did not match their detection rules), so the repository is reproducible rather than merely plausible.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "Outcome",
+        paragraphs: [
+          "A working defense-in-depth model where prevention and detection are demonstrated against the same attack rather than described in the abstract, on a cluster that was stood up, proven, and destroyed clean with zero residual billing.",
+          "The Azure counterpart to the AWS cloud-security-lab, built on a different policy engine and detection stack to show the pattern is not tool specific.",
+        ],
+      },
+    ],
+    stack: ["AKS", "Kyverno", "Falco", "Defender for Containers", "Log Analytics", "Workload Identity", "Terraform", "MITRE ATT&CK"],
+    repo: "https://github.com/jordann6/azure-aks-runtime-security",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "AKS cluster, Log Analytics, and Defender for Containers via 5 Terraform resources" },
+        { k: "Prevent", v: "Kyverno blocked the privileged/hostPath/hostPID pod with all 4 policies firing" },
+        { k: "Detect", v: "Falco caught all 5 runtime techniques, including CRITICAL container escape" },
+        { k: "Destroy", v: "Torn down clean, Defender plan reverted to Free, zero residual billing" },
+      ],
+      total: { k: "Model", v: "Prevent · Detect · Verify" },
+    },
+  },
 ];
 
 export function getCaseStudy(slug: string): CaseStudy | undefined {
