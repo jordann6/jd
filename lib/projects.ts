@@ -385,5 +385,6 @@ export const projects: Project[] = [
     categories: ["Azure", "Platform"],
     link: "https://github.com/jordann6/azure-aks-runtime-security",
     featured: true,
+    caseStudy: "azure-aks-runtime-security",
   },
 ];
