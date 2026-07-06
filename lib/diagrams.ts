@@ -138,6 +138,21 @@ export const diagrams: Record<string, Diagram> = {
       { nodes: [{ label: "Status λ", sub: "poll job" }] },
     ],
   },
+  "azure-aks-runtime-security": {
+    caption: "Defense in depth on AKS — Kyverno blocks unsafe pods at admission, Falco detects what an exempt workload does at runtime, Defender watches the cloud plane",
+    cols: [
+      { nodes: [{ label: "Pod Deploy", sub: "create request" }] },
+      { nodes: [{ label: "Kyverno", sub: "admission · deny unsafe", accent: true }] },
+      { nodes: [{ label: "AKS Pod", sub: "runs in exempt ns" }] },
+      { nodes: [{ label: "Falco", sub: "eBPF · 5 ATT&CK rules", accent: true }] },
+      {
+        nodes: [
+          { label: "Defender", sub: "cloud threat alerts" },
+          { label: "Log Analytics", sub: "correlation" },
+        ],
+      },
+    ],
+  },
 };
 
 export function getDiagram(slug: string): Diagram | undefined {
