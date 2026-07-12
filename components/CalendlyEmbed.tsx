@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const CALENDLY_URL = "https://calendly.com/jordandn6";
+const CALENDLY_URL = "https://calendly.com/jordandn6/30min";
 const SCRIPT_SRC = "https://assets.calendly.com/assets/external/widget.js";
 
 declare global {
