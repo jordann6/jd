@@ -119,6 +119,17 @@ export const capabilities: Capability[] = [
       { label: "Azure DevSecOps Pipeline", href: "https://github.com/jordann6/azure-devsecops-project" },
     ],
   },
+  {
+    num: "E",
+    title: "Data Platform Engineering",
+    blurb:
+      "The storage, catalog, transformation, and governance layers data teams build on: serverless lakehouses and medallion architecture across both clouds, dbt analytics engineering with data-quality test gates, and columnar Parquet that cuts query scan cost, all in Terraform with keyless, least-privilege access.",
+    proofs: [
+      { label: "AWS Serverless Lakehouse", href: "https://github.com/jordann6/aws-serverless-lakehouse" },
+      { label: "dbt Analytics Engineering", href: "https://github.com/jordann6/aws-lakehouse-dbt" },
+      { label: "Azure Medallion Lakehouse", href: "https://github.com/jordann6/azure-medallion-lakehouse" },
+    ],
+  },
 ];
 
 export const marqueeItems = [
