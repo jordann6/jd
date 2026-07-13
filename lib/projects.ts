@@ -1,4 +1,4 @@
-export type Category = "AWS" | "Azure" | "AI" | "Platform";
+export type Category = "AWS" | "Azure" | "AI" | "Platform" | "Data";
 
 export interface Project {
   num: string;
@@ -14,7 +14,7 @@ export interface Project {
   featured?: boolean;
 }
 
-export const CATEGORIES: Category[] = ["AWS", "Azure", "AI", "Platform"];
+export const CATEGORIES: Category[] = ["AWS", "Azure", "AI", "Platform", "Data"];
 
 export const categoryMeta: Record<
   Category,
@@ -43,6 +43,12 @@ export const categoryMeta: Record<
     title: "Platform",
     blurb:
       "Platform engineering: Kubernetes, GitOps, internal developer platforms, and SRE-style observability across both clouds.",
+  },
+  Data: {
+    slug: "data",
+    title: "Data",
+    blurb:
+      "Data-platform engineering across both clouds: serverless lakehouses, medallion architecture, dbt analytics engineering, and catalog-driven query, all in Terraform with columnar Parquet and least-privilege, keyless access.",
   },
 };
 
@@ -413,5 +419,34 @@ export const projects: Project[] = [
     tags: ["C# .NET 8", "ECS Fargate", "CodeDeploy", "RDS PostgreSQL", "EF Core", "Secrets Manager", "OpenTelemetry", "Terraform"],
     categories: ["AWS", "Platform"],
     link: "https://github.com/jordann6/order-management-api",
+  },
+  {
+    num: "37",
+    title: "Serverless",
+    titleOut: "Lakehouse",
+    desc: "A serverless data lakehouse on one S3 bucket split into raw, curated, and query-results zones by prefix. Raw CSV lands in the raw zone; a Glue crawler infers its schema and registers it in the Data Catalog with no hand-written DDL, on the principle of crawling what you do not control. Athena then reads that raw table and runs a CTAS that transforms it into Snappy-compressed, columnar Parquet in the curated zone, whose schema is a deliberate contract the transform declares. The economic payoff is measured, not asserted: the validator runs the same count and sum query against both zones and confirms the curated Parquet scans 156 bytes versus 2.09 MB for the raw CSV, the entire argument for a curated zone made concrete. The Glue crawler role takes the managed Glue service policy for catalog access but its S3 reach is a custom inline policy scoped to this one bucket, not the broad managed S3 access wizards attach by default; the Athena workgroup enforces its own encrypted result location so ad-hoc queries cannot redirect output. A lifecycle rule expires query scratch after seven days. Twelve resources in Terraform, built to deploy, demo, and destroy for well under a quarter, with force-destroy emptying the bucket on teardown so nothing lingers.",
+    tags: ["S3", "Glue Data Catalog", "Athena CTAS", "Parquet", "IAM", "Terraform"],
+    categories: ["AWS", "Data"],
+    link: "https://github.com/jordann6/aws-serverless-lakehouse",
+    featured: true,
+  },
+  {
+    num: "38",
+    title: "dbt Analytics",
+    titleOut: "Engineering",
+    desc: "The analytics-engineering layer on top of the lakehouse, where the transformations are code and one command reconciles the warehouse to them. A dbt project on the dbt-athena adapter seeds raw orders, builds a typed and cleaned silver staging view (order_date cast to a real date, non-positive quantity and price dropped, a computed line_total the marts can trust), and materializes two gold marts as Snappy Parquet: revenue by category and country, and a daily revenue trend one row per day. Data quality is enforced as twelve dbt tests that gate every run: unique and not_null on keys, accepted_values on category and country, and a singular test asserting that total revenue in the gold mart reconciles to total line_total in silver to the cent, so a transform that silently drops or double-counts rows fails the build. Terraform provisions the S3 lake, the Glue schema dbt materializes into, and an Athena workgroup; the whole GitOps loop runs as dbt seed, run, and test, and CI compiles the model DAG and lints on every push. An independent validator re-checks the marts straight against Athena, confirming the Parquet output, the row survival, and the silver-to-gold revenue reconciliation without going through dbt.",
+    tags: ["dbt", "Athena", "Glue", "S3", "Parquet", "Data Tests", "GitOps", "Terraform"],
+    categories: ["AWS", "Data"],
+    link: "https://github.com/jordann6/aws-lakehouse-dbt",
+    featured: true,
+  },
+  {
+    num: "39",
+    title: "Medallion",
+    titleOut: "Lakehouse (Azure)",
+    desc: "The Azure analog of the Athena lakehouse, using the same bronze, silver, and gold medallion pattern with no cluster and no dedicated pool. Raw CSV lands in a bronze container on ADLS Gen2 with the hierarchical namespace enabled, which is what gives Blob storage real directory semantics. Synapse serverless SQL reads it with OPENROWSET, types and cleans it into a silver Parquet table with CETAS, then aggregates silver into a gold Parquet table with a second CETAS; the only compute is the serverless engine, free at rest and billed per terabyte scanned. Access is by identity, not keys: serverless reaches the lake as the workspace managed identity through a database-scoped credential declared WITH IDENTITY = 'Managed Identity', so no storage key or SAS token is ever created, stored, or committed, and Terraform grants that identity Storage Blob Data Contributor. A pure-Python TDS runner drives the SQL with no ODBC or sqlcmd dependency. The build documents two real Azure lessons: some subscriptions are soft-blocked from provisioning new SQL servers in certain regions, and a subscription Owner still gets 403 on the blob data plane until granted a data-plane role. A four-check validator confirms Parquet output, row survival, and silver-to-gold revenue reconciliation.",
+    tags: ["ADLS Gen2", "Synapse Serverless", "CETAS", "Managed Identity", "Parquet", "Terraform"],
+    categories: ["Azure", "Data"],
+    link: "https://github.com/jordann6/azure-medallion-lakehouse",
   },
 ];
