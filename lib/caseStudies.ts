@@ -523,6 +523,88 @@ export const caseStudies: CaseStudy[] = [
       total: { k: "Model", v: "Prevent · Detect · Verify" },
     },
   },
+  {
+    slug: "gpu-index-api",
+    num: "40",
+    title: "GPU Index",
+    titleOut: "API",
+    category: "AWS · Backend · Performance",
+    lede: "An async FastAPI service where the query plan is the product: two million price observations, a hot path cut 85 percent by making an index match the sort it feeds, and every claim backed by an EXPLAIN plan rather than an assertion.",
+    meta: [
+      { k: "Role", v: "Backend / Platform" },
+      { k: "Cloud", v: "AWS" },
+      { k: "Dataset", v: "2M rows, 385 MB" },
+      { k: "Coverage", v: "41 tests, 95%" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "GPU capacity is priced differently by every provider, in every region, and changes hourly. Answering the only question that matters, which is where a given accelerator is cheapest right now and how that compares to its recent trend, means reading the latest observation per provider and region out of a table where most rows are history.",
+          "That is a query-planning problem, not an endpoint problem. At a few thousand rows every plan looks fine and proves nothing, so the dataset was built to two million observations across twenty-six accelerators, ten providers, and twenty regions specifically so the indexing decisions would have consequences worth measuring.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "Approach",
+        bullets: [
+          "FastAPI with Pydantic v2 and SQLAlchemy 2.0 async over asyncpg, with the session, cache client, and authenticated principal all provided as dependencies so tests can swap them through dependency_overrides.",
+          "The hot path uses DISTINCT ON rather than a ROW_NUMBER window function: the window version sorts the full filtered set before discarding rows, while DISTINCT ON consumes index order and stops at the first row per group.",
+          "Redis serves both a read-through cache and a per-key token bucket, and both fail open. A Redis outage degrades to a direct database read rather than taking the API down, because availability is worth more than hit ratio or perfect throttling.",
+          "Ingestion fans out across provider feeds under a bounded semaphore with return_exceptions, so one feed returning garbage cannot sink the run and a wide provider list cannot exhaust the connection pool.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "The Tuning",
+        paragraphs: [
+          "The baseline hot query ran 166.6ms and read 43,215 heap blocks. The first attempt at an index barely moved it, 4 percent, and the plan explained why: the index led with region while the DISTINCT ON ordered by provider_id, so Postgres sorted 54,000 rows to disk anyway, and neither branch of the plan carried its selected columns so both fell back to heap fetches.",
+          "Fixing both took the query to 23.8ms, an 85.5 percent cut, with heap blocks down to 1,198 and Heap Fetches at zero on both branches. Matching the index column order to the sort it feeds removed the sort entirely; carrying the selected columns in INCLUDE made the scans index-only.",
+          "The most useful finding was a negative one. A partial index on availability measured worse than a covering index, because the API passes availability as a bind parameter and the planner cannot prove a partial predicate holds for a value it does not yet know. The index-ranking endpoint does use a partial index, since there the filter is a literal. Same technique, opposite verdict, decided by measurement.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "Measuring Honestly",
+        bullets: [
+          "Planner cost settings are applied to both the before and after runs, so the reported delta isolates the indexes rather than mixing in the cost-model change. Left at the default random_page_cost of 4.0, Postgres assumes spinning-disk seeks and rejects the index-only scan even once the index exists.",
+          "Keyset pagination replaces OFFSET, measured at depth fifty thousand: 3.4ms versus 0.7ms. OFFSET walks and discards every preceding row no matter what indexes exist, so its cost grows with depth by construction.",
+          "The first load test reported a healthy-looking p95 computed over 13,461 rate-limited errors. The harness now fails its own run above a one percent error rate, because a flattering percentile measured on rejected requests is worse than no number at all.",
+          "Corrected, the service sustains 1,114 requests per second at a p50 of 6.8ms and a p95 of 8.3ms with zero errors and a 99.7 percent cache hit ratio. At concurrency 20 against two workers the p95 rises to 126ms, which is queue time, not query time, and is reported alongside rather than omitted.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "What Deploying Caught",
+        bullets: [
+          "RDS no longer offers PostgreSQL 16.4, so the first apply failed outright and the version was pinned forward.",
+          "The seed script crashed in the container with ModuleNotFoundError. Python puts the script's directory on sys.path, not the working directory, and the API never hit it because uvicorn adds cwd. Only a real deployment surfaces that class of bug.",
+          "The tuning indexes lived in the tuning script rather than the schema, so the cloud hot path sat at 170ms until they were applied out of band. They now live in an Alembic migration with the DDL defined once and imported by both the migration and the tuning script, so a measured index can never be missing from a deployment.",
+          "Coverage read 77 percent until the report was corrected: SQLAlchemy runs async code inside greenlets that coverage does not trace by default, so every line after an await on the session appeared unhit.",
+        ],
+      },
+      {
+        num: "/06",
+        heading: "Outcome",
+        paragraphs: [
+          "A service whose performance claims are reproducible rather than asserted: one command regenerates the tuning document with full EXPLAIN plans, and the numbers in the README are the numbers that command produces.",
+          "Deployed to ECS Fargate behind an ALB with RDS and ElastiCache, verified live with ten smoke tests including that an unauthenticated request is refused, then destroyed clean. Deliberately no NAT Gateway, which would have been the largest line item and the resource most likely to survive a partial teardown.",
+        ],
+      },
+    ],
+    stack: ["FastAPI", "Pydantic v2", "SQLAlchemy async", "asyncpg", "PostgreSQL", "Redis", "ECS Fargate", "Alembic", "Terraform"],
+    repo: "https://github.com/jordann6/gpu-index-api",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "31 Terraform resources: ECS Fargate, RDS, ElastiCache, ALB, ECR, $10 budget" },
+        { k: "Tune", v: "Hot query 166.6ms to 23.8ms (85.5%), heap blocks 43,215 to 1,198" },
+        { k: "Prove", v: "1,114 req/s at p95 8.3ms, zero errors, 10/10 live smoke tests passed" },
+        { k: "Destroy", v: "All 31 destroyed, no orphans, no final snapshot, zero residual billing" },
+      ],
+      total: { k: "Cost", v: "~$0.20 for the demo window" },
+    },
+  },
 ];
 
 export function getCaseStudy(slug: string): CaseStudy | undefined {
