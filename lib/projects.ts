@@ -457,6 +457,7 @@ export const projects: Project[] = [
     tags: ["FastAPI", "Pydantic v2", "SQLAlchemy async", "PostgreSQL", "Redis", "ECS Fargate", "Terraform"],
     categories: ["AWS", "Platform"],
     link: "https://github.com/jordann6/gpu-index-api",
+    caseStudy: "gpu-index-api",
     featured: true,
   },
 ];
