@@ -37,18 +37,29 @@ export const diagrams: Record<string, Diagram> = {
     ],
   },
   "aws-developer-platform": {
-    caption: "Self-service paved road — claim to hardened AWS resource, no static credentials",
+    caption: "Self-service paved road — claim to hardened, cost-attributed AWS resource, no static credentials",
     cols: [
       { nodes: [{ label: "Developer", sub: "Backstage template" }] },
-      { nodes: [{ label: "Git", sub: "app-of-apps" }] },
+      { nodes: [{ label: "Git", sub: "app-of-apps · FinOps gate" }] },
       {
         nodes: [
           { label: "ArgoCD", sub: "reconcile" },
-          { label: "Kyverno", sub: "admission policy" },
+          { label: "Kyverno", sub: "attribution + hardening" },
+          { label: "OpenCost", sub: "spend by namespace" },
         ],
       },
-      { nodes: [{ label: "Crossplane", sub: "IRSA provider", accent: true }] },
-      { nodes: [{ label: "S3 Bucket", sub: "AES256 · versioned · tagged", accent: true }] },
+      {
+        nodes: [
+          { label: "Crossplane", sub: "IRSA provider", accent: true },
+          { label: "External Secrets", sub: "IRSA" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "S3 Bucket", sub: "SSE-KMS · TLS-only · tagged", accent: true },
+          { label: "Secrets Manager", sub: "adp/*" },
+        ],
+      },
     ],
   },
   "azure-developer-platform": {
