@@ -703,7 +703,7 @@ export const caseStudies: CaseStudy[] = [
     title: "Secrets Lifecycle",
     titleOut: "& Rotation Readiness",
     category: "AWS · Security · Platform",
-    lede: "Governance tooling that answers the question AWS Config cannot: not whether a secret is stale, but why nobody rotated it. Dependency analysis over CloudTrail turns rotation from an outage gamble into an ordered runbook, with auditor-ready evidence produced on the way out.",
+    lede: "Governance tooling that answers the question AWS Config cannot: not whether a secret is stale, but why nobody rotated it. Dependency analysis over CloudTrail turns rotation from an outage gamble into an ordered runbook, with auditor-ready evidence produced on the way out, then a separately-permissioned executor closes the loop and performs the rotation an operator approves.",
     meta: [
       { k: "Role", v: "Cloud Security / Platform" },
       { k: "Cloud", v: "AWS" },
@@ -727,6 +727,7 @@ export const caseStudies: CaseStudy[] = [
           "A Python analyzer queries 90 days of CloudTrail through Athena (partition projection, no MSCK repair) for GetSecretValue and GetParameter events, building a consumer map per secret: which principals read it, how often, and how recently.",
           "The consumer map drives a rotation readiness score combining age, consumer count, consumer identifiability, and rotation configuration, and Claude on Bedrock synthesizes an ordered runbook with rollback path and confidence level for the highest-risk secrets, prompted for strict JSON and validated on parse, with a deterministic rule-based fallback when the model is unavailable.",
           "Every finding maps to HIPAA 164.308(a)(5)(ii)(D), SOC 2 CC6.1, NIST 800-53 IA-5, and CIS 1.14 from a versioned config file, lands in a versioned S3 bucket with Object Lock in governance mode, and imports to Security Hub as ASFF findings.",
+          "A separate executor Lambda closes the loop. It implements the standard AWS four-step rotation contract (createSecret, setSecret, testSecret, finishSecret) with AWSPENDING/AWSCURRENT/AWSPREVIOUS staging, and the service-specific set and test steps are a pluggable Strategy so rotating an RDS password later is a new Strategy, not a rewrite of the contract.",
         ],
       },
       {
@@ -735,6 +736,7 @@ export const caseStudies: CaseStudy[] = [
         paragraphs: [
           "The defining constraint is that a tool inspecting every secret in the account must be provably unable to read any of them. The scanner and analyzer roles carry an explicit IAM deny on GetSecretValue and GetParameter, so metadata access cannot escalate even if a broader policy is ever attached. The first version denied kms:Decrypt outright, which broke Lambda's own environment variable decryption at cold start; the fix scopes the deny with kms:ViaService to Secrets Manager and SSM, keeping the guarantee without breaking the runtime. A redaction layer scrubs anything resembling key material before data reaches logs, DynamoDB, or Bedrock, as defense in depth on top of never fetching values.",
           "The pipeline is chained with Lambda on-success destinations rather than Step Functions: EventBridge fires the scanner asynchronously, and scanner, analyzer, and reporter pass the scan ID through their response payloads. Each function gets its own least-privilege role, and the evidence bucket accepts writes only from the analyzer.",
+          "The rotation executor is deliberately the one exception to the read-only posture, and it is fenced on both sides. Its IAM role is the only one without the secret-material deny, and its GetSecretValue, PutSecretValue, UpdateSecretVersionStage, and RotateSecret grants are scoped by an IAM condition to secrets tagged secops:rotation-approved, so an untagged secret cannot be touched even by a direct invoke. On top of that, application guardrails re-check that tag, an explicit approve flag, and the analyzer runbook, refusing low-confidence and rule-based fallback runbooks unless forced, because those are exactly the secrets whose consumers could not be identified. Governance decides, a separately-permissioned executor acts.",
         ],
       },
       {
@@ -743,6 +745,7 @@ export const caseStudies: CaseStudy[] = [
         paragraphs: [
           "Verified live end to end against a seeded environment of 15 test secrets with real consumer Lambdas and a working rotation function: 17 resources scanned in about a second, consumers identified for 53 percent of secrets down to the exact Lambda execution roles and read counts, 5 rotation runbooks generated, and 31 control-mapped findings imported to Security Hub with evidence artifacts locked in S3.",
           "All 40 Terraform resources were destroyed the same day, including a governance-retention bypass sweep of the evidence bucket, with the account verified clean of every secops-prefixed resource and Security Hub returned to its unsubscribed state.",
+          "The rotation executor ships with a 14-test suite over the four-step contract and the approval guardrail matrix, verified locally. Live rotation is left opt-in behind the approval tag rather than fired against the seeded environment, so the governance receipt above stays exactly what was deployed and verified.",
         ],
       },
     ],

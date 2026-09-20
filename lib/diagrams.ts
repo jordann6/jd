@@ -180,9 +180,8 @@ export const diagrams: Record<string, Diagram> = {
     ],
   },
   "secrets-lifecycle": {
-    caption: "Consumer maps from CloudTrail turn a stale secret into an ordered rotation runbook, with auditor evidence on the way out",
+    caption: "Consumer maps from CloudTrail turn a stale secret into an ordered runbook, then a separately-permissioned executor rotates the ones an operator approves",
     cols: [
-      { nodes: [{ label: "EventBridge", sub: "scheduled sweep" }] },
       {
         nodes: [
           { label: "Go Scanner λ", sub: "worker pool · metadata only", accent: true },
@@ -198,9 +197,15 @@ export const diagrams: Record<string, Diagram> = {
       },
       {
         nodes: [
-          { label: "Security Hub", sub: "ASFF findings", accent: true },
+          { label: "Security Hub", sub: "ASFF findings" },
           { label: "S3 Evidence", sub: "Object Lock · governance" },
           { label: "Dashboard", sub: "static · S3" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Executor λ", sub: "opt-in · tag-scoped role", accent: true },
+          { label: "Four-Step Rotate", sub: "create · set · test · finish" },
         ],
       },
     ],
