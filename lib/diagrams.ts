@@ -334,31 +334,31 @@ export const diagrams: Record<string, Diagram> = {
     ],
   },
   "gcp-landing-zone": {
-    caption: "Placement is the policy — one factory vends every project, and inheritance does the enforcing",
+    caption: "Nobody holds standing prod access: Terraform applies as one impersonated identity, and the perimeter decides what may leave",
     cols: [
-      { nodes: [{ label: "Organization", sub: "9 constraints enforced", accent: true }] },
+      { nodes: [{ label: "sa-terraform", sub: "impersonated · no key", accent: true }] },
       {
         nodes: [
-          { label: "core", sub: "network · logging" },
-          { label: "workloads", sub: "nonprod · prod" },
+          { label: "Organization", sub: "15 constraints · 3 CEL" },
+          { label: "PAM", sub: "1h prod · approved" },
         ],
       },
       {
         nodes: [
-          { label: "Project Factory", sub: "folder + billing + audit", accent: true },
-          { label: "nonprod override", sub: "locations widened to EU" },
+          { label: "Project Factory", sub: "folder · audit · CMEK" },
+          { label: "Org Sinks", sub: "BigQuery · 13 alerts" },
         ],
       },
       {
         nodes: [
-          { label: "Shared VPC", sub: "deny ingress · IAP SSH only" },
-          { label: "Org Sink", sub: "include_children" },
+          { label: "VPC-SC", sub: "restricted Shared VPC", accent: true },
+          { label: "Cloud NGFW", sub: "FQDN egress · PSC" },
         ],
       },
       {
         nodes: [
-          { label: "BigQuery", sub: "30d partitions · CMEK", accent: true },
-          { label: "SCC + Budget", sub: "findings to Pub/Sub" },
+          { label: "Private GKE", sub: "BinAuthz · WI", accent: true },
+          { label: "Cloud SQL HA", sub: "CMEK · DR replica" },
         ],
       },
     ],
