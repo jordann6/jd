@@ -892,12 +892,12 @@ export const caseStudies: CaseStudy[] = [
     title: "Azure Landing",
     titleOut: "Zone",
     category: "Azure · Platform · Governance",
-    lede: "The governance foundation a workload subscription inherits before anyone deploys into it: a management group hierarchy, policy as code, and a hub-spoke network whose spokes are vended by a single module call.",
+    lede: "The governance foundation a workload subscription inherits before anyone deploys into it, and the prod paved road that lands on top of it: a management group hierarchy and policy as code, a hub-spoke network, and a private AKS plus zone-redundant HA PostgreSQL workload that reaches its keys over private endpoints and leaves only through the hub firewall.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
-      { k: "Cloud", v: "Azure" },
-      { k: "Hierarchy", v: "4 levels" },
-      { k: "Resources", v: "24 (Terraform)" },
+      { k: "Cloud", v: "Azure (centralus)" },
+      { k: "Layers", v: "Base LZ + workload" },
+      { k: "Resources", v: "~145 (Terraform)" },
     ],
     blocks: [
       {
@@ -905,45 +905,55 @@ export const caseStudies: CaseStudy[] = [
         heading: "Problem",
         paragraphs: [
           "Governance applied after workloads exist is negotiation. Governance applied to a management group before the first subscription lands there is just the environment. The distinction decides whether a policy is a guardrail or a ticket.",
-          "The goal was the smallest complete Azure foundation that a workload subscription could be dropped into and immediately inherit: a hierarchy that policy can attach to, a network with room for the services it will eventually need, and a repeatable way to add the next spoke.",
+          "But a governed foundation is only half the story. A paved road is only real if a workload can actually land on it and inherit the controls without hand-wiring them, so this project is both: the base landing zone, and a prod workload (private AKS plus a managed database) that deploys onto it as the reference paved road.",
         ],
       },
       {
         num: "/02",
-        heading: "Approach",
+        heading: "Approach: the base",
         bullets: [
-          "A four-level management group tree under the tenant root, splitting Platform, Workloads, and Sandbox, with the subscription moved into Workloads so all policy assignments apply to everything in it automatically.",
-          "Three custom Azure Policy definitions authored and assigned at the Workloads scope: require an owner tag, deny public IP creation, and restrict resources to allowed locations.",
-          "A hub VNet at 10.0.0.0/16 carrying reserved subnets for Firewall, Gateway, and Bastion alongside an active management subnet whose NSG blocks inbound internet.",
-          "Two spokes, Platform and Sandbox, each peered bidirectionally with the hub, provisioned through a reusable module so a third spoke is one block.",
+          "A management group tree under the tenant root splitting Platform, Workloads, and Sandbox, with dev, test, and prod beneath Workloads and the subscription moved into Workloads so every assignment applies automatically.",
+          "Custom Azure Policy definitions assigned at the Workloads scope, require an owner tag, deny public IP creation, restrict to allowed locations, and require cost-center, environment, and data-classification tags, plus a prod single-region policy and the built-in CIS Azure Foundations initiative.",
+          "A hub VNet at 10.0.0.0/16 carrying reserved subnets for Firewall, Gateway, and Bastion alongside an active management subnet whose NSG blocks inbound internet; spokes peer bidirectionally through a reusable module.",
         ],
       },
       {
         num: "/03",
-        heading: "Architecture",
-        paragraphs: [
-          "The reserved subnets are the detail that matters most and costs nothing. Azure Firewall, VPN and ExpressRoute Gateway, and Bastion each require an exactly-named subnet at a minimum prefix size, so those subnets are carved and named correctly up front even though none of the services are deployed. Activating any of them later is a resource addition rather than a re-addressing exercise across every peered network, which is the expensive version of that mistake.",
-          "Policy effects are set to Audit for the demo deployment rather than Deny. That is a deliberate choice worth stating plainly: in a production pipeline these become Deny and run as a separate governance stage ahead of workload provisioning, but a Deny effect in a demo environment blocks the very resources the demo needs to create.",
+        heading: "Approach: the workload paved road",
+        bullets: [
+          "A separate Terraform root vends a prod VNet (10.3.0.0/16) peered to the hub and a private AKS cluster with no public API, OIDC workload identity, and outbound_type=userDefinedRouting so all egress leaves only through the hub Azure Firewall.",
+          "etcd secrets are envelope-encrypted with a customer-managed key reached over a Key Vault private endpoint; the vault stays default-Deny and AKS API Server VNet Integration projects the control plane into a delegated subnet so it can reach the key privately. Node OS disks use a separate CMK via a disk encryption set.",
+          "The data tier is a zone-redundant HA PostgreSQL Flexible Server, VNet-injected into a delegated subnet, CMK-encrypted, Entra-auth enabled, with a geo-redundant Data Protection backup vault protecting it.",
+          "ACR sits behind a private endpoint with a cache rule; External Secrets gets a federated workload identity; the AKS control-plane identity carries a least-privilege custom role scoped to just the Key Vault private-endpoint approval actions it needs.",
         ],
       },
       {
         num: "/04",
+        heading: "Architecture: the load-bearing decisions",
+        paragraphs: [
+          "Reserved subnets are the cheap detail that matters most. Azure Firewall, Gateway, and Bastion each require an exactly-named subnet at a minimum prefix, so those are carved and named up front; activating any later is a resource addition rather than a re-addressing exercise across every peered network.",
+          "A private Key Vault for etcd KMS forces a chain of non-obvious requirements the platform enforces rather than documents. Private KMS is rejected outright unless API Server VNet Integration is enabled, and once enabled, AKS stands up its own managed private endpoint to the vault, which fails unless the cluster identity can approve that connection, a permission no built-in Crypto or Network role grants. The answer is a custom role with exactly the private-endpoint proxy and approval actions, not weakening the vault to public.",
+          "Zone-redundant Postgres HA replicates between a primary and a standby inside one delegated subnet, so a data NSG that denies everything but the app and AKS tiers silently blocks the standby from reaching the primary on 5432. The fix is an explicit intra-subnet allow, and the region itself was moved to centralus because Postgres Flexible Server is capacity-restricted in the original region.",
+        ],
+      },
+      {
+        num: "/05",
         heading: "Outcome",
         paragraphs: [
-          "Deployed against a real Azure tenant and verified through the control plane rather than the plan file: the management group hierarchy, the subscription's placement under Workloads, the policy assignments at that scope, and both peering directions reporting Connected.",
-          "Then destroyed clean, with the subscription automatically re-associating to the tenant root group. The whole environment carries no VMs, no Firewall, no Bastion, and no Gateway, so the cost of standing it up and tearing it down repeatedly is effectively nothing, which is what makes it usable as a reference rather than a one-time demo.",
+          "Deployed against a real Azure tenant across two Terraform roots and verified through the control plane, not the plan file: the management group hierarchy and policy assignments, private AKS nodes Ready with etcd KMS active over the Key Vault private endpoint, PostgreSQL zone-redundant HA reporting Healthy, and the Postgres backup instance ProtectionConfigured.",
+          "Then destroyed clean, base and workload both, with billing back to zero and residual limited to soft-deleted Key Vaults by design. Deploy-demo-destroy discipline keeps the whole reference reproducible for roughly the price of a couple of hours of runtime rather than a standing bill.",
         ],
       },
     ],
-    stack: ["Azure Management Groups", "Azure Policy", "Hub-Spoke VNet", "VNet Peering", "NSG", "Terraform"],
+    stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Terraform"],
     repo: "https://github.com/jordann6/azure-landing-zone",
     receipt: {
       rows: [
-        { k: "Provision", v: "24 Terraform resources: 4-level management group tree, 3 policy definitions and assignments, hub plus 2 peered spokes" },
-        { k: "Verify", v: "Hierarchy, subscription placement, policy assignments, and both peering directions confirmed via the Azure control plane" },
-        { k: "Destroy", v: "Torn down clean; subscription auto-reassociated to the tenant root group" },
+        { k: "Provision", v: "~145 Terraform resources across two roots: base management-group tree, policy definitions and assignments, CIS initiative, hub-spoke with firewall; plus a private AKS and zone-redundant HA PostgreSQL workload peered to the hub" },
+        { k: "Verify", v: "Private AKS nodes Ready with etcd KMS active over the KV private endpoint, PostgreSQL HA Healthy, backup ProtectionConfigured, all confirmed via the Azure control plane" },
+        { k: "Destroy", v: "Base and workload torn down clean; residual limited to soft-deleted Key Vaults by design" },
       ],
-      total: { k: "Cost", v: "effectively zero, no VMs, Firewall, Bastion, or Gateway" },
+      total: { k: "Cost", v: "~$2/hr while up, deploy-demo-destroy" },
     },
   },
   {
