@@ -506,6 +506,67 @@ export const diagrams: Record<string, Diagram> = {
       { nodes: [{ label: "Human merge", sub: "then Terraform applies", accent: true }] },
     ],
   },
+  "multi-cloud-developer-platform": {
+    caption: "One API, three clouds: a reviewed pull request becomes infrastructure on the team's cloud, with no static credentials",
+    cols: [
+      {
+        nodes: [
+          {
+            label: "Developer",
+            sub: "Backstage template",
+          },
+        ],
+      },
+      {
+        nodes: [
+          {
+            label: "GitHub",
+            sub: "reviewed PR · CI",
+          },
+        ],
+      },
+      {
+        nodes: [
+          {
+            label: "Argo CD",
+            sub: "sync main",
+          },
+          {
+            label: "Kyverno",
+            sub: "10 policies · admission",
+          },
+        ],
+      },
+      {
+        nodes: [
+          {
+            label: "Crossplane v2",
+            sub: "Database · WebService",
+            accent: true,
+          },
+        ],
+      },
+      {
+        nodes: [
+          {
+            label: "AWS",
+            sub: "RDS · ECS Fargate",
+            accent: true,
+          },
+          {
+            label: "GCP",
+            sub: "Cloud SQL · Cloud Run",
+            accent: true,
+          },
+          {
+            label: "Azure",
+            sub: "Flexible Server · Container Apps",
+            accent: true,
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export function getDiagram(slug: string): Diagram | undefined {
