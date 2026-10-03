@@ -1908,6 +1908,89 @@ export const caseStudies: CaseStudy[] = [
       total: { k: "Total cost", v: "A few dollars" },
     },
   },
+  {
+    slug: "multi-cloud-developer-platform",
+    num: "39",
+    title: "Multi-Cloud Developer",
+    titleOut: "Platform",
+    category: "AWS · Azure · GCP · Platform",
+    lede: "One internal developer platform over three clouds: a developer runs a Backstage template and gets a repository, a pipeline, cloud infrastructure, and a catalog entry through reviewed pull requests, on whichever cloud their team runs, with no long-lived credential anywhere in the platform.",
+    meta: [
+      {
+        k: "Role",
+        v: "Platform Eng",
+      },
+      {
+        k: "Clouds",
+        v: "AWS · Azure · GCP",
+      },
+      {
+        k: "Control plane",
+        v: "K3s + Crossplane v2",
+      },
+      {
+        k: "Decisions",
+        v: "24 ADRs",
+      },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: ["Teams that live on different clouds usually get three different platforms, three request processes, and three sets of controls. The goal was one paved road: the same request, the same review, and the same guarantees whether the team runs on AWS, Azure, or GCP.", "A multi-cloud API is only honest if it records where the clouds refuse to look alike, so every leak in the abstraction was written down as it was found rather than hidden in a Composition."],
+      },
+      {
+        num: "/02",
+        heading: "Approach",
+        bullets: ["Two cloud-agnostic APIs, Database and WebService, exposing intent only: t-shirt sizes, a platform region, visibility, a digest-pinned image, and cost attribution. SKUs, subnets, and load balancers never appear in the API.", "One Crossplane Composition per cloud per type. The cloud comes from the team's catalog Group, not a form field, so the developer's request reads the same everywhere.", "Change only through Git: templates open pull requests, Argo CD syncs main, and a Kyverno policy admits claims only from Argo and Crossplane, so nobody applies infrastructure by hand.", "Ten Kyverno ValidatingPolicies, each annotated with the SOC 2 and CIS controls it implements and each with a CLI test suite in CI, check composed resources as well as requests, so a Composition bug cannot produce a public database either.", "Keyless identity end to end: K3s publishes its own OIDC discovery document and keys through private S3 and CloudFront, and AWS IAM, an Azure managed identity, and a GCP Workload Identity pool all trust it.", "Repository and pipeline scaffolding on two GitHub Apps in a dedicated organization: the service template creates a branch-protected repository whose CI publishes a two-architecture image to ECR Public through GitHub OIDC, and a deploy template promotes each built digest by pull request.", "Hourly-billed pieces (the AWS ALB and endpoints, the Azure Container Apps environment) are per-session modules, applied for a demo and destroyed after."],
+      },
+      {
+        num: "/03",
+        heading: "Architecture",
+        paragraphs: ["The control plane is K3s in a small VM running Backstage, Argo CD, Crossplane v2, and Kyverno. Each cloud has one private network created once in Terraform; claims attach to it and never create their own VPC or NAT.", "A Database claim becomes RDS PostgreSQL, Cloud SQL, or Postgres Flexible Server and always returns the same six-key connection Secret. A WebService claim becomes ECS Fargate on ARM64 behind a shared HTTPS ALB, Cloud Run, or Container Apps, and always reports its HTTPS URL. Images come from ECR Public by digest through an ECR pull-through cache, an Artifact Registry remote repository, or an ACR cache rule, with no registry credential anywhere."],
+      },
+      {
+        num: "/04",
+        heading: "What the live runs broke",
+        bullets: ["A service switched to internal on AWS stayed reachable from the internet while reporting Ready, because a refused update keeps the old state. The Composition now fails closed and admission refuses the request.", "An ECS task definition revision cannot be edited, so a new image never reached AWS while the XR said Ready. The task definition is now named by a hash of its contents, and the XR stays not Ready until ECS runs the new revision.", "Reference selectors failed three ways on AWS: across providers, after a deploy, and inside a list that was replaced at deletion. Every reference in the AWS Composition is now an ARN read from the observed resource.", "Policies on composed resources denied correctly but produced no PolicyReports, because the reports controller could not resolve a wildcard API version.", "Cloud Run sends empty resource attributes to IAM, so a name-scoped condition could never match; Azure RBAC cannot scope by name at all. Scope moved to the project, the resource group, and admission.", "The IAM simulator allowed a bearer-token condition the real ECR Public login does not satisfy, a reminder that the simulator evaluates only the keys it is handed."],
+      },
+      {
+        num: "/05",
+        heading: "Outcome",
+        paragraphs: ["Every path was proven live through GitOps on all three clouds: databases and web services from the portal, the repository and pipeline scaffolding with a first CI run that published a two-architecture image, and deploys by digest. On AWS one service took three image changes and a size change in a row, each rolling out with the managed resources in sync throughout, and deleting a claim by git removed every cloud resource with no manual step.", "Everything was then torn down. Between demos the platform costs about fifty cents a month, and the 24 ADRs record each decision, each leak, and what was traded off."],
+      },
+    ],
+    stack: ["Crossplane v2", "Argo CD", "Kyverno", "Backstage", "K3s", "GitHub Apps", "OIDC federation", "ECR Public", "ECS Fargate", "Cloud Run", "Container Apps", "RDS", "Cloud SQL", "Postgres Flexible Server", "Terraform", "GitOps"],
+    repo: "https://github.com/jordann6/idp-platform",
+    receipt: {
+      rows: [
+        {
+          k: "Provision",
+          v: "K3s control plane; per-cloud Terraform bootstrap: OIDC issuer, federated identities, private networks, budgets; per-session ALB and Container Apps environment",
+        },
+        {
+          k: "Demo",
+          v: "Database and WebService claims Ready on AWS, GCP, and Azure from Backstage pull requests; scaffolded repositories published amd64 and arm64 images to ECR Public by OIDC",
+        },
+        {
+          k: "Deploys",
+          v: "AWS service moved through task definition revisions 1 to 4 (three images, one size change), managed resources Synced throughout",
+        },
+        {
+          k: "Policy",
+          v: "10 Kyverno ValidatingPolicies with CLI suites in CI; live denials for public databases, untagged resources, manual applies, and internal visibility on AWS",
+        },
+        {
+          k: "Destroy",
+          v: "Claims removed by git with one prune sync; per-session modules destroyed; all three clouds verified back to the standing footprint",
+        },
+      ],
+      total: {
+        k: "Lifecycle",
+        v: "Deploy · Demo · Destroy",
+      },
+    },
+  },
 ];
 
 export function getCaseStudy(slug: string): CaseStudy | undefined {
