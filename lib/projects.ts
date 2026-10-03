@@ -506,4 +506,14 @@ export const projects: Project[] = [
     categories: ["AWS", "Data", "Platform"],
     link: "https://github.com/jordann6/governed-data-pipeline",
   },
+  {
+    num: "39",
+    title: "Multi-Cloud Developer",
+    titleOut: "Platform",
+    desc: "One internal developer platform over AWS, Azure, and GCP. A developer runs a Backstage template and gets a repository, a pipeline, cloud infrastructure, and a catalog entry, all through reviewed pull requests, on whichever cloud their team runs. Crossplane v2 serves two cloud-agnostic APIs, Database and WebService, with one Composition per cloud: a claim becomes RDS, Cloud SQL, or Postgres Flexible Server, and ECS Fargate behind a shared HTTPS ALB, Cloud Run, or Container Apps, with the same six-key connection Secret and the same status URL everywhere. Argo CD syncs only reviewed commits, and ten Kyverno ValidatingPolicies mapped to SOC 2 and CIS controls refuse non-compliant requests and non-compliant composed resources. No long-lived credential exists anywhere: K3s is its own OIDC issuer federated to all three clouds, Backstage uses two GitHub Apps with one-hour tokens, and scaffolded repositories publish two-architecture images to ECR Public through GitHub OIDC, pulled by digest through each cloud's cache. Every live run that broke something is recorded in 24 ADRs, from a refused update that stayed public to an ECS task definition that could not change; each was fixed and proven again live, then torn down to a standing cost of about fifty cents a month.",
+    tags: ["Crossplane v2", "Argo CD", "Kyverno", "Backstage", "K3s", "GitHub Apps", "OIDC federation", "ECR Public", "ECS Fargate", "Cloud Run", "Container Apps", "RDS", "Cloud SQL", "Postgres Flexible Server", "Terraform", "GitOps"],
+    categories: ["AWS", "Azure", "GCP", "Platform"],
+    link: "https://github.com/jordann6/idp-platform",
+    caseStudy: "multi-cloud-developer-platform",
+  },
 ];
