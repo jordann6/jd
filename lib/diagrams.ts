@@ -231,22 +231,6 @@ export const diagrams: Record<string, Diagram> = {
       },
     ],
   },
-  "aws-landing-zone-automator": {
-    caption: "One block in a tfvars file, and the account arrives inside guardrails with logging, budgets, and SSO already applied",
-    cols: [
-      { nodes: [{ label: "tfvars", sub: "account_requests" }] },
-      { nodes: [{ label: "Organizations", sub: "OU tree · all features" }] },
-      {
-        nodes: [
-          { label: "SCPs", sub: "deny root · region allowlist", accent: true },
-          { label: "Identity Center", sub: "3 groups · per-account" },
-          { label: "Budgets", sub: "80% alarm" },
-        ],
-      },
-      { nodes: [{ label: "Vended Account", sub: "baseline · no default VPC", accent: true }] },
-      { nodes: [{ label: "Log Archive", sub: "org trail · SSE-KMS · locked", accent: true }] },
-    ],
-  },
   "azure-landing-zone": {
     caption: "Governance attaches to the management group before the first subscription lands, so policy is the environment rather than a ticket",
     cols: [
@@ -359,6 +343,36 @@ export const diagrams: Record<string, Diagram> = {
         nodes: [
           { label: "Private GKE", sub: "BinAuthz · WI", accent: true },
           { label: "Cloud SQL HA", sub: "CMEK · DR replica" },
+        ],
+      },
+    ],
+  },
+  "aws-landing-zone": {
+    caption: "Guardrails live above the account, so a workload inherits them and cannot switch them off, and its only way out is the inspected hub",
+    cols: [
+      { nodes: [{ label: "Organization", sub: "8 accounts · 4 OUs", accent: true }] },
+      {
+        nodes: [
+          { label: "SCPs", sub: "region · S3 · detective" },
+          { label: "Identity Center", sub: "personas · short sessions" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Org CloudTrail", sub: "Object Lock · KMS" },
+          { label: "Security acct", sub: "GuardDuty · Sec Hub" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Transit Gateway", sub: "RAM-shared hub" },
+          { label: "Network Firewall", sub: "domain allowlist", accent: true },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Private EKS", sub: "IRSA · KMS secrets", accent: true },
+          { label: "RDS Multi-AZ", sub: "Vault Lock backup" },
         ],
       },
     ],
