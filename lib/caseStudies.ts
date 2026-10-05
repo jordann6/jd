@@ -831,12 +831,12 @@ export const caseStudies: CaseStudy[] = [
     title: "Azure Landing",
     titleOut: "Zone",
     category: "Azure · Platform · Governance",
-    lede: "The governance foundation a workload subscription inherits before anyone deploys into it, and the prod paved road that lands on top of it: a management group hierarchy and policy as code, a hub-spoke network, and a private AKS plus zone-redundant HA PostgreSQL workload that reaches its keys over private endpoints and leaves only through the hub firewall.",
+    lede: "The governance foundation a workload subscription inherits before anyone deploys into it, and two workloads that land on top of it: a private AKS plus zone-redundant HA PostgreSQL paved road that leaves only through the hub firewall, and a two-region member portal whose failover was drilled live at 7.3 seconds with zero writes lost.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
-      { k: "Cloud", v: "Azure (centralus)" },
-      { k: "Layers", v: "Base LZ + workload" },
-      { k: "Resources", v: "~145 (Terraform)" },
+      { k: "Cloud", v: "Azure, 3 regions" },
+      { k: "Layers", v: "Base LZ + 2 workloads" },
+      { k: "SQL failover", v: "7.3 s, 0 writes lost" },
     ],
     blocks: [
       {
@@ -852,8 +852,9 @@ export const caseStudies: CaseStudy[] = [
         heading: "Approach: the base",
         bullets: [
           "A management group tree under the tenant root splitting Platform, Workloads, and Sandbox, with dev, test, and prod beneath Workloads and the subscription moved into Workloads so every assignment applies automatically.",
-          "Custom Azure Policy definitions assigned at the Workloads scope, require an owner tag, deny public IP creation, restrict to allowed locations, and require cost-center, environment, and data-classification tags, plus a prod single-region policy and the built-in CIS Azure Foundations initiative.",
-          "A hub VNet at 10.0.0.0/16 carrying reserved subnets for Firewall, Gateway, and Bastion alongside an active management subnet whose NSG blocks inbound internet; spokes peer bidirectionally through a reusable module.",
+          "Deny-effect Azure Policy at the hierarchy: no public IPs, allowed locations (tighter at prod), and required owner, cost-center, environment, and data-classification tags, plus the built-in CIS Azure Foundations initiative and HITRUST/HIPAA scoring in Defender for Cloud.",
+          "data_classification is limited to public, internal, confidential, or phi, and a resource group tagged phi cannot hold a Key Vault, storage account, SQL server, or PostgreSQL server with public network access, so the classification enforces the control rather than describing it.",
+          "A hub VNet at 10.0.0.0/16 with Azure Firewall (threat intelligence in Deny mode) and Bastion as the only admin path, flag-gated as the hourly layer, and dev, test, and sandbox spokes peered through a reusable module, each with a default-deny NSG. One action group alerts on Deny policy events, Key Vault 403s, and firewall deny spikes.",
         ],
       },
       {
@@ -877,20 +878,41 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/05",
+        heading: "A second workload: the member portal",
+        bullets: [
+          "Front Door Premium with WAF (Default Rule Set 2.1, Bot Manager, a per-IP rate limit) in front of Container Apps in two regions. The apps are internal with public access disabled and reached only over Private Link, so the base deny-public-IP policy holds with no exception.",
+          "Azure SQL in a failover group with private endpoints and Entra-only auth, in a resource group tagged phi so the base policy denies it public network access. Both regions connect to the failover group listener, so the app never needs to know which database is primary.",
+          "API Management for partners, Entra External ID in its own tenant for member sign-in, a Logic App integration, and Application Insights with an availability test and a 99.9% SLO fast-burn alert, all landing in the base Log Analytics workspace.",
+          "Failover runs on two clocks: Front Door shifts stateless traffic on its health probes, and the SQL failover group moves the data on its own. Neither depends on the other.",
+        ],
+      },
+      {
+        num: "/06",
+        heading: "Measured, not claimed",
+        paragraphs: [
+          "A smoke test passed 7 of 7 through Front Door, including a SQL injection probe the WAF blocked with a 403 and a partner call refused without a key. With the primary region's ingress disabled, Front Door served every request from the second region 83.9 seconds later, a number that includes the disable command's own run time. A planned SQL failover, writing every second throughout, had a longest gap of 7.3 seconds and lost zero acknowledged writes, and the failback measured 7.4 seconds with 0 of 36 lost. Planned failovers are lossless by design, which the write-up says plainly.",
+          "The first deploy taught as much as the drills. The landing zone's own allowed-locations policy denied the portal's second region until a reviewed one-line change added it. Container Apps had no capacity in centralus and Azure SQL was restricted in three eastern regions, so regions are now chosen per tier. The app created its table before listening and the liveness probe killed it, so schema setup moved to a background thread. One honest gap remains: the portal VNets do not yet route egress through the hub firewall.",
+        ],
+      },
+      {
+        num: "/07",
         heading: "Outcome",
         paragraphs: [
           "Deployed against a real Azure tenant across two Terraform roots and verified through the control plane, not the plan file: the management group hierarchy and policy assignments, private AKS nodes Ready with etcd KMS active over the Key Vault private endpoint, PostgreSQL zone-redundant HA reporting Healthy, and the Postgres backup instance ProtectionConfigured.",
-          "Then destroyed clean, base and workload both, with billing back to zero and residual limited to soft-deleted Key Vaults by design. Deploy-demo-destroy discipline keeps the whole reference reproducible for roughly the price of a couple of hours of runtime rather than a standing bill.",
+          "Then destroyed clean, base and both workloads, with the External ID tenant emptied first so it deletes on the first try, and residual limited to soft-deleted Key Vaults by design. Deploy-demo-destroy discipline keeps the whole reference reproducible for roughly the price of a couple of hours of runtime rather than a standing bill.",
         ],
       },
     ],
-    stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Terraform"],
+    stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Front Door", "Container Apps", "Azure SQL", "API Management", "Entra External ID", "Application Insights", "Terraform"],
     repo: "https://github.com/jordann6/azure-landing-zone",
     receipt: {
       rows: [
         { k: "Provision", v: "~145 Terraform resources across two roots: base management-group tree, policy definitions and assignments, CIS initiative, hub-spoke with firewall; plus a private AKS and zone-redundant HA PostgreSQL workload peered to the hub" },
         { k: "Verify", v: "Private AKS nodes Ready with etcd KMS active over the KV private endpoint, PostgreSQL HA Healthy, backup ProtectionConfigured, all confirmed via the Azure control plane" },
-        { k: "Destroy", v: "Base and workload torn down clean; residual limited to soft-deleted Key Vaults by design" },
+        { k: "Portal smoke", v: "7 of 7 through Front Door: WAF blocked a SQL injection probe (403), partner API 200 with a key and 401 without" },
+        { k: "App drill", v: "primary region ingress disabled, Front Door serving entirely from the second region 83.9 s later" },
+        { k: "Data drill", v: "planned SQL failover: longest write gap 7.3 s, 0 acknowledged writes lost; failback 7.4 s, 0 of 36 lost" },
+        { k: "Destroy", v: "Base and both workloads torn down clean; residual limited to soft-deleted Key Vaults by design" },
       ],
       total: { k: "Cost", v: "~$2/hr while up, deploy-demo-destroy" },
     },
