@@ -1190,7 +1190,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "gcp-landing-zone",
-    num: "30",
+    num: "19",
     title: "GCP",
     titleOut: "Landing Zone",
     category: "GCP · Platform · Governance",
