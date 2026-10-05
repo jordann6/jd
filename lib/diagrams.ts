@@ -232,28 +232,28 @@ export const diagrams: Record<string, Diagram> = {
     ],
   },
   "azure-landing-zone": {
-    caption: "Governance attaches to the management group before the first subscription lands, so policy is the environment rather than a ticket",
+    caption: "One governed base, two workloads landing on it: policy is inherited from the management group, and the portal's failover is measured, not claimed",
     cols: [
-      { nodes: [{ label: "Tenant Root", sub: "mg-jordann6" }] },
+      { nodes: [{ label: "Management Groups", sub: "Deny · CIS · HIPAA", accent: true }] },
       {
         nodes: [
-          { label: "Workloads MG", sub: "subscription placed", accent: true },
-          { label: "Azure Policy", sub: "owner tag · no public IP" },
-        ],
-      },
-      { nodes: [{ label: "Hub VNet", sub: "10.0.0.0/16", accent: true }] },
-      {
-        nodes: [
-          { label: "Reserved", sub: "Firewall · Gateway · Bastion" },
-          { label: "snet-management", sub: "NSG denies inbound" },
+          { label: "Hub VNet", sub: "Firewall · Bastion" },
+          { label: "Spokes", sub: "dev · test · sandbox" },
         ],
       },
       {
         nodes: [
-          { label: "Platform Spoke", sub: "10.1.0.0/16 · peered", accent: true },
-          { label: "Sandbox Spoke", sub: "10.2.0.0/16 · peered" },
+          { label: "Private AKS", sub: "etcd CMK · UDR egress", accent: true },
+          { label: "PostgreSQL HA", sub: "zone-redundant" },
         ],
       },
+      {
+        nodes: [
+          { label: "Front Door", sub: "Premium · WAF", accent: true },
+          { label: "Container Apps", sub: "2 regions · Private Link" },
+        ],
+      },
+      { nodes: [{ label: "SQL Failover Group", sub: "7.3 s · 0 writes lost", accent: true }] },
     ],
   },
   "aws-serverless-lakehouse": {
