@@ -263,7 +263,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/azure-landing-zone",
     caseStudy: "azure-landing-zone",
     featured: true,
-    featuredRank: 7,
+    featuredRank: 8,
   },
   {
     num: "16",
@@ -296,16 +296,6 @@ export const projects: Project[] = [
     tags: ["EKS", "AKS", "Prometheus", "Grafana", "AlertManager", "Helm", "kube-prometheus-stack", "ServiceMonitor", "Terraform"],
     categories: ["AWS", "Azure", "Platform"],
     link: "https://github.com/jordann6/observability-stack",
-  },
-  {
-    num: "19",
-    title: "AWS Landing Zone",
-    titleOut: "Automator",
-    desc: "Terraform account vending machine that turns a bare AWS Organization into a SOC 2 ready multi-account foundation, built for the gap between one shared account with a root login and a full Control Tower deployment. One apply stands up the OU hierarchy (Security, Workloads/Prod, Workloads/NonProd, Sandbox), four SCP guardrails (root-user deny, leave-org deny, region allowlist, CloudTrail tamper protection), IAM Identity Center groups and permission sets, an organization CloudTrail flowing into an SSE-KMS, versioned, object-locked bucket in a dedicated log-archive account, and per-account AWS Budgets alarms. After that, every new account is one block in a tfvars map: the vending module creates it in the right OU with owner and cost-center tags, assumes into it to apply an IAM baseline (account alias, strict password policy, scoped smoke-test role, default VPC removed in every region), and wires SSO assignments. The apply is two-stage because Terraform provider configurations must resolve at plan time, so cross-account assume-role ARNs come from variables filled by a helper script after the accounts exist. Deployed live against a real Organization: the SCP check returned an explicit service control policy deny for API calls outside the region allowlist, org CloudTrail delivered per-account logs within minutes, SSO group assignments granted Developer on nonprod with nothing on the management account, and vended accounts came up with zero VPCs. CI gates on checkov, tflint, and gitleaks with an OIDC-authenticated plan job and zero static keys; all real tfvars stay gitignored so emails and account IDs never reach the repo. The same workflow reads three ways: SOC 2 foundation for startups, account vending for SaaS platform teams, client onboarding for MSPs.",
-    tags: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "KMS", "S3 Object Lock", "AWS Budgets", "Terraform"],
-    categories: ["AWS", "Platform"],
-    link: "https://github.com/jordann6/landing-zone-automator",
-    caseStudy: "aws-landing-zone-automator",
   },
   {
     num: "20",
@@ -420,7 +410,7 @@ export const projects: Project[] = [
     link: "https://github.com/jordann6/gcp-landing-zone",
     caseStudy: "gcp-landing-zone",
     featured: true,
-    featuredRank: 8,
+    featuredRank: 9,
   },
   {
     num: "31",
@@ -515,5 +505,16 @@ export const projects: Project[] = [
     categories: ["AWS", "Azure", "GCP", "Platform"],
     link: "https://github.com/jordann6/idp-platform",
     caseStudy: "multi-cloud-developer-platform",
+  },  {
+    num: "40",
+    title: "AWS",
+    titleOut: "Landing Zone",
+    desc: "The AWS member of the three-cloud landing zone set, built to the same design as the Azure and GCP zones in bespoke Terraform rather than Control Tower or the Landing Zone Accelerator, so every control is a reviewable line of code. Five roots split by lifecycle. A permanent accounts root owns the organization, Security, Infrastructure, Workloads, and Sandbox OUs, eight member accounts, an org tag policy, and SCPs that deny root use, leaving the org, unapproved regions, public or unencrypted S3, and disabling detective services; accounts carry close_on_deletion false and prevent_destroy because a closed account sits SUSPENDED for 90 days holding quota and its email, so the next deploy would collide with it. A governance root sends an organization CloudTrail to a KMS-encrypted, Object-Locked bucket in log-archive, delegates GuardDuty, Security Hub with CIS 1.4.0, and AWS Config to the security account, defines IAM Identity Center personas with permission boundaries and short sessions, and alarms on any root sign-in. An observability root routes GuardDuty severity 7+ and Security Hub HIGH and CRITICAL findings to one topic, makes shared-services a CloudWatch OAM monitoring account linked to prod and network, and raises five cross-account alarms. The hourly layers come and go on their own: a network root with a RAM-shared Transit Gateway and an inspection VPC forcing egress and return through Network Firewall with a domain allowlist, and a workload root with a private prod VPC that has no internet gateway or NAT, private EKS with KMS-encrypted secrets and IRSA, Multi-AZ PostgreSQL with an RDS-managed secret, Backup Vault Lock, and an ECR supply chain with immutable tags, scanning, and a pull-through cache. CI runs gitleaks, tflint, Checkov, Trivy, and OPA on all five roots plus an Infracost gate that blocks any change adding more than $50 a month. Deployed live in us-east-1 with 50 network and 85 workload resources verified, then both hourly layers destroyed with the accounts, audit trail, and monitoring plane retained.",
+    tags: ["AWS Organizations", "SCPs", "IAM Identity Center", "Transit Gateway", "Network Firewall", "GuardDuty", "Security Hub", "CloudWatch OAM", "EKS", "RDS", "Terraform"],
+    categories: ["AWS", "Platform"],
+    link: "https://github.com/jordann6/aws-scp-governance/tree/main",
+    caseStudy: "aws-landing-zone",
+    featured: true,
+    featuredRank: 7,
   },
 ];
