@@ -826,67 +826,6 @@ export const caseStudies: CaseStudy[] = [
     },
   },
   {
-    slug: "aws-landing-zone-automator",
-    num: "19",
-    title: "AWS Landing Zone",
-    titleOut: "Automator",
-    category: "AWS · Platform · Governance",
-    lede: "An account vending machine for the gap between one shared account with a root login and a platform team running Control Tower. One apply stands up a SOC 2 ready multi-account foundation; after that a new account is one block in a tfvars file and it arrives with guardrails, logging, budgets, and SSO already applied.",
-    meta: [
-      { k: "Role", v: "Cloud / Platform" },
-      { k: "Cloud", v: "AWS" },
-      { k: "Scope", v: "Organization-wide" },
-      { k: "Resources", v: "58 (Terraform)" },
-    ],
-    blocks: [
-      {
-        num: "/01",
-        heading: "Problem",
-        paragraphs: [
-          "Multi-account AWS is the recommendation everyone gives and almost nobody implements, because the first account separation is where the work actually is: organizational units, service control policies, centralized immutable audit logging, and single sign-on all have to exist before the second account is worth having.",
-          "The target was the middle of that gap. Startups getting SOC 2 ready need account separation, immutable audit logs, least-privilege SSO, and root controls, which is most of what an auditor asks about first. SaaS teams need dev, staging, and prod per product. MSPs need a client to land inside guardrails on day one. All three are the same recurring workflow, not a one-time script.",
-        ],
-      },
-      {
-        num: "/02",
-        heading: "Approach",
-        bullets: [
-          "Organizations with all features enabled, and an OU tree of Security, Workloads/Prod, Workloads/NonProd, and Sandbox, so policy attaches to a boundary rather than to individual accounts.",
-          "Four service control policies as the guardrail layer: deny root user actions, deny leaving the organization, a region allowlist, and CloudTrail tamper protection.",
-          "An organization CloudTrail encrypted with SSE-KMS writing into a versioned, object-locked bucket in a dedicated log-archive account, so the audit trail is outside the accounts it is auditing and cannot be rewritten by them.",
-          "Vending itself is an `account_requests` map: each entry creates an account in the right OU with tags, a monthly budget alarm at 80 percent, and an in-account baseline that sets an IAM alias, a strict password policy, a smoke-test role, and removes the default VPC.",
-        ],
-      },
-      {
-        num: "/03",
-        heading: "Architecture",
-        paragraphs: [
-          "The apply runs in two stages, and the reason is a real Terraform constraint rather than a workaround. Provider configurations are static and must resolve at plan time, but the aliased providers that assume roles into the log-archive and vended accounts need account IDs that do not exist until the first stage finishes. A helper script copies those IDs from stage one outputs into a gitignored tfvars file, and the second apply completes the cross-account wiring.",
-          "Nothing sensitive reaches the repository. Account emails, notification addresses, and account IDs live only in gitignored tfvars and remote state, outputs carrying account IDs are marked sensitive, the state bucket name is passed through a gitignored backend config, and CI authenticates with GitHub OIDC against the committed example file only.",
-        ],
-      },
-      {
-        num: "/04",
-        heading: "Outcome",
-        paragraphs: [
-          "Deployed live against a real organization and validated on six independent checks: an SCP explicitly denying a disallowed region, per-account organization CloudTrail delivery, least-privilege SSO assignment, budget alarms, tag and OU placement, and zero default VPCs in the vended accounts.",
-          "Teardown taught more than the build. Closed accounts block OU deletion until they are moved back to the root, the account-close waiter finishes a minute or so before AWS actually settles, and the SSO assignment loop needs the account request map emptied before the final destroy pass will complete. All three are documented in the repo, because the teardown path is the part of a landing zone nobody writes down.",
-        ],
-      },
-    ],
-    stack: ["AWS Organizations", "Service Control Policies", "IAM Identity Center", "CloudTrail", "KMS", "S3 Object Lock", "AWS Budgets", "Terraform"],
-    repo: "https://github.com/jordann6/landing-zone-automator",
-    receipt: {
-      rows: [
-        { k: "Provision", v: "58 resources against a real organization: OUs, 4 SCPs, Identity Center, org CloudTrail, vended accounts" },
-        { k: "Validate", v: "6 of 6 checks passed, including an SCP-denied region and zero default VPCs in vended accounts" },
-        { k: "Destroy", v: "Torn down the same night, state at zero, only the default FullAWSAccess SCP remaining" },
-        { k: "Residual", v: "Trail KMS key in its mandatory 7-day deletion window, unbilled" },
-      ],
-      total: { k: "Cost", v: "a few cents for the full deploy-demo-destroy cycle" },
-    },
-  },
-  {
     slug: "azure-landing-zone",
     num: "15",
     title: "Azure Landing",
@@ -1989,6 +1928,99 @@ export const caseStudies: CaseStudy[] = [
         k: "Lifecycle",
         v: "Deploy · Demo · Destroy",
       },
+    },
+  },
+  {
+    slug: "aws-landing-zone",
+    num: "40",
+    title: "AWS",
+    titleOut: "Landing Zone",
+    category: "AWS · Platform · Governance",
+    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept.",
+    meta: [
+      { k: "Role", v: "Cloud / Platform" },
+      { k: "Cloud", v: "AWS" },
+      { k: "Roots", v: "5, split by lifecycle" },
+      { k: "Accounts", v: "8 members, 4 OUs" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "A landing zone has to settle two things before any workload arrives: what every account inherits, and how anything leaves the network. This one settles them with a persistent multi-account organization whose guardrails are inherited from the OUs, audit and security controls centralized outside the accounts they watch, and an inspected private network that is the only way a workload reaches the internet.",
+          "The reference workload on top is private EKS and Multi-AZ PostgreSQL. Its job is to prove the zone can host a real workload tier, not to run an application. Application integration is outside the completion scope, and the write-up keeps that line visible.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "Five roots, split by how long they live",
+        bullets: [
+          "accounts is permanent: the organization, OUs, eight member accounts, SCPs, the tag policy, and RAM sharing. Every account carries close_on_deletion false and prevent_destroy, because a closed account sits SUSPENDED for 90 days holding org quota and its email alias, and the next deploy collides with it. Idle accounts cost nothing.",
+          "governance and observability are nearly free and stay up: the audit trail, detective services, identity, budgets, and the monitoring plane.",
+          "network and workload are the hourly layers. They apply and destroy on their own, workload first and network second, so the expensive tiers exist only for a demo.",
+          "Moving the org into its own root was done live with import and removed blocks: 28 resources adopted, zero added, zero destroyed, and both roots re-planned to no changes.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "Guardrails a workload cannot turn off",
+        bullets: [
+          "SCPs on the OUs deny root use, leaving the organization, unapproved regions, public or unencrypted S3, and disabling GuardDuty, Config, or CloudTrail. The management account is SCP-exempt by design, so its root hardening is a separate step: a strict password policy and an EventBridge alarm on any root sign-in.",
+          "An organization CloudTrail writes to a KMS-encrypted, GOVERNANCE-mode Object Lock bucket in log-archive, with log-file validation, so the record of what happened is safe from the account that did it.",
+          "GuardDuty, Security Hub with CIS AWS Foundations 1.4.0, and AWS Config are delegated to the security account, so security operations run outside the account that can change the org.",
+          "IAM Identity Center personas (admin, platform engineer, junior engineer, manager, FinOps, security, break-glass) carry permission boundaries and short sessions. There are no IAM users and no standing prod write.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "One inspected path out, one place to look",
+        paragraphs: [
+          "The network account shares a Transit Gateway to the org over RAM with explicit attachment acceptance. Separate spoke and inspection route tables force egress and its return through AWS Network Firewall with a default-deny domain allowlist, then NAT, and the allowlist defaults to AWS and Cognito domains. The demo inspection path runs in one availability zone, which is a cost choice and not a production availability design. Admin access is SSM over interface endpoints rather than a bastion.",
+          "Shared-services is a CloudWatch OAM monitoring account with prod and network linked into it, so alarms live where no workload team can change them while the data stays in the account that produced it. GuardDuty severity 7 and above and Security Hub HIGH and CRITICAL findings route to one topic, and five cross-account alarms (RDS CPU and storage, EKS failed nodes, firewall drops, failed backups) route to another.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "The paved road on top",
+        bullets: [
+          "A private prod VPC with no internet gateway or NAT of its own. Its only way out is the Transit Gateway to the hub firewall.",
+          "EKS with a private API endpoint, KMS-encrypted secrets, IRSA, and two AL2023 managed nodes, plus the account's own interface endpoints for ECR, STS, EKS, Logs, SSM, and Secrets Manager.",
+          "PostgreSQL on RDS, Multi-AZ, encrypted, private, with an RDS-managed secret so no password lands in state. Only the app tier security group reaches 5432, backed by a data-subnet NACL.",
+          "Daily AWS Backup into a Vault Lock vault, with cross-region copy held off until a destination region is approved. An ECR supply chain with immutable tags, scan on push, a pull-through cache, and Inspector, plus an on-demand Image Builder pipeline; the demo nodes ran the standard AL2023 EKS image.",
+        ],
+      },
+      {
+        num: "/06",
+        heading: "What the live apply found",
+        bullets: [
+          "CreateTrail failed with InsufficientEncryptionPolicyException. kms:DescribeKey sat under a kms:EncryptionContext condition, and DescribeKey carries no context, so it moved into its own statement.",
+          "Root-activity alerts were not arriving. EventBridge and CloudWatch cannot publish to a topic under the AWS-managed aws/sns key, so every alert topic now has its own customer-managed key granting only the service that publishes to it.",
+          "The tag policy was rejected as malformed because rds:db does not support enforcement. CostCenter is enforced on the types that do and still evaluated for compliance on RDS.",
+          "New OAM links return Forbidden for about 3.7 minutes, so the alarms wait on them. On teardown, disabling Inspector timed out after 84 of 85 workload resources were gone, and a reviewed Inspector-only recovery removed the last one.",
+        ],
+      },
+      {
+        num: "/07",
+        heading: "Verified, then torn down",
+        paragraphs: [
+          "Before teardown, live checks confirmed Network Firewall READY and IN_SYNC, both RAM associations ASSOCIATED, prod seeing the shared Transit Gateway with egress routed through inspection, EKS 1.35 with both nodes ACTIVE, and PostgreSQL 16.14 private, encrypted, and Multi-AZ. The observability suite raised a GuardDuty sample finding and confirmed its publish, saw 15 prod and 9 network metrics from the monitoring account, and forced an alarm to confirm its action fired.",
+          "Those checks prove infrastructure state and routing, not application traffic, and the write-up says so: a forced RDS failover and an end-to-end firewall traffic test were not run. Workload and network were then destroyed, and live API checks confirmed zero EKS, RDS, endpoints, NAT gateways, Transit Gateways, and firewalls, with every account still ACTIVE, the trail logging, and the monitoring plane in place.",
+        ],
+      },
+    ],
+    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "Terraform", "Infracost"],
+    repo: "https://github.com/jordann6/aws-scp-governance/tree/main",
+    receipt: {
+      rows: [
+        { k: "Foundation", v: "8 member accounts in 4 OUs, SCPs and tag policy in a permanent root; 28 resources moved into it live with zero changes" },
+        { k: "Provision", v: "50 network + 85 workload resources in us-east-1: TGW, inspection VPC, Network Firewall, private EKS 1.35, Multi-AZ PostgreSQL 16.14, Vault Lock, ECR" },
+        { k: "Verified", v: "Firewall READY and IN_SYNC, RAM ASSOCIATED, TGW egress through inspection, both EKS nodes ACTIVE, RDS private and encrypted" },
+        { k: "Observability", v: "GuardDuty sample finding published, 15 prod and 9 network metrics visible centrally, forced alarm action succeeded" },
+        { k: "Not demonstrated", v: "forced RDS failover timing and end-to-end firewall traffic" },
+        { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
+      ],
+      total: { k: "Retained", v: "accounts, audit trail, monitoring plane" },
     },
   },
 ];
