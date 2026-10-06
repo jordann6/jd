@@ -912,7 +912,7 @@ export const caseStudies: CaseStudy[] = [
       },
     ],
     stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Front Door", "Container Apps", "Azure SQL", "API Management", "Entra External ID", "Application Insights", "Terraform"],
-    repo: "https://github.com/jordann6/azure-landing-zone",
+    repo: "https://github.com/jordann6/azure-landing-zone/tree/compute-baseline",
     receipt: {
       rows: [
         { k: "Provision", v: "~145 Terraform resources across two roots: base management-group tree, policy definitions and assignments, CIS initiative, hub-spoke with firewall; plus a private AKS and zone-redundant HA PostgreSQL workload peered to the hub" },
@@ -1306,7 +1306,7 @@ export const caseStudies: CaseStudy[] = [
       },
     ],
     stack: ["Org Policy", "VPC Service Controls", "Privileged Access Manager", "Workforce Identity Federation", "Shared VPC", "Cloud NGFW", "Private Service Connect", "GKE", "Binary Authorization", "Cloud SQL", "Backup and DR", "Cloud KMS", "Terraform"],
-    repo: "https://github.com/jordann6/gcp-landing-zone",
+    repo: "https://github.com/jordann6/gcp-landing-zone/tree/compute-baseline",
     receipt: {
       rows: [
         { k: "Provision", v: "337 resources over 4 roots: 6 folders, 3 vended projects, 15 org-root constraints, 2 PAM entitlements, 13 alert policies, VPC-SC perimeter, private GKE, Cloud SQL HA plus cross-region replica, Backup and DR vault" },
@@ -2057,7 +2057,7 @@ export const caseStudies: CaseStudy[] = [
       },
     ],
     stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "Terraform", "Infracost"],
-    repo: "https://github.com/jordann6/aws-landing-zone/tree/main",
+    repo: "https://github.com/jordann6/aws-landing-zone/tree/compute-baseline",
     receipt: {
       rows: [
         { k: "Foundation", v: "8 member accounts in 4 OUs, SCPs and tag policy in a permanent root; 28 resources moved into it live with zero changes" },
