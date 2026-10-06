@@ -373,6 +373,7 @@ export const diagrams: Record<string, Diagram> = {
         nodes: [
           { label: "Private EKS", sub: "IRSA · KMS secrets", accent: true },
           { label: "RDS Multi-AZ", sub: "Vault Lock backup" },
+          { label: "Golden AMI", sub: "STIG + CIS · SSM only" },
         ],
       },
     ],

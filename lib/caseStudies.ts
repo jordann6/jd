@@ -1975,7 +1975,7 @@ export const caseStudies: CaseStudy[] = [
     title: "AWS",
     titleOut: "Landing Zone",
     category: "AWS · Platform · Governance",
-    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept.",
+    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
@@ -2049,21 +2049,23 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/08",
-        heading: "Sandbox-first compute baseline queued",
+        heading: "Compute baseline, proven live",
         paragraphs: [
-          "The next phase will plan IMDSv2 and EBS encryption SCPs plus an EC2 declarative policy for the Sandbox OU. The operator applies governance before a reduced workload network or compute root can be deployed. Public repository links use aws-landing-zone; existing state keys retain their internal names.",
-          "The proposed Image Builder bake stages the shared Ansible role in S3 for the private build subnet. One golden-AMI management instance will be reached only through SSM. Allowed-image denials and live guest-hardening proof are pending; EKS will retain its managed AL2023 node image.",
+          "Preventive guardrails went to the Sandbox OU first: SCPs that require IMDSv2 and encrypted EBS, plus an EC2 declarative policy that enforces IMDS defaults, blocks public AMI sharing, and allows only Amazon AL2023 and the prod account's golden AMIs. Eleven live dry-run checks proved each one denies. Prod gets a dedicated EBS CMK as the account default, an IMDSv2 hop-1 default, and SSM patching with a custom AL2023 baseline.",
+          "An Image Builder pipeline in a private subnet layers Amazon's STIG medium component and the same cis_baseline Ansible role the Azure and GCP zones bake, staged offline in S3, then boots a second instance from the new AMI and runs the role's check script after a reboot. The first bakes found what no static gate could: STIG's sysctl file sorted after the role's and won at boot, and STIG re-added audit rules the role already loads, so the kernel rejected the duplicates and the rules never went immutable, an error STIG's own reload discards. A reconcile step now lets the role win both overlaps and fails the build on any rule it cannot explain.",
+          "The golden AMI passed every hardening check after a reboot. A t3.micro management instance with no public IP, no key pair, and no inbound rules then passed 17 of 17 live checks, including the guest checks fetched from the pinned role tag over SSM Run Command and a patch scan against the prod baseline. Everything was destroyed the same session, golden AMIs and snapshots included, for about three dollars.",
         ],
       },
     ],
-    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "Terraform", "Infracost"],
-    repo: "https://github.com/jordann6/aws-landing-zone/tree/compute-baseline",
+    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Ansible", "Terraform", "Infracost"],
+    repo: "https://github.com/jordann6/aws-landing-zone",
     receipt: {
       rows: [
         { k: "Foundation", v: "8 member accounts in 4 OUs, SCPs and tag policy in a permanent root; 28 resources moved into it live with zero changes" },
         { k: "Provision", v: "50 network + 85 workload resources in us-east-1: TGW, inspection VPC, Network Firewall, private EKS 1.35, Multi-AZ PostgreSQL 16.14, Vault Lock, ECR" },
         { k: "Verified", v: "Firewall READY and IN_SYNC, RAM ASSOCIATED, TGW egress through inspection, both EKS nodes ACTIVE, RDS private and encrypted" },
         { k: "Observability", v: "GuardDuty sample finding published, 15 prod and 9 network metrics visible centrally, forced alarm action succeeded" },
+        { k: "Compute", v: "Sandbox guardrails 11/11 live denials; STIG + CIS golden AMI passed after reboot; private SSM-only management instance 17/17" },
         { k: "Not demonstrated", v: "forced RDS failover timing and end-to-end firewall traffic" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
