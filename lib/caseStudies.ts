@@ -899,7 +899,15 @@ export const caseStudies: CaseStudy[] = [
         heading: "Outcome",
         paragraphs: [
           "Deployed against a real Azure tenant across two Terraform roots and verified through the control plane, not the plan file: the management group hierarchy and policy assignments, private AKS nodes Ready with etcd KMS active over the Key Vault private endpoint, PostgreSQL zone-redundant HA reporting Healthy, and the Postgres backup instance ProtectionConfigured.",
-          "Then destroyed clean, base and both workloads, with the External ID tenant emptied first so it deletes on the first try, and residual limited to soft-deleted Key Vaults by design. Deploy-demo-destroy discipline keeps the whole reference reproducible for roughly the price of a couple of hours of runtime rather than a standing bill.",
+          "The demo workloads were removed, with the External ID tenant emptied first. A backup vault remains during its protected recovery window, alongside soft-deleted Key Vaults. Deploy-demo-destroy discipline keeps the whole reference reproducible for roughly the price of a couple of hours of runtime rather than a standing bill.",
+        ],
+      },
+      {
+        num: "/08",
+        heading: "Compute baseline proven live",
+        paragraphs: [
+          "Locally implemented controls restrict standalone VMs to the landing-zone Compute Gallery, approved sizes, and encryption at host, with guest configuration and periodic update assessment. AKS retains its managed Ubuntu node image with SecurityPatch and weekly maintenance settings validated statically.",
+          "Packer publishes a gallery image using the shared cis_baseline Ansible role, with narrow, expiring build exemptions. On 2026-10-05, the image passed 28 hardening checks after reboot and a new private management VM passed the same checks through Azure Run Command. All 16 guardrail checks passed, including isolated denials for an unapproved image, forbidden size, and missing host encryption. The first VM exposed an Apport boot override, which the corrected role removes. A retained backup vault remains during its recovery window; teardown is not a zero-invoice guarantee.",
         ],
       },
     ],
@@ -909,10 +917,11 @@ export const caseStudies: CaseStudy[] = [
       rows: [
         { k: "Provision", v: "~145 Terraform resources across two roots: base management-group tree, policy definitions and assignments, CIS initiative, hub-spoke with firewall; plus a private AKS and zone-redundant HA PostgreSQL workload peered to the hub" },
         { k: "Verify", v: "Private AKS nodes Ready with etcd KMS active over the KV private endpoint, PostgreSQL HA Healthy, backup ProtectionConfigured, all confirmed via the Azure control plane" },
+        { k: "Compute baseline", v: "Packer image and new private management VM each passed 28 guest checks; 16 guardrail checks passed, including three independent policy denials. AKS node changes checked statically." },
         { k: "Portal smoke", v: "7 of 7 through Front Door: WAF blocked a SQL injection probe (403), partner API 200 with a key and 401 without" },
         { k: "App drill", v: "primary region ingress disabled, Front Door serving entirely from the second region 83.9 s later" },
         { k: "Data drill", v: "planned SQL failover: longest write gap 7.3 s, 0 acknowledged writes lost; failback 7.4 s, 0 of 36 lost" },
-        { k: "Destroy", v: "Base and both workloads torn down clean; residual limited to soft-deleted Key Vaults by design" },
+        { k: "Destroy", v: "Demo compute and network removed; backup vault retained during its recovery window, plus soft-deleted Key Vaults" },
       ],
       total: { k: "Cost", v: "~$2/hr while up, deploy-demo-destroy" },
     },
@@ -1285,6 +1294,14 @@ export const caseStudies: CaseStudy[] = [
         paragraphs: [
           "Two suites ran against the live org. The guardrail suite proved controls deny, and requires each denial to name the control, so a refusal for an unrelated reason cannot pass: a service account key, an out-of-region bucket, and an unencrypted prod bucket refused; a non-allowlisted site unreachable from inside the VPC while an allowlisted one answered; the operator blocked by the perimeter while sa-terraform was admitted; and the org sink delivering over 13,000 audit rows to BigQuery.",
           "The workload suite proved the paved road end to end: an unsigned image rejected at admission, a signed one admitted, an app pod reading its secret with no key and connecting over TLS, an unlabelled pod and a VM in the same VPC both unable to reach the database, and a zonal failover from us-central1-f to us-central1-c in 37 seconds on the same private IP. Then all four roots were destroyed and a teardown check confirmed nothing hourly survived and Google's defaults were intact.",
+        ],
+      },
+      {
+        num: "/08",
+        heading: "Compute baseline queued",
+        paragraphs: [
+          "The next phase will add trusted-image restrictions, a golden image baked with the shared cis_baseline Ansible role, and one private management VM reached through IAP and OS Login. GKE keeps its managed node image; its maintenance changes will be checked statically.",
+          "The existing 39 live tests establish the earlier governance and workload demo. They do not establish management-VM hardening. The private image bake is paused pending an approved package mirror or egress path; no public-IP or NAT exception is authorized. The image, VM, and live guest proof remain pending.",
         ],
       },
     ],
@@ -2028,6 +2045,14 @@ export const caseStudies: CaseStudy[] = [
         paragraphs: [
           "Before teardown, live checks confirmed Network Firewall READY and IN_SYNC, both RAM associations ASSOCIATED, prod seeing the shared Transit Gateway with egress routed through inspection, EKS 1.35 with both nodes ACTIVE, and PostgreSQL 16.14 private, encrypted, and Multi-AZ. The observability suite raised a GuardDuty sample finding and confirmed its publish, saw 15 prod and 9 network metrics from the monitoring account, and forced an alarm to confirm its action fired.",
           "Those checks prove infrastructure state and routing, not application traffic, and the write-up says so: a forced RDS failover and an end-to-end firewall traffic test were not run. Workload and network were then destroyed, and live API checks confirmed zero EKS, RDS, endpoints, NAT gateways, Transit Gateways, and firewalls, with every account still ACTIVE, the trail logging, and the monitoring plane in place.",
+        ],
+      },
+      {
+        num: "/08",
+        heading: "Sandbox-first compute baseline queued",
+        paragraphs: [
+          "The next phase will plan IMDSv2 and EBS encryption SCPs plus an EC2 declarative policy for the Sandbox OU. The operator applies governance before a reduced workload network or compute root can be deployed. Public repository links use aws-landing-zone; existing state keys retain their internal names.",
+          "The proposed Image Builder bake stages the shared Ansible role in S3 for the private build subnet. One golden-AMI management instance will be reached only through SSM. Allowed-image denials and live guest-hardening proof are pending; EKS will retain its managed AL2023 node image.",
         ],
       },
     ],
