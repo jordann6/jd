@@ -360,7 +360,7 @@ export const diagrams: Record<string, Diagram> = {
       {
         nodes: [
           { label: "Org CloudTrail", sub: "Object Lock · KMS" },
-          { label: "Security acct", sub: "GuardDuty · Sec Hub" },
+          { label: "Security acct", sub: "GuardDuty · Sec Hub · secrets scan" },
         ],
       },
       {
