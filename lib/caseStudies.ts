@@ -1979,7 +1979,7 @@ export const caseStudies: CaseStudy[] = [
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
-      { k: "Roots", v: "5, split by lifecycle" },
+      { k: "Roots", v: "8, split by lifecycle" },
       { k: "Accounts", v: "8 members, 4 OUs" },
     ],
     blocks: [
@@ -1993,11 +1993,12 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/02",
-        heading: "Five roots, split by how long they live",
+        heading: "Roots split by how long they live",
         bullets: [
           "accounts is permanent: the organization, OUs, eight member accounts, SCPs, the tag policy, and RAM sharing. Every account carries close_on_deletion false and prevent_destroy, because a closed account sits SUSPENDED for 90 days holding org quota and its email alias, and the next deploy collides with it. Idle accounts cost nothing.",
           "governance and observability are nearly free and stay up: the audit trail, detective services, identity, budgets, and the monitoring plane.",
-          "network and workload are the hourly layers. They apply and destroy on their own, workload first and network second, so the expensive tiers exist only for a demo.",
+          "network and workload are the hourly layers. They apply and destroy on their own, workload first and network second, so the expensive tiers exist only for a demo. compute rides with them.",
+          "bootstrap holds the CI OIDC roles and the dedicated state backend, and secrets holds the scanner's metadata-only roles at no cost; both stay up.",
           "Moving the org into its own root was done live with import and removed blocks: 28 resources adopted, zero added, zero destroyed, and both roots re-planned to no changes.",
         ],
       },
@@ -2056,8 +2057,16 @@ export const caseStudies: CaseStudy[] = [
           "The golden AMI passed every hardening check after a reboot. A t3.micro management instance with no public IP, no key pair, and no inbound rules then passed 17 of 17 live checks, including the guest checks fetched from the pinned role tag over SSM Run Command and a patch scan against the prod baseline. Everything was destroyed the same session, golden AMIs and snapshots included, for about three dollars.",
         ],
       },
+      {
+        num: "/09",
+        heading: "A secrets scanner that cannot read a secret",
+        paragraphs: [
+          "The secrets-lifecycle scanner runs in the security account, not management, because management is SCP-exempt and should hold only org-level resources. A secrets root gives it one role in every member account that trusts only the exact scanner role inside the organization, allows inventory and version metadata, and explicitly denies GetSecretValue, BatchGetSecretValue, every parameter read, and kms:Decrypt. Age comes from the current version's creation date, so a renewed key is not flagged, and a second alarm fires when no scan completes, so an AccessDenied can never look healthy. Its dashboard lists secret names and their readers, so it stays private; the demo build served it publicly and that became opt-in.",
+          "The first live scan returned zero, which proves nothing on its own. CloudTrail showed the scanner's AssumeRole into all seven target accounts, and a positive control closed the gap: an empty secret created in sandbox was inventoried on the next scan, SecretsNeedingAttention went to 1, and the age alarm moved to ALARM and published to its encrypted topic a minute later. The policy simulator confirms the value reads are explicit denies on the deployed roles.",
+        ],
+      },
     ],
-    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Ansible", "Terraform", "Infracost"],
+    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
     repo: "https://github.com/jordann6/aws-landing-zone",
     receipt: {
       rows: [
@@ -2066,10 +2075,11 @@ export const caseStudies: CaseStudy[] = [
         { k: "Verified", v: "Firewall READY and IN_SYNC, RAM ASSOCIATED, TGW egress through inspection, both EKS nodes ACTIVE, RDS private and encrypted" },
         { k: "Observability", v: "GuardDuty sample finding published, 15 prod and 9 network metrics visible centrally, forced alarm action succeeded" },
         { k: "Compute", v: "Sandbox + Workloads guardrails 20/20 live checks; STIG + CIS golden AMI passed after reboot; private SSM-only management instance 17/17" },
+        { k: "Secrets", v: "scanner in the security account assumed into all 7 targets; sandbox positive control flagged, age alarm OK to ALARM, value reads explicitly denied" },
         { k: "Not demonstrated", v: "forced RDS failover timing and end-to-end firewall traffic" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
-      total: { k: "Retained", v: "accounts, audit trail, monitoring plane" },
+      total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner" },
     },
   },
 ];
