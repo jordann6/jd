@@ -82,7 +82,7 @@ export const capabilities: Capability[] = [
       "Multi-account and multi-subscription foundations built in Terraform: OU and management group hierarchies, SCP and Azure Policy guardrails, hub-spoke networking, account vending, and centralized audit logging.",
     proofs: [
       { label: "AWS Landing Zone", href: "/work/aws-landing-zone/", internal: true },
-      { label: "Azure Landing Zone", href: "https://github.com/jordann6/azure-landing-zone" },
+      { label: "Azure Landing Zone", href: "/work/azure-landing-zone/", internal: true },
       { label: "GCP Landing Zone", href: "/work/gcp-landing-zone/", internal: true },
     ],
   },
