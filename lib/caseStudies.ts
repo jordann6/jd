@@ -912,7 +912,7 @@ export const caseStudies: CaseStudy[] = [
       },
     ],
     stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Front Door", "Container Apps", "Azure SQL", "API Management", "Entra External ID", "Application Insights", "Terraform"],
-    repo: "https://github.com/jordann6/azure-landing-zone/tree/compute-baseline",
+    repo: "https://github.com/jordann6/azure-landing-zone/tree/main",
     receipt: {
       rows: [
         { k: "Provision", v: "~145 Terraform resources across two roots: base management-group tree, policy definitions and assignments, CIS initiative, hub-spoke with firewall; plus a private AKS and zone-redundant HA PostgreSQL workload peered to the hub" },
