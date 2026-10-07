@@ -360,7 +360,7 @@ export const diagrams: Record<string, Diagram> = {
       {
         nodes: [
           { label: "Org CloudTrail", sub: "Object Lock · KMS" },
-          { label: "Security acct", sub: "GuardDuty · Sec Hub · secrets scan" },
+          { label: "Security acct", sub: "GuardDuty · forensics · secrets scan" },
         ],
       },
       {
@@ -374,6 +374,7 @@ export const diagrams: Record<string, Diagram> = {
           { label: "Private EKS", sub: "IRSA · KMS secrets", accent: true },
           { label: "RDS Multi-AZ", sub: "Vault Lock backup" },
           { label: "Golden AMI", sub: "STIG + CIS · SSM only" },
+          { label: "us-west-2 standby", sub: "replica · DNS failover" },
         ],
       },
     ],
