@@ -26,9 +26,6 @@ export async function generateMetadata({
   };
 }
 
-// The IDP repository is still private; its page links out without code.
-const PRIVATE_REPOS = new Set(["multi-cloud-developer-platform"]);
-
 const CLOUDS = [
   { key: "AWS", icon: "aws" },
   { key: "Azure", icon: "azure" },
@@ -84,14 +81,10 @@ export default async function CaseStudyPage({
         </dl>
 
         <div className="dlg-links">
-          {PRIVATE_REPOS.has(slug) ? (
-            <span className="fchip">Repository private for now</span>
-          ) : (
-            <a className="btn btn-primary" href={cs.repo} target="_blank" rel="noopener noreferrer">
-              <BrandIcon name="github" />
-              Code on GitHub
-            </a>
-          )}
+          <a className="btn btn-primary" href={cs.repo} target="_blank" rel="noopener noreferrer">
+            <BrandIcon name="github" />
+            Code on GitHub
+          </a>
           <a className="btn btn-ghost" href="/#contact">
             Discuss a solution
           </a>
