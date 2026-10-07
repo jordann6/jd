@@ -2083,7 +2083,7 @@ export const caseStudies: CaseStudy[] = [
       },
     ],
     stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
-    repo: "https://github.com/jordann6/aws-landing-zone/tree/incident-tooling",
+    repo: "https://github.com/jordann6/aws-landing-zone",
     receipt: {
       rows: [
         { k: "Foundation", v: "8 member accounts in 4 OUs, SCPs and tag policy in a permanent root; 28 resources moved into it live with zero changes" },
