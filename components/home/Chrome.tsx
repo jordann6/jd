@@ -1,5 +1,6 @@
 import { BrandIcon, JdLogo } from "./Brand";
 import { contact } from "@/lib/solutions";
+import VisitorCount from "@/components/VisitorCount";
 
 function BrandLink({ label }: { label: string }) {
   return (
@@ -45,6 +46,9 @@ export function SiteFooter() {
           <a href="/work/">All work</a>
           <a href="/#contact">Let&apos;s talk</a>
         </nav>
+        <span className="visits">
+          Visitors · <VisitorCount fallback="…" />
+        </span>
         <div className="soc">
           <a href={contact.linkedin} aria-label="LinkedIn">
             <BrandIcon name="linkedin" />
