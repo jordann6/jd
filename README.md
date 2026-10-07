@@ -1,8 +1,8 @@
-# Cloud Resume Challenge — [jordandesigns.io](https://jordandesigns.io)
+# [jordandesigns.io](https://jordandesigns.io)
 
 [![CI](https://github.com/jordann6/jd/actions/workflows/deploy.yml/badge.svg)](https://github.com/jordann6/jd/actions/workflows/deploy.yml)
 
-Portfolio site, an evolution of Forrest Brazeal's Cloud Resume Challenge. Built with Next.js (App Router) as a static export on a serverless AWS backend, with automated deployments, real-time visitor tracking, and all infrastructure defined as code in Terraform.
+Portfolio site, an evolution of Forrest Brazeal's Cloud Resume Challenge. Built with Next.js (App Router) as a static export served from S3 through CloudFront, with automated deployments and all infrastructure defined as code in Terraform. The original visitor counter (API Gateway, Lambda, DynamoDB) was retired in October 2026.
 
 ## Architecture
 
@@ -13,7 +13,6 @@ Portfolio site, an evolution of Forrest Brazeal's Cloud Resume Challenge. Built 
 | DNS & TLS | Route 53 · ACM (TLSv1.2+) |
 | Edge | CloudFront (OAC · HTTPS-only · compress · IPv6 · security headers · index-rewrite function) |
 | Storage | S3 (private bucket · AES-256 SSE · OAC-only access) |
-| Visitor Counter | API Gateway → Lambda (Python 3.13) → DynamoDB |
 | CI/CD | GitHub Actions → OIDC → IAM role → S3 sync + CF invalidation |
 | IaC | Terraform (remote state: S3) |
 
@@ -23,21 +22,20 @@ Portfolio site, an evolution of Forrest Brazeal's Cloud Resume Challenge. Built 
 jd/                                    # Next.js (App Router), static export
 ├── app/
 │   ├── layout.tsx                     # Root layout: fonts, site chrome, metadata
-│   ├── page.tsx                       # Home (hero, index, skills, certs, contact)
-│   ├── globals.css                    # Editorial design system + styles
+│   ├── page.tsx                       # Home (hero, solutions, services, approach, about, contact)
+│   ├── site.css                       # Design system + styles
 │   ├── icon.svg                       # jd favicon
 │   ├── not-found.tsx                  # 404 page
 │   └── work/
 │       ├── page.tsx                   # Full project index
+│       ├── case-studies/page.tsx      # Case-study index
 │       ├── [slug]/page.tsx            # Deep case-study pages
 │       └── category/[cat]/page.tsx    # Shareable per-category pages (aws/azure/ai/platform)
-├── components/                        # Hero, Nav, ProjectIndex, CaseDiagram, Cursor, ...
-├── lib/                               # projects, caseStudies, diagrams, site data
-├── backend/
-│   └── lambda_function.py             # Visitor counter Lambda
+├── components/                        # home/ (sections, dialog, brand marks), ProjectIndex, CalendlyEmbed
+├── lib/                               # projects, caseStudies, diagrams, architecture, solutions
+├── public/diagrams/                   # Architecture diagrams copied from each case study repo
 ├── infrastructure/
 │   └── terraform/
-│       ├── main.tf                    # DynamoDB, Lambda, API Gateway, IAM
 │       ├── cloudfront.tf              # CloudFront: OAC, index-rewrite fn, security headers
 │       ├── s3.tf                      # Private S3 bucket + policy
 │       ├── route53.tf                 # DNS A alias record
@@ -81,14 +79,12 @@ python3 diagram.py
 
 - S3 bucket is fully private — accessible only by CloudFront via Origin Access Control (SigV4 signed requests)
 - CloudFront enforces HTTPS and TLSv1.2 minimum for all viewers
-- Lambda IAM role scoped to `dynamodb:UpdateItem` on a single table
 - GitHub Actions uses short-lived OIDC tokens — no long-lived AWS credentials stored
-- CORS on the visitor counter API locked to `https://jordandesigns.io`
 - Terraform remote state stored in S3 (`tf-backend-jord-projs`)
 
 ## Tech Stack
 
-`Next.js` `React` `TypeScript` `S3` `CloudFront` `Route 53` `ACM` `API Gateway` `Lambda` `DynamoDB` `IAM` `Terraform` `GitHub Actions` `Python`
+`Next.js` `React` `TypeScript` `S3` `CloudFront` `Route 53` `ACM` `IAM` `Terraform` `GitHub Actions`
 
 ## Contact
 
