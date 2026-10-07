@@ -11,9 +11,6 @@ export type SolutionStudy = CaseStudy & {
   architecture: ArchitectureImage | null;
 };
 
-// The IDP repository is still private; its case study links out without code.
-const PRIVATE_REPOS = new Set(["multi-cloud-developer-platform"]);
-
 // Any element with data-open="<slug>" opens that solution's case study. The
 // cards stay server-rendered buttons; this one listener does the rest.
 export default function SolutionDialog({
@@ -103,11 +100,9 @@ export default function SolutionDialog({
               <a className="btn btn-primary" href={`/work/${c.slug}/`}>
                 Read the full case study
               </a>
-              {!PRIVATE_REPOS.has(c.slug) && (
-                <a className="btn btn-ghost" href={c.repo}>
-                  Code on GitHub
-                </a>
-              )}
+              <a className="btn btn-ghost" href={c.repo}>
+                Code on GitHub
+              </a>
             </div>
             {c.architecture && (
               <ArchitectureFigure image={c.architecture} title={`${c.title} ${c.titleOut}`} />
