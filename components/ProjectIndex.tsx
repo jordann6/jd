@@ -1,10 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useMemo, useRef, useState } from "react";
 import {
   projects,
-  featuredProjects,
   CATEGORIES,
   categoryMeta,
   caseStudyMeta,
@@ -12,8 +10,15 @@ import {
   type Category,
   type Project,
 } from "@/lib/projects";
+import { BrandIcon } from "@/components/home/Brand";
+import { plain } from "@/components/home/Diagrams";
+import type { Cloud } from "@/lib/solutions";
 
 type Filter = Category | "All" | typeof CASE_STUDY_FILTER;
+
+const CLOUD_ICONS: Partial<Record<Category, Cloud>> = { AWS: "aws", Azure: "azure", GCP: "gcp" };
+
+const LABELS: Partial<Record<Filter, string>> = { GCP: "Google Cloud" };
 
 function hrefFor(f: Filter): string {
   if (f === "All") return "/work/";
@@ -22,24 +27,14 @@ function hrefFor(f: Filter): string {
 }
 
 /**
- * Shared project index used in three modes:
- * - featured (homepage): curated Selected Work tier, no filter chips.
- * - interactive: chips toggle a client-side filter.
- * - linked (route pages): chips are real links to /work/category/<cat>, and the
- *   visible filter is fixed by the page's `initial` prop so the page is shareable.
+ * The full catalog for /work and its category pages. Filter chips are real
+ * links, so the visible filter comes from the page's `initial` prop and every
+ * view is shareable. Case-study cards link to their page; the rest open a
+ * dialog with the description and repo links.
  */
-export default function ProjectIndex({
-  initial = "All",
-  linked = false,
-  featuredOnly = false,
-}: {
-  initial?: Filter;
-  linked?: boolean;
-  featuredOnly?: boolean;
-}) {
-  const [filter, setFilter] = useState<Filter>(initial);
+export default function ProjectIndex({ initial = "All" }: { initial?: Filter }) {
+  const dialog = useRef<HTMLDialogElement>(null);
   const [modal, setModal] = useState<Project | null>(null);
-  const active: Filter = linked ? initial : filter;
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {
@@ -53,131 +48,134 @@ export default function ProjectIndex({
   }, []);
 
   const visible = useMemo(() => {
-    if (featuredOnly) return featuredProjects();
-    if (active === "All") return projects;
-    if (active === CASE_STUDY_FILTER) return projects.filter((p) => p.caseStudy);
-    return projects.filter((p) => p.categories.includes(active as Category));
-  }, [active, featuredOnly]);
+    if (initial === "All") return projects;
+    if (initial === CASE_STUDY_FILTER) return projects.filter((p) => p.caseStudy);
+    return projects.filter((p) => p.categories.includes(initial as Category));
+  }, [initial]);
 
   const filters = ["All", ...CATEGORIES, CASE_STUDY_FILTER] as Filter[];
 
+  const open = (p: Project) => {
+    setModal(p);
+    dialog.current?.showModal();
+    document.documentElement.classList.add("locked");
+  };
+
   return (
     <>
-      {!featuredOnly && (
-      <div className="proj__filters reveal">
-        {filters.map((f) =>
-          linked ? (
-            <Link
-              key={f}
-              href={hrefFor(f)}
-              className={`filter-chip${active === f ? " active" : ""}`}
-            >
-              {f} <span className="count">{counts[f]}</span>
-            </Link>
-          ) : (
-            <button
-              key={f}
-              className={`filter-chip${filter === f ? " active" : ""}`}
-              onClick={() => setFilter(f)}
-            >
-              {f} <span className="count">{counts[f]}</span>
-            </button>
-          ),
-        )}
-      </div>
-      )}
+      <nav className="chips" aria-label="Filter work">
+        {filters.map((f) => (
+          <a
+            key={f}
+            href={hrefFor(f)}
+            className="chip"
+            aria-current={initial === f ? "page" : undefined}
+          >
+            {CLOUD_ICONS[f as Category] && <BrandIcon name={CLOUD_ICONS[f as Category]!} />}
+            {LABELS[f] ?? f} <span className="count">{counts[f]}</span>
+          </a>
+        ))}
+      </nav>
 
-      <div className="proj__list reveal">
-        {visible.map((p) =>
-          p.caseStudy ? (
-            <Link className="proj__item" key={p.num} href={`/work/${p.caseStudy}/`}>
-              <div className="proj__num">/{p.num}</div>
-              <div className="proj__main">
-                <div className="proj__title">
-                  {p.title} <span className="out">{p.titleOut}</span>
-                  <span className="proj__casebadge">Case Study</span>
-                </div>
-                <div className="proj__hover-tags">
-                  {p.tags.map((t) => (
-                    <span className="tag" key={t}>
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <span className="proj__arrow">↗</span>
-            </Link>
-          ) : (
-            <button className="proj__item" key={p.num} onClick={() => setModal(p)}>
-              <div className="proj__num">/{p.num}</div>
-              <div className="proj__main">
-                <div className="proj__title">
-                  {p.title} <span className="out">{p.titleOut}</span>
-                </div>
-                <div className="proj__hover-tags">
-                  {p.tags.map((t) => (
-                    <span className="tag" key={t}>
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <span className="proj__arrow">↗</span>
-            </button>
-          ),
-        )}
-      </div>
-
-      {modal && (
-        <div
-          className="modal-mask"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setModal(null);
-          }}
-        >
-          <div className="modal">
-            <div className="modal__top">
-              <span>↳ Project /{modal.num}</span>
-              <span className="modal__close" onClick={() => setModal(null)}>
-                Close ✕
+      <div className="pgrid">
+        {visible.map((p) => {
+          const inner = <CardBody p={p} />;
+          return p.caseStudy ? (
+            <a className="pcard" key={p.num} href={`/work/${p.caseStudy}/`}>
+              {inner}
+              <span className="sol-go">
+                Read the case study <span aria-hidden="true">→</span>
               </span>
-            </div>
-            <h3>
-              {modal.title} <span className="out">{modal.titleOut}</span>
-            </h3>
-            <p className="modal__desc">{modal.desc}</p>
-            <div className="modal__tags">
+            </a>
+          ) : (
+            <button type="button" className="pcard" key={p.num} onClick={() => open(p)}>
+              {inner}
+              <span className="sol-go">
+                View details <span aria-hidden="true">→</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <dialog
+        className="dlg dlg-sm"
+        ref={dialog}
+        aria-labelledby="proj-title"
+        onClose={() => document.documentElement.classList.remove("locked")}
+        onClick={(e) => {
+          if (e.target === dialog.current) dialog.current.close();
+        }}
+      >
+        <div className="dlg-bar">
+          <span className="eyebrow">{modal?.categories.join(" · ")}</span>
+          <button
+            type="button"
+            className="dlg-close"
+            aria-label="Close project details"
+            onClick={() => dialog.current?.close()}
+          >
+            Close ✕
+          </button>
+        </div>
+        {modal && (
+          <div className="dlg-body">
+            <h2 id="proj-title">
+              {modal.title} {modal.titleOut}
+            </h2>
+            <p className="dlg-lede">{plain(modal.desc)}</p>
+            <div className="tags">
               {modal.tags.map((t) => (
-                <span className="tag" key={t}>
-                  {t}
-                </span>
+                <span key={t}>{t}</span>
               ))}
             </div>
-            <div className="modal__actions">
+            <div className="dlg-links">
               {(
                 modal.links ?? [
                   {
-                    label: modal.link.includes("github")
-                      ? "View on GitHub"
-                      : "Read on Substack",
+                    label: modal.link.includes("github") ? "Code on GitHub" : "Read on Substack",
                     href: modal.link,
                   },
                 ]
               ).map((l) => (
                 <a
-                  className="btn btn--primary"
+                  className="btn btn-primary"
                   key={l.href}
                   href={l.href}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {l.label} <span className="arrow">↗</span>
+                  {l.label}
                 </a>
               ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </dialog>
+    </>
+  );
+}
+
+function CardBody({ p }: { p: Project }) {
+  const clouds = p.categories.filter((c) => CLOUD_ICONS[c]);
+  return (
+    <>
+      <span className="sol-k">
+        {clouds.map((c) => (
+          <BrandIcon key={c} name={CLOUD_ICONS[c]!} />
+        ))}
+        {p.categories.map((c) => LABELS[c] ?? c).join(" · ")}
+        {p.caseStudy && <span className="badge">Case study</span>}
+      </span>
+      <span className="sol-t">
+        {p.title} {p.titleOut}
+      </span>
+      <span className="ptags">
+        {p.tags.slice(0, 4).map((t) => (
+          <span key={t}>{t}</span>
+        ))}
+        {p.tags.length > 4 && <span>+{p.tags.length - 4}</span>}
+      </span>
     </>
   );
 }
