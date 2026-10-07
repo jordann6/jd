@@ -1,6 +1,5 @@
 import { BrandIcon, JdLogo } from "./Brand";
 import { contact } from "@/lib/solutions";
-import VisitorCount from "@/components/VisitorCount";
 
 function BrandLink({ label }: { label: string }) {
   return (
@@ -35,6 +34,9 @@ export function SiteHeader() {
   );
 }
 
+// Evaluated at build time; every deploy is a build, so the year stays current.
+const year = new Date().getFullYear();
+
 export function SiteFooter() {
   return (
     <footer>
@@ -46,9 +48,6 @@ export function SiteFooter() {
           <a href="/work/">All work</a>
           <a href="/#contact">Let&apos;s talk</a>
         </nav>
-        <span className="visits">
-          Visitors · <VisitorCount fallback="…" />
-        </span>
         <div className="soc">
           <a href={contact.linkedin} aria-label="LinkedIn">
             <BrandIcon name="linkedin" />
@@ -57,6 +56,13 @@ export function SiteFooter() {
             <BrandIcon name="github" />
           </a>
         </div>
+      </div>
+      <div className="wrap foot-legal">
+        <span>© {year} jordandesigns.io. All rights reserved.</span>
+        <span className="powered">
+          Powered by <BrandIcon name="aws" />
+          <span className="sr-only">AWS</span>
+        </span>
       </div>
     </footer>
   );

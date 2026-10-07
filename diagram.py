@@ -1,10 +1,7 @@
 from diagrams import Diagram, Cluster, Edge
-from diagrams.aws.network import Route53, CloudFront, APIGateway
+from diagrams.aws.network import Route53, CloudFront
 from diagrams.aws.storage import S3
-from diagrams.aws.compute import Lambda
-from diagrams.aws.database import Dynamodb
 from diagrams.aws.security import ACM, IAMRole
-from diagrams.aws.management import CloudwatchLogs
 from diagrams.onprem.vcs import Github
 from diagrams.onprem.client import Users
 
@@ -18,7 +15,7 @@ graph_attr = {
 }
 
 with Diagram(
-    "jordandesigns.io — Cloud Resume Challenge",
+    "jordandesigns.io: static site on AWS",
     filename="architecture",
     outformat="png",
     graph_attr=graph_attr,
@@ -32,12 +29,6 @@ with Diagram(
     cdn = CloudFront("CloudFront\nHTTPS-only · OAC\ncompress · IPv6")
     bucket = S3("S3\nPrivate Bucket\nAES-256 SSE")
 
-    with Cluster("Visitor Counter"):
-        apigw = APIGateway("API Gateway\nGET /count")
-        fn = Lambda("VisitorCounter\nPython 3.13")
-        db = Dynamodb("DynamoDB\nvisitor_count")
-        logs = CloudwatchLogs("CloudWatch\nLogs")
-
     with Cluster("CI/CD"):
         github = Github("GitHub Actions")
         oidc = IAMRole("OIDC\nDeploy Role")
@@ -45,6 +36,4 @@ with Diagram(
     user >> Edge(label="HTTPS") >> dns >> cdn
     acm >> Edge(style="dashed", color="grey") >> cdn
     cdn >> bucket
-    cdn >> apigw >> fn >> db
-    fn >> Edge(style="dashed") >> logs
     github >> oidc >> Edge(label="s3 sync\nCF invalidate") >> bucket
