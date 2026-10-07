@@ -2045,7 +2045,7 @@ export const caseStudies: CaseStudy[] = [
         heading: "Verified, then torn down",
         paragraphs: [
           "Before teardown, live checks confirmed Network Firewall READY and IN_SYNC, both RAM associations ASSOCIATED, prod seeing the shared Transit Gateway with egress routed through inspection, EKS 1.35 with both nodes ACTIVE, and PostgreSQL 16.14 private, encrypted, and Multi-AZ. The observability suite raised a GuardDuty sample finding and confirmed its publish, saw 15 prod and 9 network metrics from the monitoring account, and forced an alarm to confirm its action fired.",
-          "Those checks prove infrastructure state and routing, not application traffic, and the write-up says so: a forced RDS failover and an end-to-end firewall traffic test were not run. Workload and network were then destroyed, and live API checks confirmed zero EKS, RDS, endpoints, NAT gateways, Transit Gateways, and firewalls, with every account still ACTIVE, the trail logging, and the monitoring plane in place.",
+          "Those checks prove infrastructure state and routing, not application traffic, and the write-up says so: a forced RDS failover and an end-to-end firewall traffic test were not run in that first session (the failover was proven later, below). Workload and network were then destroyed, and live API checks confirmed zero EKS, RDS, endpoints, NAT gateways, Transit Gateways, and firewalls, with every account still ACTIVE, the trail logging, and the monitoring plane in place.",
         ],
       },
       {
@@ -2065,6 +2065,22 @@ export const caseStudies: CaseStudy[] = [
           "The first live scan returned zero, which proves nothing on its own. CloudTrail showed the scanner's AssumeRole into all seven target accounts, and a positive control closed the gap: an empty secret created in sandbox was inventoried on the next scan, SecretsNeedingAttention went to 1, and the age alarm moved to ALARM and published to its encrypted topic a minute later. The policy simulator confirms the value reads are explicit denies on the deployed roles.",
         ],
       },
+      {
+        num: "/10",
+        heading: "Incident response, with the bugs it found",
+        paragraphs: [
+          "Two earlier projects run here as landing-zone controls. The forensics runbook sits in the security account as a standing control: a GuardDuty finding crosses an account bus, isolates the instance, captures an encrypted snapshot under the evidence key, writes a manifest, and revokes old sessions. The n8n responder is an hourly layer in the prod VPC with no internet route; a forced alarm went through SQS to n8n, remediated three times, and failed RDS over in about 35 seconds with an empty dead-letter queue. A control run with the alarm forced to OK triggered nothing.",
+          "The live run found two real bugs. The evidence step ran before the source snapshot finished, so the first drill contained the instance and then failed at evidence; a retry on SnapshotNotReady fixed it. And the SCP that requires encrypted EBS also denies turning default encryption off, so one resource could never be destroyed; it was dropped because the declarative policy already owns that setting. The Claude-written summary is built but unproven: Bedrock returned 403 and 404 for the models tried, so the proof used templates.",
+        ],
+      },
+      {
+        num: "/11",
+        heading: "A warm standby in us-west-2",
+        paragraphs: [
+          "The region-lockdown SCP allows only us-east-1, so opening a second region took two statements: allow us-west-2, then deny it to every account except prod. A multi-region KMS key encrypts a cross-region RDS replica and the replicated secret. Route 53 health checks shift traffic first; a separate Lambda in the standby region promotes the replica when the alarm crosses regions, because DNS failover and database promotion run on different clocks.",
+          "Eight of eight live checks passed, including replication, a 409 on writes while the standby was a replica, the DNS flip, promotion, and a write accepted afterward. All 75 resources were destroyed. Closing the region again blocked the verification calls, so the us-west-2 teardown rests on Terraform's own destroy rather than a live listing, and the write-up says so. The full second hub was designed and priced at about eight to ten dollars a run, and not built.",
+        ],
+      },
     ],
     stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
     repo: "https://github.com/jordann6/aws-landing-zone",
@@ -2076,7 +2092,9 @@ export const caseStudies: CaseStudy[] = [
         { k: "Observability", v: "GuardDuty sample finding published, 15 prod and 9 network metrics visible centrally, forced alarm action succeeded" },
         { k: "Compute", v: "Sandbox + Workloads guardrails 20/20 live checks; STIG + CIS golden AMI passed after reboot; private SSM-only management instance 17/17" },
         { k: "Secrets", v: "scanner in the security account assumed into all 7 targets; sandbox positive control flagged, age alarm OK to ALARM, value reads explicitly denied" },
-        { k: "Not demonstrated", v: "forced RDS failover timing and end-to-end firewall traffic" },
+        { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0" },
+        { k: "Standby", v: "us-west-2 warm standby 8/8: encrypted cross-region replica, DNS flip, automated promotion, write accepted after failover" },
+        { k: "Not demonstrated", v: "end-to-end firewall traffic; Claude-written incident summaries (built, Bedrock entitlement blocked them)" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
       total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner" },
