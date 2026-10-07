@@ -345,6 +345,12 @@ export const diagrams: Record<string, Diagram> = {
           { label: "Cloud SQL HA", sub: "CMEK · DR replica" },
         ],
       },
+      {
+        nodes: [
+          { label: "Golden image VM", sub: "mirror bake · IAP only" },
+          { label: "Incident handler", sub: "SCC to quarantine", accent: true },
+        ],
+      },
     ],
   },
   "aws-landing-zone": {

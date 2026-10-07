@@ -1236,12 +1236,12 @@ export const caseStudies: CaseStudy[] = [
     title: "GCP",
     titleOut: "Landing Zone",
     category: "GCP · Platform · Governance",
-    lede: "An organization built as code to parity with the AWS and Azure landing zones: 15 org-root constraints, no standing prod access, a VPC Service Controls perimeter around the restricted network, and a private GKE plus HA Cloud SQL paved road on top. Deployed live, proven by 39 tests, and destroyed.",
+    lede: "An organization built as code to parity with the AWS and Azure landing zones: org-root constraints, no standing prod access, a VPC Service Controls perimeter, a private GKE plus HA Cloud SQL paved road, a hardened golden-image management VM, and an incident handler that quarantines it. Deployed live in seven roots, proven suite by suite, and destroyed.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "GCP" },
-      { k: "Roots", v: "4, applied in order" },
-      { k: "Resources", v: "337 (Terraform)" },
+      { k: "Roots", v: "7, applied in order" },
+      { k: "Resources", v: "380 destroyed (Terraform)" },
     ],
     blocks: [
       {
@@ -1309,22 +1309,31 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/08",
-        heading: "Compute baseline queued",
+        heading: "Compute baseline, detection and response",
         paragraphs: [
-          "The next phase will add trusted-image restrictions, a golden image baked with the shared cis_baseline Ansible role, and one private management VM reached through IAP and OS Login. GKE keeps its managed node image; its maintenance changes will be checked statically.",
-          "The existing 39 live tests establish the earlier governance and workload demo. They do not establish management-VM hardening. The private image bake is paused pending an approved package mirror or egress path; no public-IP or NAT exception is authorized. The image, VM, and live guest proof remain pending.",
+          "The private bake reads Ubuntu through Artifact Registry remote repositories, because the bake VPC has no internet route. A golden image carrying the shared cis_baseline role boots the management VM, which is reached only through IAP and OS Login and has no external IP. compute.trustedImageProjects rejects stock images everywhere else. make test-compute passed 20 of 20, including the live hardening check and a SUCCEEDED OS Config patch job through the restricted Private Service Connect path.",
+          "On top sit Cloud Asset Inventory feeds with a BigQuery export (an IAM change was found in both, then reverted: 9 of 9), 11 ops alert policies (a forced egress-deny alert opened in about three minutes: 15 of 15), and a private Cloud Run handler. The handler quarantined the management VM from a sample Security Command Center finding: tagged, snapshotted, stopped and its service account detached, then restored. It also resized the GKE pool from 2 to 3 and back (24 of 24 live). The database password was moved out of Terraform, and no secret value appears in any of 7 state objects (30 of 30).",
+        ],
+      },
+      {
+        num: "/09",
+        heading: "Honest limits",
+        paragraphs: [
+          "Security Command Center is not activated for the organization (console-only), so that path was proven by publishing a sample finding to the topic it would publish to. The first live incident run failed Cloud SQL over by mistake, because the script claimed a dry-run gate the handler did not have; failover is now a separate, off-by-default switch. Cloud SQL failover through the handler, a real secret rotation, and deleting a backup vault that holds backups are not proven. An earlier run in August measured a zonal failover in 37 seconds on the same private IP; the final session skipped that step.",
         ],
       },
     ],
-    stack: ["Org Policy", "VPC Service Controls", "Privileged Access Manager", "Workforce Identity Federation", "Shared VPC", "Cloud NGFW", "Private Service Connect", "GKE", "Binary Authorization", "Cloud SQL", "Backup and DR", "Cloud KMS", "Terraform"],
-    repo: "https://github.com/jordann6/gcp-landing-zone/tree/compute-baseline",
+    stack: ["Org Policy", "VPC Service Controls", "Privileged Access Manager", "Workforce Identity Federation", "Shared VPC", "Cloud NGFW", "Private Service Connect", "GKE", "Binary Authorization", "Cloud SQL", "Backup and DR", "Cloud KMS", "Packer", "Artifact Registry", "OS Config", "Cloud Asset Inventory", "Cloud Run", "Terraform"],
+    repo: "https://github.com/jordann6/gcp-landing-zone/tree/main",
     receipt: {
       rows: [
-        { k: "Provision", v: "337 resources over 4 roots: 6 folders, 3 vended projects, 15 org-root constraints, 2 PAM entitlements, 13 alert policies, VPC-SC perimeter, private GKE, Cloud SQL HA plus cross-region replica, Backup and DR vault" },
-        { k: "Guardrails", v: "23 passed, 0 failed, 2 skipped (sandbox and dev not vended): every denial names its control; org sink delivering 13,439 audit rows" },
-        { k: "Paved road", v: "16 passed, 0 failed: unsigned image rejected, keyless secret read over TLS, segmentation from pod and VM, zonal failover us-central1-f to c in 37s on the same private IP" },
-        { k: "Not deployed", v: "SCC findings stream: organization activation is console-only, so it stays gated off" },
-        { k: "Destroy", v: "62 + 44 + 147 + 84 resources destroyed; teardown check 8 of 8, Google's six default org policies intact" },
+        { k: "Provision", v: "7 roots; 380 resources destroyed (observability 22, incident 26, compute 14, workload 58, network 48, image 29, governance 183)" },
+        { k: "Guardrails", v: "23 passed, 0 failed, 2 skipped: every denial names its control" },
+        { k: "Paved road", v: "15 passed, 0 failed with the failover step skipped; an earlier run measured failover in 37s on the same private IP" },
+        { k: "Compute", v: "20 passed, 0 failed: image policy, golden boot, live hardening, mirror-only apt, patch job SUCCEEDED" },
+        { k: "Detect and respond", v: "observability 15/0, asset history 9/0, incident 15/0 dry-run and 24/0 live, secrets 30/0, handler 22 unit tests" },
+        { k: "Not proven", v: "Cloud SQL failover through the handler, a real secret rotation, a populated backup vault delete; SCC activation is console-only" },
+        { k: "Destroy", v: "every root's state empty; only the seed project remains ACTIVE" },
       ],
       total: { k: "Standing cost", v: "$0 after teardown" },
     },
