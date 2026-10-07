@@ -19,7 +19,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
         "style-src 'self' 'unsafe-inline' https://assets.calendly.com",
         "font-src 'self' data:",
         "img-src 'self' data: https://*.calendly.com",
-        "connect-src 'self' https://673vy98pwa.execute-api.us-east-1.amazonaws.com https://calendly.com",
+        "connect-src 'self' https://calendly.com",
         "frame-src https://calendly.com",
         "upgrade-insecure-requests",
       ])
