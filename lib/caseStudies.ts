@@ -1979,7 +1979,7 @@ export const caseStudies: CaseStudy[] = [
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
-      { k: "Roots", v: "5, split by lifecycle" },
+      { k: "Roots", v: "8, split by lifecycle" },
       { k: "Accounts", v: "8 members, 4 OUs" },
     ],
     blocks: [
@@ -1993,11 +1993,12 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/02",
-        heading: "Five roots, split by how long they live",
+        heading: "Roots split by how long they live",
         bullets: [
           "accounts is permanent: the organization, OUs, eight member accounts, SCPs, the tag policy, and RAM sharing. Every account carries close_on_deletion false and prevent_destroy, because a closed account sits SUSPENDED for 90 days holding org quota and its email alias, and the next deploy collides with it. Idle accounts cost nothing.",
           "governance and observability are nearly free and stay up: the audit trail, detective services, identity, budgets, and the monitoring plane.",
-          "network and workload are the hourly layers. They apply and destroy on their own, workload first and network second, so the expensive tiers exist only for a demo.",
+          "network and workload are the hourly layers. They apply and destroy on their own, workload first and network second, so the expensive tiers exist only for a demo. compute rides with them.",
+          "bootstrap holds the CI OIDC roles and the dedicated state backend, and secrets holds the scanner's metadata-only roles at no cost; both stay up.",
           "Moving the org into its own root was done live with import and removed blocks: 28 resources adopted, zero added, zero destroyed, and both roots re-planned to no changes.",
         ],
       },
@@ -2044,20 +2045,44 @@ export const caseStudies: CaseStudy[] = [
         heading: "Verified, then torn down",
         paragraphs: [
           "Before teardown, live checks confirmed Network Firewall READY and IN_SYNC, both RAM associations ASSOCIATED, prod seeing the shared Transit Gateway with egress routed through inspection, EKS 1.35 with both nodes ACTIVE, and PostgreSQL 16.14 private, encrypted, and Multi-AZ. The observability suite raised a GuardDuty sample finding and confirmed its publish, saw 15 prod and 9 network metrics from the monitoring account, and forced an alarm to confirm its action fired.",
-          "Those checks prove infrastructure state and routing, not application traffic, and the write-up says so: a forced RDS failover and an end-to-end firewall traffic test were not run. Workload and network were then destroyed, and live API checks confirmed zero EKS, RDS, endpoints, NAT gateways, Transit Gateways, and firewalls, with every account still ACTIVE, the trail logging, and the monitoring plane in place.",
+          "Those checks prove infrastructure state and routing, not application traffic, and the write-up says so: a forced RDS failover and an end-to-end firewall traffic test were not run in that first session (the failover was proven later, below). Workload and network were then destroyed, and live API checks confirmed zero EKS, RDS, endpoints, NAT gateways, Transit Gateways, and firewalls, with every account still ACTIVE, the trail logging, and the monitoring plane in place.",
         ],
       },
       {
         num: "/08",
         heading: "Compute baseline, proven live",
         paragraphs: [
-          "Preventive guardrails went to the Sandbox OU first: SCPs that require IMDSv2 and encrypted EBS, plus an EC2 declarative policy that enforces IMDS defaults, blocks public AMI sharing, and allows only Amazon AL2023 and the prod account's golden AMIs. Eleven live dry-run checks proved each one denies. Prod gets a dedicated EBS CMK as the account default, an IMDSv2 hop-1 default, and SSM patching with a custom AL2023 baseline.",
+          "Preventive guardrails went to the Sandbox OU first: SCPs that require IMDSv2 and encrypted EBS, plus an EC2 declarative policy that enforces IMDS defaults, blocks public AMI sharing, and allows only Amazon AL2023 and the prod account's golden AMIs. Promotion to the Workloads OU was its own reviewed change. The EKS node image is Amazon-owned but named outside the AL2023 pattern, so the sandbox rule would have hidden it and stalled the node group; the Workloads policy adds that pattern and ran in audit mode until prod reported the node image allowed and an Ubuntu control blocked. Twenty live dry-run checks across sandbox and prod prove each control denies. Prod gets a dedicated EBS CMK as the account default, an IMDSv2 hop-1 default, and SSM patching with a custom AL2023 baseline.",
           "An Image Builder pipeline in a private subnet layers Amazon's STIG medium component and the same cis_baseline Ansible role the Azure and GCP zones bake, staged offline in S3, then boots a second instance from the new AMI and runs the role's check script after a reboot. The first bakes found what no static gate could: STIG's sysctl file sorted after the role's and won at boot, and STIG re-added audit rules the role already loads, so the kernel rejected the duplicates and the rules never went immutable, an error STIG's own reload discards. A reconcile step now lets the role win both overlaps and fails the build on any rule it cannot explain.",
           "The golden AMI passed every hardening check after a reboot. A t3.micro management instance with no public IP, no key pair, and no inbound rules then passed 17 of 17 live checks, including the guest checks fetched from the pinned role tag over SSM Run Command and a patch scan against the prod baseline. Everything was destroyed the same session, golden AMIs and snapshots included, for about three dollars.",
         ],
       },
+      {
+        num: "/09",
+        heading: "A secrets scanner that cannot read a secret",
+        paragraphs: [
+          "The secrets-lifecycle scanner runs in the security account, not management, because management is SCP-exempt and should hold only org-level resources. A secrets root gives it one role in every member account that trusts only the exact scanner role inside the organization, allows inventory and version metadata, and explicitly denies GetSecretValue, BatchGetSecretValue, every parameter read, and kms:Decrypt. Age comes from the current version's creation date, so a renewed key is not flagged, and a second alarm fires when no scan completes, so an AccessDenied can never look healthy. Its dashboard lists secret names and their readers, so it stays private; the demo build served it publicly and that became opt-in.",
+          "The first live scan returned zero, which proves nothing on its own. CloudTrail showed the scanner's AssumeRole into all seven target accounts, and a positive control closed the gap: an empty secret created in sandbox was inventoried on the next scan, SecretsNeedingAttention went to 1, and the age alarm moved to ALARM and published to its encrypted topic a minute later. The policy simulator confirms the value reads are explicit denies on the deployed roles.",
+        ],
+      },
+      {
+        num: "/10",
+        heading: "Incident response, with the bugs it found",
+        paragraphs: [
+          "Two earlier projects run here as landing-zone controls. The forensics runbook sits in the security account as a standing control: a GuardDuty finding crosses an account bus, isolates the instance, captures an encrypted snapshot under the evidence key, writes a manifest, and revokes old sessions. The n8n responder is an hourly layer in the prod VPC with no internet route; a forced alarm went through SQS to n8n, remediated three times, and failed RDS over in about 35 seconds with an empty dead-letter queue. A control run with the alarm forced to OK triggered nothing.",
+          "The live run found two real bugs. The evidence step ran before the source snapshot finished, so the first drill contained the instance and then failed at evidence; a retry on SnapshotNotReady fixed it. And the SCP that requires encrypted EBS also denies turning default encryption off, so one resource could never be destroyed; it was dropped because the declarative policy already owns that setting. The Claude-written summary is built but unproven: Bedrock returned 403 and 404 for the models tried, so the proof used templates.",
+        ],
+      },
+      {
+        num: "/11",
+        heading: "A warm standby in us-west-2",
+        paragraphs: [
+          "The region-lockdown SCP allows only us-east-1, so opening a second region took two statements: allow us-west-2, then deny it to every account except prod. A multi-region KMS key encrypts a cross-region RDS replica and the replicated secret. Route 53 health checks shift traffic first; a separate Lambda in the standby region promotes the replica when the alarm crosses regions, because DNS failover and database promotion run on different clocks.",
+          "Eight of eight live checks passed, including replication, a 409 on writes while the standby was a replica, the DNS flip, promotion, and a write accepted afterward. All 75 resources were destroyed. Closing the region again blocked the verification calls, so the us-west-2 teardown rests on Terraform's own destroy rather than a live listing, and the write-up says so. The full second hub was designed and priced at about eight to ten dollars a run, and not built.",
+        ],
+      },
     ],
-    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Ansible", "Terraform", "Infracost"],
+    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
     repo: "https://github.com/jordann6/aws-landing-zone",
     receipt: {
       rows: [
@@ -2065,11 +2090,14 @@ export const caseStudies: CaseStudy[] = [
         { k: "Provision", v: "50 network + 85 workload resources in us-east-1: TGW, inspection VPC, Network Firewall, private EKS 1.35, Multi-AZ PostgreSQL 16.14, Vault Lock, ECR" },
         { k: "Verified", v: "Firewall READY and IN_SYNC, RAM ASSOCIATED, TGW egress through inspection, both EKS nodes ACTIVE, RDS private and encrypted" },
         { k: "Observability", v: "GuardDuty sample finding published, 15 prod and 9 network metrics visible centrally, forced alarm action succeeded" },
-        { k: "Compute", v: "Sandbox guardrails 11/11 live denials; STIG + CIS golden AMI passed after reboot; private SSM-only management instance 17/17" },
-        { k: "Not demonstrated", v: "forced RDS failover timing and end-to-end firewall traffic" },
+        { k: "Compute", v: "Sandbox + Workloads guardrails 20/20 live checks; STIG + CIS golden AMI passed after reboot; private SSM-only management instance 17/17" },
+        { k: "Secrets", v: "scanner in the security account assumed into all 7 targets; sandbox positive control flagged, age alarm OK to ALARM, value reads explicitly denied" },
+        { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0" },
+        { k: "Standby", v: "us-west-2 warm standby 8/8: encrypted cross-region replica, DNS flip, automated promotion, write accepted after failover" },
+        { k: "Not demonstrated", v: "end-to-end firewall traffic; Claude-written incident summaries (built, Bedrock entitlement blocked them)" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
-      total: { k: "Retained", v: "accounts, audit trail, monitoring plane" },
+      total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner" },
     },
   },
 ];
