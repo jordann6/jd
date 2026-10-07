@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
-import { Barlow, Barlow_Condensed, IBM_Plex_Mono } from "next/font/google";
-import "./globals.css";
-import { buildVol, siteVersion } from "@/lib/build";
-import FrameHud from "@/components/FrameHud";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
-import RevealInit from "@/components/RevealInit";
+import { Barlow, Barlow_Condensed, IBM_Plex_Mono, Manrope } from "next/font/google";
+import "./site.css";
+import { BrandSprite } from "@/components/home/Brand";
+import { SiteFooter, SiteHeader } from "@/components/home/Chrome";
 
 // Self-hosted at build time, so the site serves its own fonts off CloudFront
 // instead of a render-blocking third-party stylesheet.
@@ -23,6 +20,13 @@ const body = Barlow({
   variable: "--font-body",
 });
 
+const sans = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
 const mono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["300", "400", "500"],
@@ -32,13 +36,13 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://jordandesigns.io"),
-  title: "Jordan — Multi-Cloud Engineer",
+  title: "jordandesigns.io · Jordan, Multi-Cloud Engineer",
   description:
-    "Jordan, Multi-Cloud Engineer. Platforms, infrastructure, and automation across AWS and Azure. Open to full-time roles and contract (1099) engagements.",
+    "Jordan, Multi-Cloud Engineer. Secure, well-organized cloud environments on AWS, Azure, and Google Cloud. Open to full-time roles and contract (1099) engagements.",
   openGraph: {
-    title: "Jordan — Multi-Cloud Engineer",
+    title: "jordandesigns.io · Jordan, Multi-Cloud Engineer",
     description:
-      "Platforms, infrastructure, and automation across AWS and Azure. Open to full-time and contract (1099).",
+      "Secure, well-organized cloud environments on AWS, Azure, and Google Cloud. Open to full-time and contract (1099).",
     url: "https://jordandesigns.io",
     siteName: "jordandesigns.io",
     type: "website",
@@ -53,9 +57,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Jordan — Multi-Cloud Engineer",
+    title: "jordandesigns.io · Jordan, Multi-Cloud Engineer",
     description:
-      "Platforms, infrastructure, and automation across AWS and Azure.",
+      "Secure, well-organized cloud environments on AWS, Azure, and Google Cloud.",
     images: ["/og.png"],
   },
 };
@@ -64,14 +68,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable} ${mono.variable}`}
+      className={`${display.variable} ${body.variable} ${sans.variable} ${mono.variable}`}
     >
       <body>
-        <FrameHud vol={buildVol} version={siteVersion} />
-        <Nav />
-        <main>{children}</main>
-        <Footer />
-        <RevealInit />
+        <BrandSprite />
+        <a className="skip" href="#main">
+          Skip to content
+        </a>
+        <SiteHeader />
+        <main id="main">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   CATEGORIES,
@@ -20,10 +19,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { cat } = await params;
   const category = categoryFromSlug(cat);
-  if (!category) return { title: "Work — Jordan" };
+  if (!category) return { title: "Work · jordandesigns.io" };
   const m = categoryMeta[category];
   return {
-    title: `${m.title} Work — Jordan`,
+    title: `${m.title === "GCP" ? "Google Cloud" : m.title} work · jordandesigns.io`,
     description: m.blurb,
   };
 }
@@ -39,24 +38,25 @@ export default async function CategoryPage({
   const m = categoryMeta[category];
   const count = projectsByCategory(category).length;
 
+  const name = category === "GCP" ? "Google Cloud" : m.title;
+
   return (
-    <section className="stage work">
-      <Link href="/work/" className="cs__back">
-        ← All Work
-      </Link>
-
-      <div className="cs__eyebrow">
-        <span>↳ Focus area</span>
-        <span className="cat">
-          {count} {category} project{count === 1 ? "" : "s"}
-        </span>
+    <section className="sec work">
+      <div className="wrap">
+        <nav className="crumbs" aria-label="Breadcrumb">
+          <a href="/">Home</a>
+          <span aria-hidden="true">/</span>
+          <a href="/work/">All work</a>
+        </nav>
+        <div className="sec-head">
+          <span className="eyebrow">
+            Focus area · {count} build{count === 1 ? "" : "s"}
+          </span>
+          <h1 className="page-title">{name} work</h1>
+          <p>{m.blurb}</p>
+        </div>
+        <ProjectIndex initial={category} />
       </div>
-      <h1 className="cs__title">
-        {m.title} <span className="out">Work</span>
-      </h1>
-      <p className="cs__lede">{m.blurb}</p>
-
-      <ProjectIndex initial={category} linked />
     </section>
   );
 }
