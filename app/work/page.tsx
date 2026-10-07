@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 export default function WorkIndex() {
   return (
     <section className="stage work">
-      <Link href="/" className="cs__back">
+      <a href="/" className="cs__back">
         ← Back to Home
-      </Link>
+      </a>
 
       <div className="cs__eyebrow">
         <span>↳ Index</span>

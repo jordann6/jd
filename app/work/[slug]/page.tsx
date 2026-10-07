@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { caseStudies, getCaseStudy } from "@/lib/caseStudies";
 import { getDiagram } from "@/lib/diagrams";
@@ -35,9 +34,9 @@ export default async function CaseStudyPage({
 
   return (
     <article className="cs">
-      <Link href="/#projects" className="cs__back">
-        ← Back to Index
-      </Link>
+      <a href="/#solutions" className="cs__back">
+        ← Back to Solutions
+      </a>
 
       <div className="cs__eyebrow">
         <span>↳ Project /{cs.num}</span>
@@ -116,9 +115,9 @@ export default async function CaseStudyPage({
         >
           View on GitHub <span className="arrow">↗</span>
         </a>
-        <Link href="/#contact" className="btn btn--ghost">
+        <a href="/#contact" className="btn btn--ghost">
           Schedule a Call <span className="arrow">↗</span>
-        </Link>
+        </a>
       </div>
     </article>
   );
