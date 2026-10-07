@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 
+// Targets are sections on the homepage. Plain <a> tags (not next/link) so the
+// jump home is a full page load and the homepage's own stylesheet loads clean.
 const LINKS = [
-  { num: "01", label: "About", target: "about" },
-  { num: "02", label: "Focus", target: "capabilities" },
-  { num: "03", label: "Index", target: "projects" },
-  { num: "04", label: "Stack", target: "skills" },
-  { num: "05", label: "Certified", target: "certs" },
-  { num: "06", label: "Signal", target: "contact" },
+  { num: "01", label: "Services", target: "services" },
+  { num: "02", label: "Solutions", target: "solutions" },
+  { num: "03", label: "Approach", target: "approach" },
+  { num: "04", label: "About", target: "about" },
+  { num: "05", label: "Contact", target: "contact" },
 ];
 
 export default function Nav() {
@@ -51,21 +51,21 @@ export default function Nav() {
 
   return (
     <nav className="nav">
-      <Link href="/" className="nav__logo" aria-label="jordandesigns.io home">
+      <a href="/" className="nav__logo" aria-label="jordandesigns.io home">
         <Logo />
         Jordan<span className="dim-dot">.</span>
-      </Link>
+      </a>
       <ul className="nav__links">
         {LINKS.map((l) => (
           <li key={l.target}>
-            <Link
+            <a
               href={`/#${l.target}`}
               className={`nav__link${active === l.target ? " active" : ""}`}
               onClick={(e) => handleClick(e, l.target)}
             >
               <span className="num">{l.num}</span>
               {l.label}
-            </Link>
+            </a>
           </li>
         ))}
       </ul>
@@ -73,13 +73,13 @@ export default function Nav() {
         <span>
           <span className="label">Status</span>Available
         </span>
-        <Link
+        <a
           href="/#contact"
           className="nav__cta"
           onClick={(e) => handleClick(e, "contact")}
         >
           Let&apos;s Talk <span className="arrow">→</span>
-        </Link>
+        </a>
       </div>
     </nav>
   );
