@@ -3,8 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CaseStudy } from "@/lib/caseStudies";
 import type { Diagram } from "@/lib/diagrams";
+import type { ArchitectureImage } from "@/lib/architecture";
+import { ArchitectureFigure, FlowDiagram, plain } from "./Diagrams";
 
-export type SolutionStudy = CaseStudy & { diagram: Diagram | null };
+export type SolutionStudy = CaseStudy & {
+  diagram: Diagram | null;
+  architecture: ArchitectureImage | null;
+};
 
 // The IDP repository is still private; its case study links out without code.
 const PRIVATE_REPOS = new Set(["multi-cloud-developer-platform"]);
@@ -60,7 +65,7 @@ export default function SolutionDialog({
 
   return (
     <dialog
-      id="sol-dialog"
+      className="dlg"
       ref={ref}
       aria-labelledby="dlg-title"
       onClose={onClose}
@@ -104,19 +109,10 @@ export default function SolutionDialog({
                 </a>
               )}
             </div>
-            {c.diagram && (
-              <figure className="diagram">
-                <div className="diagram-head">Architecture</div>
-                <div className="diagram-scroll">
-                  <div className="diagram-flow">
-                    {c.diagram.cols.map((col, i) => (
-                      <Col key={i} first={i === 0} col={col} />
-                    ))}
-                  </div>
-                </div>
-                <figcaption>{plain(c.diagram.caption)}</figcaption>
-              </figure>
+            {c.architecture && (
+              <ArchitectureFigure image={c.architecture} title={`${c.title} ${c.titleOut}`} />
             )}
+            {c.diagram && <FlowDiagram diagram={c.diagram} />}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {c.blocks.map((b) => (
                 <section className="cblock" key={b.heading}>
@@ -158,25 +154,4 @@ export default function SolutionDialog({
       </div>
     </dialog>
   );
-}
-
-function Col({ col, first }: { col: Diagram["cols"][number]; first: boolean }) {
-  return (
-    <>
-      {!first && <span className="arrow">→</span>}
-      <div className="dcol">
-        {col.nodes.map((n) => (
-          <div key={n.label} className={`dnode${n.accent ? " accent" : ""}`}>
-            <span className="dl">{n.label}</span>
-            {n.sub && <span className="ds">{n.sub}</span>}
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-// Older case-study copy uses em dashes; the homepage voice uses commas.
-function plain(s: string) {
-  return s.replace(/\s*—\s*/g, ", ");
 }

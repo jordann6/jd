@@ -1,44 +1,31 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { projects, CATEGORIES, categoryMeta, caseStudyMeta } from "@/lib/projects";
+import { projects } from "@/lib/projects";
 import ProjectIndex from "@/components/ProjectIndex";
 
 export const metadata: Metadata = {
-  title: "Work — Index — Jordan",
+  title: "All work · jordandesigns.io",
   description:
-    "Selected cloud, platform, and AI engineering work across AWS and Azure. Filter by AWS, Azure, AI, or Platform.",
+    "Cloud, platform, security, FinOps, data, and AI engineering across AWS, Azure, and Google Cloud. Filter by cloud or focus area.",
 };
 
 export default function WorkIndex() {
   return (
-    <section className="stage work">
-      <a href="/" className="cs__back">
-        ← Back to Home
-      </a>
-
-      <div className="cs__eyebrow">
-        <span>↳ Index</span>
-        <span className="cat">{projects.length} projects</span>
+    <section className="sec work">
+      <div className="wrap">
+        <nav className="crumbs" aria-label="Breadcrumb">
+          <a href="/">Home</a>
+        </nav>
+        <div className="sec-head">
+          <span className="eyebrow">All work · {projects.length} builds</span>
+          <h1 className="page-title">Everything I&apos;ve built</h1>
+          <p>
+            Cloud, platform, security, FinOps, data, and AI engineering across
+            AWS, Azure, and Google Cloud, all defined as code and deployed for
+            real. Filter by cloud or focus area.
+          </p>
+        </div>
+        <ProjectIndex initial="All" />
       </div>
-      <h1 className="cs__title">
-        Selected <span className="out">Work</span>
-      </h1>
-      <p className="cs__lede">
-        Cloud, platform, and AI engineering across AWS and Azure, defined as code
-        and built to deploy, demo, and destroy. Browse all, or jump to a focus
-        area.
-      </p>
-
-      <div className="work__cats">
-        {CATEGORIES.map((c) => (
-          <Link key={c} href={`/work/category/${categoryMeta[c].slug}/`}>
-            {c}
-          </Link>
-        ))}
-        <Link href={`/work/${caseStudyMeta.slug}/`}>{caseStudyMeta.title}</Link>
-      </div>
-
-      <ProjectIndex initial="All" linked />
     </section>
   );
 }

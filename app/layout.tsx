@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Barlow, Barlow_Condensed, IBM_Plex_Mono, Manrope } from "next/font/google";
+import "./site.css";
+import { BrandSprite } from "@/components/home/Brand";
+import { SiteFooter, SiteHeader } from "@/components/home/Chrome";
 
 // Self-hosted at build time, so the site serves its own fonts off CloudFront
 // instead of a render-blocking third-party stylesheet.
@@ -61,16 +64,21 @@ export const metadata: Metadata = {
   },
 };
 
-// Fonts and metadata only. The homepage and the /work pages each bring their
-// own stylesheet and chrome, and link to each other with plain <a> tags so a
-// full page load keeps the two style sheets from ever sharing a document.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       className={`${display.variable} ${body.variable} ${sans.variable} ${mono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <BrandSprite />
+        <a className="skip" href="#main">
+          Skip to content
+        </a>
+        <SiteHeader />
+        <main id="main">{children}</main>
+        <SiteFooter />
+      </body>
     </html>
   );
 }
