@@ -852,7 +852,7 @@ export const caseStudies: CaseStudy[] = [
         heading: "Approach: the base",
         bullets: [
           "A management group tree under the tenant root splitting Platform, Workloads, and Sandbox, with dev, test, and prod beneath Workloads and the subscription moved into Workloads so every assignment applies automatically.",
-          "Deny-effect Azure Policy at the hierarchy: no public IPs, allowed locations (tighter at prod), and required owner, cost-center, environment, and data-classification tags, plus the built-in CIS Azure Foundations initiative and HITRUST/HIPAA scoring in Defender for Cloud.",
+          "Deny-effect Azure Policy at the hierarchy: no public IPs, allowed locations (a stricter prod assignment is wired but binds nothing until prod has its own subscription), and required owner, cost-center, environment, and data-classification tags, plus the built-in CIS Azure Foundations initiative and HITRUST/HIPAA scoring in Defender for Cloud.",
           "data_classification is limited to public, internal, confidential, or phi, and a resource group tagged phi cannot hold a Key Vault, storage account, SQL server, or PostgreSQL server with public network access, so the classification enforces the control rather than describing it.",
           "A hub VNet at 10.0.0.0/16 with Azure Firewall (threat intelligence in Deny mode) and Bastion as the only admin path, flag-gated as the hourly layer, and dev, test, and sandbox spokes peered through a reusable module, each with a default-deny NSG. One action group alerts on Deny policy events, Key Vault 403s, and firewall deny spikes.",
         ],
