@@ -527,4 +527,14 @@ export const projects: Project[] = [
     featured: true,
     featuredRank: 7,
   },
+  {
+    num: "41",
+    title: "Release Guard",
+    titleOut: "(.NET on EKS)",
+    desc: "An order-processing API in C# on .NET 10 with idempotency keys, ETag concurrency, and expand-only migrations, and the delivery system that proves each release healthy before the next one may follow. Ten required PR checks run with no cloud credentials, and each was proven by a pull request it had to block. On main, a C# release CLI publishes a digest-pinned OCI artifact that Flux pulls into a private EKS cluster, and only an in-cluster verifier can record the verdict, enforced by IAM on the DynamoDB keys it writes. A failed release blocks the next one until a rollback or an audited, expiring override. Deployed onto the AWS landing zone, where the first two releases failed for real and were caught by the verifier, recovered through the override, and destroyed the same day.",
+    tags: ["C#", ".NET 10", "EF Core", "PostgreSQL", "EKS", "Flux", "ECR", "DynamoDB", "IRSA", "GitHub Actions", "CodeQL", "Trivy", "Terraform"],
+    categories: ["AWS", "Platform"],
+    link: "https://github.com/jordann6/release-guard",
+    caseStudy: "release-guard",
+  },
 ];

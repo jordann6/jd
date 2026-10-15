@@ -2120,6 +2120,88 @@ export const caseStudies: CaseStudy[] = [
       total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner" },
     },
   },
+  {
+    slug: "release-guard",
+    num: "41",
+    title: "Release",
+    titleOut: "Guard (.NET on EKS)",
+    category: "AWS · Platform · .NET",
+    lede: "An order API in C# on .NET 10 and the delivery system behind it, built on one rule: the pipeline is not allowed to say a release worked. GitHub ships an artifact, Flux pulls it into a private EKS cluster, and only an in-cluster verifier can record the verdict. A failed release blocks the next one until it is rolled back or overridden on the record. Deployed live onto the AWS landing zone, where the first two releases failed for real and were caught, then destroyed the same day.",
+    meta: [
+      { k: "Role", v: "Platform / Software Engineering" },
+      { k: "Cloud", v: "AWS (EKS, private API)" },
+      { k: "Language", v: "C# on .NET 10" },
+      { k: "Resources", v: "195 (3 Terraform roots)" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "Most delivery pipelines end with a green check that means the deploy command returned zero. That says the cluster accepted some YAML. It does not say the new pods came up, that they can reach their database, or that the release now serving traffic is the one that was tested, and the next merge will happily stack another release on top of one that never became healthy.",
+          "The fix is not a better check at the end of the pipeline. It is moving the verdict out of the pipeline entirely, to something that runs where the release runs and is the only thing allowed to write the answer down.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "A service worth delivering",
+        paragraphs: [
+          "The application is a real one rather than a hello-world, because a delivery system is only tested by a service that can break in interesting ways. Orders are created with an Idempotency-Key, so a retried request returns the original order and concurrent duplicates create exactly one, decided by a primary key inside the same transaction rather than by a check-then-insert. Updates require If-Match with a strong ETag taken from PostgreSQL's xmin row version, so a stale writer gets a 412 instead of silently overwriting someone else.",
+          "Migrations are expand-only and run as a separate process under a separate database role. The schema-owning migrator and the select-insert-update application role both sign in with short-lived RDS IAM tokens, so the service holds no database password. Because nothing destructive ever ships in a migration, the previous release always runs against the current schema, and an application rollback never needs a database rollback. CI proves that rather than assuming it by running the previous release's integration tests against the new schema.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "Gates proven by refusals",
+        bullets: [
+          "Ten required checks run on every pull request with no AWS credentials at all: format, analyzers as errors, unit and Testcontainers integration tests, CodeQL with a gate that fails on any security result, Trivy on the built image, gitleaks, destructive-migration detection, and the N-1 schema test.",
+          "Each gate was proven by a pull request it had to block: a cancellable shipped order failed the tests, SQL built from a query parameter failed CodeQL at severity 8.8, a runtime image pinned back to 10.0.0 failed Trivy, and a column rename failed both migration safety and N-1.",
+          "Main accepts squash merges only, with an empty bypass list, so a direct push from the owner account was rejected too. The release pipeline then checks that the merged commit's tree is byte-identical to the tree the checks ran on, so nothing untested can ride in on the merge.",
+          "On main, the image is rebuilt, scanned again, and published with a CycloneDX SBOM and build provenance attestations bound to its digest, verifiable by anyone with gh attestation verify.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "The pipeline cannot declare success",
+        paragraphs: [
+          "Delivery is pull-based. A C# CLI, releasectl, renders the manifests with the image pinned by digest and pushes them as an OCI artifact to ECR. Flux inside the cluster pulls that artifact over VPC endpoints and applies it as a restricted service account. GitHub runners never hold Kubernetes credentials and never touch the EKS API, which stays private.",
+          "Deployment state lives in DynamoDB, and IAM enforces who may write what with dynamodb:LeadingKeys on composite partition keys. The promote role can take the lock and write a DEPLOY record but cannot write a VERIFY record. The verifier, a .NET worker running in the cluster under its own IRSA role, can write only VERIFY records. It watches the rollout, runs smoke checks, and records pass, fail, or timeout. The pipeline waits for that record and has no way to forge it.",
+          "One release is in flight at a time, held by a conditional-write lease. A failure or a timeout blocks the next promotion. The ways forward are a rollback, which republishes the last verified release as a new, higher version so the history only ever moves forward, or an override: a specific image digest, a written reason, an expiry, and an approval on a protected environment, all kept with the release record.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "What AWS found",
+        paragraphs: [
+          "All eleven release and recovery scenarios passed on a local k3d cluster before anything touched AWS, including concurrent promotions, an interrupted promotion resuming without publishing twice, and an abandoned one timing out at its lease. The live run onto the landing zone still found five problems, and none of them were visible locally.",
+          "The first release run failed its scan because Trivy will not read an OCI image tarball, so the layout is now extracted first. Pods could not reach PostgreSQL even with the right security group rule, because the VPC CNI gives pods addresses from the node subnets and the data subnet's network ACL admitted only the app subnets. And the RDS IAM token generator loads the AWS STS assembly by reflection at runtime, which nothing referenced at build time, so the deployed image could not sign in to its database until the package was added explicitly.",
+          "Then the first two releases on EKS failed, and the verifier caught both. Seq 1: releasectl adds a name suffix to the migration release, which renamed its ServiceAccount, and the IRSA trust policy accepts only the exact name, so STS refused it. Seq 2: the CloudWatch observability add-on annotated the API's pod template and injected OpenTelemetry init containers that the restricted PodSecurity profile rejects. Each one got a fix and a regression test.",
+          "With a failed release and no healthy one before it, both normal promotion and first-time initialization were blocked, which is the design doing its job. The way out was the audited override for the fixed image digest. Seq 3 rolled out at 2 of 2 pods running, and the verifier recorded Pass.",
+        ],
+      },
+      {
+        num: "/06",
+        heading: "Verified, then destroyed",
+        paragraphs: [
+          "The stack ran on the landing zone's inspected hub network: a Network Firewall egress allowlist, a transit gateway, a private EKS cluster, and Multi-AZ PostgreSQL. Teardown went in reverse dependency order from reviewed destroy plans: delivery switched off and the deployment contract deleted, then the delivery, workload, and network roots. The account's EBS encryption default was taken out of Terraform state first, so the destroy could not turn it off.",
+          "Afterward every root's state was empty, the hourly-resource guard passed on all three, and both member accounts were checked live for firewalls, NAT gateways, transit gateways, clusters, databases, and instances, with none found.",
+          "Not everything was exercised on AWS. A normal release after the recovery, a rollback, and the staged failed-rollout and blocked-promotion demos were skipped to keep the run short. Those paths rest on the local scenarios, and the write-up says so rather than claiming them.",
+        ],
+      },
+    ],
+    stack: ["C# / .NET 10", "ASP.NET Core", "EF Core", "PostgreSQL", "Amazon EKS", "Flux (OCI)", "ECR", "DynamoDB", "IRSA", "GitHub Actions OIDC", "CodeQL", "Trivy", "Terraform"],
+    repo: "https://github.com/jordann6/release-guard",
+    receipt: {
+      rows: [
+        { k: "Gates", v: "10 required PR checks, each proven by a PR it blocked (#2 to #5); direct push to main rejected" },
+        { k: "Local", v: "11 of 11 release and recovery scenarios passed on k3d" },
+        { k: "Provision", v: "195 resources across the network, workload, and delivery roots on the AWS landing zone" },
+        { k: "Releases", v: "Seq 1 and 2 failed for real and were caught by the verifier; seq 3 Healthy through an audited override, verifier Pass" },
+        { k: "Destroy", v: "Same day, all three states empty, hourly guard clean, both accounts checked live" },
+      ],
+      total: { k: "Session cost", v: "About $2.60 (estimated from the hourly rate)" },
+    },
+  },
 ];
 
 export function getCaseStudy(slug: string): CaseStudy | undefined {
