@@ -1,15 +1,16 @@
 import { caseStudies } from "@/lib/caseStudies";
 import { getDiagram } from "@/lib/diagrams";
 import { getArchitecture } from "@/lib/architecture";
-import { solutionSlugs } from "@/lib/solutions";
+import { dialogSlugs } from "@/lib/solutions";
 import Hero from "@/components/home/Hero";
 import { LandingZones, MoreSolutions } from "@/components/home/Solutions";
 import { About, Approach, Contact, Services } from "@/components/home/Sections";
 import SolutionDialog, { type SolutionStudy } from "@/components/home/SolutionDialog";
 
-// Only the ten featured case studies ship to the client, for the dialog.
+// Only the case studies the homepage links to ship to the client, for the dialog:
+// the solution cards plus any study a service card names.
 const studies: Record<string, SolutionStudy> = Object.fromEntries(
-  solutionSlugs.map((slug) => {
+  dialogSlugs.map((slug) => {
     const cs = caseStudies.find((c) => c.slug === slug);
     if (!cs) throw new Error(`lib/solutions.ts names unknown case study: ${slug}`);
     return [

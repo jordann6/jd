@@ -137,7 +137,11 @@ export const services: Service[] = [
     tag: "DevOps",
     title: "CI/CD",
     desc: "Continuous integration and delivery. Every change is tested and deployed automatically, so releases are small and routine.",
-    rel: [{ slug: "gcp-supply-chain-security", label: "Software supply chain security" }],
+    rel: [
+      { slug: "release-guard", label: "Verified .NET delivery" },
+      ", ",
+      { slug: "gcp-supply-chain-security", label: "Software supply chain security" },
+    ],
   },
   {
     tag: "DevOps",
@@ -149,13 +153,21 @@ export const services: Service[] = [
     tag: "DevOps",
     title: "GitOps",
     desc: "The code repository is the source of truth. Only reviewed, approved changes reach the live system.",
-    rel: [{ slug: platformSlug, label: "Multicloud developer platform" }],
+    rel: [
+      { slug: platformSlug, label: "Multicloud developer platform" },
+      ", ",
+      { slug: "release-guard", label: "Verified .NET delivery" },
+    ],
   },
   {
     tag: "DevOps",
     title: "DevSecOps",
     desc: "Security scans run inside the pipeline, catching leaked passwords and vulnerable software before release.",
-    rel: [{ slug: "gcp-supply-chain-security", label: "Software supply chain security" }],
+    rel: [
+      { slug: "gcp-supply-chain-security", label: "Software supply chain security" },
+      ", ",
+      { slug: "release-guard", label: "Verified .NET delivery" },
+    ],
   },
   {
     tag: "Governance",
@@ -223,7 +235,11 @@ export const services: Service[] = [
     tag: "SRE",
     title: "Postmortems and decision records",
     desc: "Every failure and major choice written down with its cause and fix, so it does not happen twice.",
-    rel: [{ slug: platformSlug, label: "Multicloud developer platform" }],
+    rel: [
+      { slug: platformSlug, label: "Multicloud developer platform" },
+      ", ",
+      { slug: "release-guard", label: "Verified .NET delivery" },
+    ],
   },
   {
     tag: "Automation",
@@ -236,6 +252,15 @@ export const services: Service[] = [
       " landing zones",
     ],
   },
+];
+
+/** Every case study the homepage can open: the solution cards plus any study a
+ * service card links to that is not itself a card. */
+export const dialogSlugs = [
+  ...new Set([
+    ...solutionSlugs,
+    ...services.flatMap((s) => s.rel.flatMap((r) => (typeof r === "string" ? [] : [r.slug]))),
+  ]),
 ];
 
 export const contact = {
