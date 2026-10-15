@@ -33,6 +33,7 @@ const sizes: Record<string, [string, number, number]> = {
   "multi-agent-coding-orchestrator": ["png", 1551, 1292],
   "multi-cloud-developer-platform": ["png", 1842, 2371],
   "multi-region-failover": ["png", 1301, 2515],
+  "release-guard": ["png", 2656, 1481],
   "secrets-lifecycle": ["png", 2483, 2082],
 };
 

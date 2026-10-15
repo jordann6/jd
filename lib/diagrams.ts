@@ -589,6 +589,31 @@ export const diagrams: Record<string, Diagram> = {
       },
     ],
   },
+  "release-guard": {
+    caption: "The pipeline ships an artifact and waits; only the verifier inside the cluster can write the verdict",
+    cols: [
+      { nodes: [{ label: "10 PR checks", sub: "no cloud credentials" }] },
+      {
+        nodes: [
+          { label: "Evidence gate", sub: "merged tree · tested tree" },
+          { label: "Build + Trivy", sub: "SBOM · provenance" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "releasectl (C#)", sub: "lease · DEPLOY record" },
+          { label: "ECR OCI artifact", sub: "pinned by digest" },
+        ],
+      },
+      { nodes: [{ label: "Flux in EKS", sub: "pulls · private API" }] },
+      {
+        nodes: [
+          { label: "Verifier", sub: "only VERIFY writer", accent: true },
+          { label: "Fail blocks next", sub: "rollback · override", accent: true },
+        ],
+      },
+    ],
+  },
 };
 
 export function getDiagram(slug: string): Diagram | undefined {
