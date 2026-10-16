@@ -140,6 +140,8 @@ export const services: Service[] = [
     rel: [
       { slug: "release-guard", label: "Verified .NET delivery" },
       ", ",
+      { slug: "aws-landing-zone", label: "Gated infrastructure pipeline" },
+      ", ",
       { slug: "gcp-supply-chain-security", label: "Software supply chain security" },
     ],
   },
@@ -147,7 +149,10 @@ export const services: Service[] = [
     tag: "DevOps",
     title: "Infrastructure as code",
     desc: "Cloud resources defined in versioned files, so any environment can be rebuilt exactly, reviewed, or removed on demand.",
-    rel: ["Every solution here, written in Terraform"],
+    rel: [
+      "Every solution here, written in Terraform; ",
+      { slug: "aws-landing-zone", label: "applied through a gated pipeline" },
+    ],
   },
   {
     tag: "DevOps",
