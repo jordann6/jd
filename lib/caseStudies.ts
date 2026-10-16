@@ -1995,7 +1995,7 @@ export const caseStudies: CaseStudy[] = [
     title: "AWS",
     titleOut: "Landing Zone",
     category: "AWS · Platform · Governance",
-    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live.",
+    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live. The hourly layers now build and tear down through a gated CI pipeline, proven live on the full stack.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
@@ -2101,6 +2101,16 @@ export const caseStudies: CaseStudy[] = [
           "Eight of eight live checks passed, including replication, a 409 on writes while the standby was a replica, the DNS flip, promotion, and a write accepted afterward. All 75 resources were destroyed. Closing the region again blocked the verification calls, so the us-west-2 teardown rests on Terraform's own destroy rather than a live listing, and the write-up says so. The full second hub was designed and priced at about eight to ten dollars a run, and not built.",
         ],
       },
+      {
+        num: "/12",
+        heading: "The infrastructure gets a pipeline too",
+        paragraphs: [
+          "Until now every apply and destroy of the hourly layers ran from an operator laptop. Now network, workload, and delivery plan on every pull request with a read-only role, apply on merge behind a reviewer-gated environment, and destroy only from a gated dispatch. Plan and apply are separate identities in every account: management gha-plan and gha-apply each chain into exactly one matching role in the network and prod accounts, so a pull request can never reach a write role. The OIDC trust had matched the plain repository subject while GitHub now issues an immutable one, so the CI roles could never have been assumed; nothing noticed because nothing credentialed had run.",
+          "The gated job replays the exact plan the reviewer approved. Saved plans freeze variables and provider settings, which would replay the read-only role, so an ephemeral ci_stage variable picks the member role per job without entering the plan. Inputs come from upstream state instead of private var files, and a removed block replaces the manual state rm that kept the EBS encryption default alive through every destroy.",
+          "The full stack went through it live: 196 resources in about 35 minutes across three gates, then every root planned again, and the run fails unless the second plan is empty, which catches a perpetual diff the day it appears. The gated destroy ran about 20 minutes and checked each root for surviving hourly resources. The first live runs caught two real defects, and both failed safe. The setup-terraform wrapper reports plan exit code 2 as 0, so every apply was skipped and nothing was built. And the hub flow-log role had re-created its own log group after an earlier teardown, so an apply stopped at 47 of 50; the role lost logs:CreateLogGroup, and the group did not come back after the CI destroy.",
+          "One control did not hold up: the hourly TTL alarm never fired on schedule while the stack was up, because GitHub delays or drops scheduled runs. It is written down as a best-effort backstop, and the gated destroy is the control that protected the spend.",
+        ],
+      },
     ],
     stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
     repo: "https://github.com/jordann6/aws-landing-zone",
@@ -2114,6 +2124,7 @@ export const caseStudies: CaseStudy[] = [
         { k: "Secrets", v: "scanner in the security account assumed into all 7 targets; sandbox positive control flagged, age alarm OK to ALARM, value reads explicitly denied" },
         { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0" },
         { k: "Standby", v: "us-west-2 warm standby 8/8: encrypted cross-region replica, DNS flip, automated promotion, write accepted after failover" },
+        { k: "Pipeline", v: "196 resources applied through CI behind 3 reviewer gates, second plan empty, gated destroy to empty state; first live runs caught 2 defects, both failed safe" },
         { k: "Not demonstrated", v: "end-to-end firewall traffic; Claude-written incident summaries (built, Bedrock entitlement blocked them)" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
