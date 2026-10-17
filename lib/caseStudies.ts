@@ -1999,7 +1999,7 @@ export const caseStudies: CaseStudy[] = [
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
-      { k: "Roots", v: "8, split by lifecycle" },
+      { k: "Roots", v: "14, split by lifecycle" },
       { k: "Accounts", v: "8 members, 4 OUs" },
     ],
     blocks: [
@@ -2017,7 +2017,8 @@ export const caseStudies: CaseStudy[] = [
         bullets: [
           "accounts is permanent: the organization, OUs, eight member accounts, SCPs, the tag policy, and RAM sharing. Every account carries close_on_deletion false and prevent_destroy, because a closed account sits SUSPENDED for 90 days holding org quota and its email alias, and the next deploy collides with it. Idle accounts cost nothing.",
           "governance and observability are nearly free and stay up: the audit trail, detective services, identity, budgets, and the monitoring plane.",
-          "network and workload are the hourly layers. They apply and destroy on their own, workload first and network second, so the expensive tiers exist only for a demo. compute rides with them.",
+          "network, workload, and delivery are the hourly layers. They apply and destroy on their own, delivery and workload before network, so the expensive tiers exist only for a demo. compute, the incident responder, and the us-west-2 standby ride with them.",
+          "uptime, backup-verify, and remediation are small standing controls that stay up, and incident holds the forensics roles, the alarm reader, and the n8n image mirror.",
           "bootstrap holds the CI OIDC roles and the dedicated state backend, and secrets holds the scanner's metadata-only roles at no cost; both stay up.",
           "Moving the org into its own root was done live with import and removed blocks: 28 resources adopted, zero added, zero destroyed, and both roots re-planned to no changes.",
         ],
@@ -2029,7 +2030,7 @@ export const caseStudies: CaseStudy[] = [
           "SCPs on the OUs deny root use, leaving the organization, unapproved regions, public or unencrypted S3, and disabling GuardDuty, Config, or CloudTrail. The management account is SCP-exempt by design, so its root hardening is a separate step: a strict password policy and an EventBridge alarm on any root sign-in.",
           "An organization CloudTrail writes to a KMS-encrypted, GOVERNANCE-mode Object Lock bucket in log-archive, with log-file validation, so the record of what happened is safe from the account that did it.",
           "GuardDuty, Security Hub with CIS AWS Foundations 1.4.0, and AWS Config are delegated to the security account, so security operations run outside the account that can change the org.",
-          "IAM Identity Center personas (admin, platform engineer, junior engineer, manager, FinOps, security, break-glass) carry permission boundaries and short sessions. There are no IAM users and no standing prod write.",
+          "People sign in through IAM Identity Center personas (admin, platform engineer, junior engineer, manager, FinOps, security, break-glass) with permission boundaries and short sessions. No persona has standing write in prod; a prod change is a one-hour admin elevation, backed in CI by the reviewer-gated apply.",
         ],
       },
       {
@@ -2045,7 +2046,7 @@ export const caseStudies: CaseStudy[] = [
         heading: "The paved road on top",
         bullets: [
           "A private prod VPC with no internet gateway or NAT of its own. Its only way out is the Transit Gateway to the hub firewall.",
-          "EKS with a private API endpoint, KMS-encrypted secrets, IRSA, and two AL2023 managed nodes, plus the account's own interface endpoints for ECR, STS, EKS, Logs, SSM, and Secrets Manager.",
+          "EKS with a private API endpoint, KMS-encrypted secrets, IRSA, and two AL2023 managed nodes, plus the account's own interface endpoints, including ECR, STS, EKS, Logs, SSM, and Secrets Manager, and S3 and DynamoDB gateway endpoints.",
           "PostgreSQL on RDS, Multi-AZ, encrypted, private, with an RDS-managed secret so no password lands in state. Only the app tier security group reaches 5432, backed by a data-subnet NACL.",
           "Daily AWS Backup into a Vault Lock vault, with cross-region copy held off until a destination region is approved. An ECR supply chain with immutable tags, scan on push, a pull-through cache, and Inspector, plus an on-demand Image Builder pipeline; the demo nodes ran the standard AL2023 EKS image.",
         ],
@@ -2123,7 +2124,7 @@ export const caseStudies: CaseStudy[] = [
         ],
       },
     ],
-    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "EventBridge", "DynamoDB", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
+    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "EventBridge", "DynamoDB", "SNS", "SQS", "Amazon Bedrock", "n8n", "Secrets Manager", "Ansible", "Terraform", "GitHub Actions", "Infracost"],
     repo: "https://github.com/jordann6/aws-landing-zone",
     receipt: {
       rows: [
@@ -2133,11 +2134,11 @@ export const caseStudies: CaseStudy[] = [
         { k: "Observability", v: "GuardDuty sample finding published, 15 prod and 9 network metrics visible centrally, forced alarm action succeeded" },
         { k: "Compute", v: "Sandbox + Workloads guardrails 20/20 live checks; STIG + CIS golden AMI passed after reboot; private SSM-only management instance 17/17" },
         { k: "Secrets", v: "scanner in the security account assumed into all 7 targets; sandbox positive control flagged, age alarm OK to ALARM, value reads explicitly denied" },
-        { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0" },
+        { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0; standing uptime alarm handled notify-only with an Amazon Nova Lite summary" },
         { k: "Standby", v: "us-west-2 warm standby 8/8: encrypted cross-region replica, DNS flip, automated promotion, write accepted after failover" },
         { k: "Pipeline", v: "196 resources applied through CI behind 3 reviewer gates, second plan empty, gated destroy to empty state; first live runs caught 2 defects, both failed safe" },
-        { k: "Standing", v: "uptime and empty-bucket alarms fired; remediation dry run, reboot, cooldown, untagged skip and circuit breaker on forced alarms; real CPU load raised the alarm on its own, answered in dry run" },
-        { k: "Not demonstrated", v: "end-to-end firewall traffic; Claude-written incident summaries (built, Bedrock entitlement blocked them); a reboot from real load; a stale backup object" },
+        { k: "Standing", v: "uptime and empty-bucket alarms fired; heartbeat producer writes to the landing bucket; remediation dry run, reboot, cooldown, untagged skip and circuit breaker on forced alarms; real CPU load raised the alarm on its own, answered in dry run" },
+        { k: "Not demonstrated", v: "end-to-end firewall traffic; a reboot from real load; a stale backup object; restore of a real backup" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
       total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner, standing controls" },
