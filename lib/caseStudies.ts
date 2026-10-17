@@ -1995,7 +1995,7 @@ export const caseStudies: CaseStudy[] = [
     title: "AWS",
     titleOut: "Landing Zone",
     category: "AWS · Platform · Governance",
-    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live. The hourly layers now build and tear down through a gated CI pipeline, proven live on the full stack.",
+    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live. The hourly layers now build and tear down through a gated CI pipeline, proven live on the full stack. Standing uptime, backup, and remediation controls were proven by breaking them, real CPU load included.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
@@ -2111,8 +2111,18 @@ export const caseStudies: CaseStudy[] = [
           "One control did not hold up: the hourly TTL alarm never fired on schedule while the stack was up, because GitHub delays or drops scheduled runs. It is written down as a best-effort backstop, and the gated destroy is the control that protected the spend.",
         ],
       },
+      {
+        num: "/13",
+        heading: "Standing controls, proven by breaking them",
+        paragraphs: [
+          "Three small roots stay up for about five dollars a month. An uptime Lambda in shared-services checks the portfolio site every five minutes and alarms on failure, latency, certificate expiry, or a checker that stops reporting. A retained landing bucket, versioned, KMS-encrypted, and protected by prevent_destroy, has a daily freshness check. In prod, a remediation Lambda reboots an instance whose CPU alarm fires, but only one tagged Monitored, behind a 15-minute cooldown, a three-strikes circuit breaker that pages on-call once, and a conditional write so two invocations cannot both act. It ships in dry run with nothing monitored.",
+          "Each claim was proven on its own. The uptime check was pointed at a 404 path, so the site itself never went down, and two failing datapoints raised the alarm and notified the ops topic. An empty bucket raised the freshness alarm. On a disposable prod instance, forced alarms proved the dry run, a real reboot recorded in CloudTrail, the cooldown skip, the untagged skip, and the circuit breaker: three reboots, one page, then silence.",
+          "A forced alarm proves the response path, not the trigger, so a second instance burned real CPU through SSM send-command, reached over a public IP behind a security group with no inbound rules. Nothing was forced. Eight minutes later the alarm moved to ALARM on its own from two datapoints at 99.99 percent, and the Lambda answered in dry run in about three seconds: one notice delivered, nothing paged, no state written, no reboot in CloudTrail. The same run showed the success metric counted drills and reboots together, so it now carries a DryRun dimension.",
+          "Not proven: a real reboot caused by real load, since dry run stayed on, and a stale backup object, which needs a producer and a day of data. The prod EC2 policy also refused the first, arm64, proof instance as an unapproved image, which is the guardrail doing its job.",
+        ],
+      },
     ],
-    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
+    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "EventBridge", "DynamoDB", "Secrets Manager", "Ansible", "Terraform", "Infracost"],
     repo: "https://github.com/jordann6/aws-landing-zone",
     receipt: {
       rows: [
@@ -2125,10 +2135,11 @@ export const caseStudies: CaseStudy[] = [
         { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0" },
         { k: "Standby", v: "us-west-2 warm standby 8/8: encrypted cross-region replica, DNS flip, automated promotion, write accepted after failover" },
         { k: "Pipeline", v: "196 resources applied through CI behind 3 reviewer gates, second plan empty, gated destroy to empty state; first live runs caught 2 defects, both failed safe" },
-        { k: "Not demonstrated", v: "end-to-end firewall traffic; Claude-written incident summaries (built, Bedrock entitlement blocked them)" },
+        { k: "Standing", v: "uptime and empty-bucket alarms fired; remediation dry run, reboot, cooldown, untagged skip and circuit breaker on forced alarms; real CPU load raised the alarm on its own, answered in dry run" },
+        { k: "Not demonstrated", v: "end-to-end firewall traffic; Claude-written incident summaries (built, Bedrock entitlement blocked them); a reboot from real load; a stale backup object" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
-      total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner" },
+      total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner, standing controls" },
     },
   },
   {
