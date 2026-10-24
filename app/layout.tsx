@@ -46,12 +46,13 @@ export const metadata: Metadata = {
     url: "https://jordandesigns.io",
     siteName: "jordandesigns.io",
     type: "website",
+    // New filename per redesign: share caches (iMessage, LinkedIn) key on the URL.
     images: [
       {
-        url: "/og.png",
+        url: "/og-2026-10.png",
         width: 1200,
         height: 630,
-        alt: "Jordan, Multi-Cloud Engineer",
+        alt: "jordandesigns.io · Jordan, Multi-Cloud Engineer",
       },
     ],
   },
@@ -60,7 +61,7 @@ export const metadata: Metadata = {
     title: "jordandesigns.io · Jordan, Multi-Cloud Engineer",
     description:
       "Secure, well-organized cloud environments on AWS, Azure, and Google Cloud.",
-    images: ["/og.png"],
+    images: ["/og-2026-10.png"],
   },
 };
 

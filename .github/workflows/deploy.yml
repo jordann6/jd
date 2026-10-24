@@ -34,7 +34,7 @@ jobs:
           aws-region: us-east-1
 
       # Only /_next/ filenames carry a content hash, so only those are safe to
-      # freeze. Everything else (HTML, og.png, robots.txt, sitemap.xml) keeps a
+      # freeze. Everything else (HTML, og-*.png, robots.txt, sitemap.xml) keeps a
       # stable URL and therefore needs a short TTL.
       - name: Sync hashed build assets (immutable, long cache)
         run: |
