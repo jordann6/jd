@@ -1247,7 +1247,7 @@ export const caseStudies: CaseStudy[] = [
     title: "GCP",
     titleOut: "Landing Zone",
     category: "GCP · Platform · Governance",
-    lede: "An organization built as code to parity with the AWS and Azure landing zones: org-root constraints, no standing prod access, a VPC Service Controls perimeter, a private GKE plus HA Cloud SQL paved road, a hardened golden-image management VM, and an incident handler that quarantines it. Deployed live in seven roots, proven suite by suite, and destroyed.",
+    lede: "An organization built as code to parity with the AWS and Azure landing zones: org-root constraints, no standing prod access, a VPC Service Controls perimeter, a private GKE plus HA Cloud SQL paved road, a hardened golden-image management VM, and an incident handler that quarantines it. Deployed live in seven roots, proven suite by suite, and destroyed. CI now applies and tears down through reviewer gates on Workload Identity Federation, with no key anywhere and no path to the org admin identity.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "GCP" },
@@ -1328,13 +1328,23 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/09",
+        heading: "Gated CI on federated identities",
+        paragraphs: [
+          "The federation pool existed from the first build, but its environment bindings pointed at sa-terraform, which holds organizationAdmin and can rewrite the pool's own trust. On 2026-10-26 those bindings moved to a new sa-gha-apply that holds networking roles in the seed project and nothing at the org. It is reachable only from a job bound to the prod-apply or destroy environment, because its binding matches the token's environment claim, and both environments carry a required reviewer and accept main only. sa-terraform is no longer reachable from CI at all.",
+          "State got the same treatment. The plan identity had object admin on the whole state bucket, so a plan could have edited state. It now reads every root's state but writes only .tflock objects, and the apply identity reads and writes only the ci-proof prefix, both through IAM conditions. The pool also checks the repository's numeric ID and owner ID alongside its name, because a name can be freed and claimed by someone else. The AWS and Azure pipelines each failed a first run on a name-based OIDC subject, so this one pinned IDs from the start.",
+          "The first run failed anyway, at init: a 403 writing the ci-proof root's state. The GCS backend writes an empty state object the first time a root is initialized, and the plan identity may now write only lock files. That was the new condition working on CI itself, and a one-time operator init seeds a new root. After that, a gated apply built three resources after approval, a gated destroy removed all three with the hourly check clean, and the TTL guard read network, workload, compute, and ci-proof green.",
+          "Scope, stated plainly: CI applies only a free proof root, a VPC, subnet, and deny-all firewall rule in the seed project. Governance, network, workload, and compute stay operator-applied through impersonation, because they need org roles CI should never hold.",
+        ],
+      },
+      {
+        num: "/10",
         heading: "Honest limits",
         paragraphs: [
           "Security Command Center is not activated for the organization (console-only), so that path was proven by publishing a sample finding to the topic it would publish to. The first live incident run failed Cloud SQL over by mistake, because the script claimed a dry-run gate the handler did not have; failover is now a separate, off-by-default switch. Cloud SQL failover through the handler, a real secret rotation, and deleting a backup vault that holds backups are not proven. An earlier run in August measured a zonal failover in 37 seconds on the same private IP; the final session skipped that step.",
         ],
       },
     ],
-    stack: ["Org Policy", "VPC Service Controls", "Privileged Access Manager", "Workforce Identity Federation", "Shared VPC", "Cloud NGFW", "Private Service Connect", "GKE", "Binary Authorization", "Cloud SQL", "Backup and DR", "Cloud KMS", "Packer", "Artifact Registry", "OS Config", "Cloud Asset Inventory", "Cloud Run", "Terraform"],
+    stack: ["Org Policy", "VPC Service Controls", "Privileged Access Manager", "Workforce Identity Federation", "Shared VPC", "Cloud NGFW", "Private Service Connect", "GKE", "Binary Authorization", "Cloud SQL", "Backup and DR", "Cloud KMS", "Packer", "Artifact Registry", "OS Config", "Cloud Asset Inventory", "Cloud Run", "Terraform", "GitHub Actions"],
     repo: "https://github.com/jordann6/gcp-landing-zone/tree/main",
     receipt: {
       rows: [
@@ -1343,6 +1353,7 @@ export const caseStudies: CaseStudy[] = [
         { k: "Paved road", v: "15 passed, 0 failed with the failover step skipped; an earlier run measured failover in 37s on the same private IP" },
         { k: "Compute", v: "20 passed, 0 failed: image policy, golden boot, live hardening, mirror-only apt, patch job SUCCEEDED" },
         { k: "Detect and respond", v: "observability 15/0, asset history 9/0, incident 15/0 dry-run and 24/0 live, secrets 30/0, handler 22 unit tests" },
+        { k: "CI", v: "Gated apply through Workload Identity Federation (3 resources, reviewer-approved), gated destroy to empty with the hourly check clean, TTL guard green on four roots, 2026-10-26" },
         { k: "Not proven", v: "Cloud SQL failover through the handler, a real secret rotation, a populated backup vault delete; SCC activation is console-only" },
         { k: "Destroy", v: "every root's state empty; only the seed project remains ACTIVE" },
       ],
