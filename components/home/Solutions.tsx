@@ -3,7 +3,6 @@ import {
   landingZones,
   moreSolutions,
   platformSlug,
-  type Cloud,
 } from "@/lib/solutions";
 
 export function LandingZones() {
@@ -18,8 +17,8 @@ export function LandingZones() {
         <div className="lz-grid">
           {landingZones.map((s) => (
             <article className="lz" key={s.slug}>
-              <div className="lz-img" aria-hidden="true">
-                <Scene cloud={s.cloud} />
+              <div className={`lz-img lz-logo ${s.cloud}`} aria-hidden="true">
+                <BrandIcon name={s.cloud} />
               </div>
               <div className="lz-body">
                 <span className={`cloud-label ${s.cloud}`}>
@@ -147,60 +146,5 @@ export function MoreSolutions() {
         </p>
       </div>
     </section>
-  );
-}
-
-// Small architectural scenes for the landing zone cards, one per cloud.
-function Scene({ cloud }: { cloud: Cloud }) {
-  if (cloud === "aws")
-    return (
-      <svg viewBox="0 0 320 170" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="sk-aws" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#e9d9c6" />
-            <stop offset="1" stopColor="#f6ece0" />
-          </linearGradient>
-        </defs>
-        <rect width="320" height="170" fill="url(#sk-aws)" />
-        <path d="M0 108 L40 92 L78 100 L120 84 L160 98 L200 90 L200 120 L0 120 Z" fill="#c9b7a6" opacity=".7" />
-        <rect y="118" width="320" height="52" fill="#e4dbd0" />
-        <polygon points="70,128 220,128 238,118 88,118" fill="#efe8de" />
-        <rect x="70" y="128" width="150" height="16" fill="#d8cdbf" />
-        <polygon points="220,40 262,26 262,152 220,152" fill="#d3c8ba" />
-        <rect x="192" y="40" width="28" height="112" fill="#e6ddd1" />
-      </svg>
-    );
-  if (cloud === "azure")
-    return (
-      <svg viewBox="0 0 320 170" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="sk-azure" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#bcd3e6" />
-            <stop offset="1" stopColor="#e6eff6" />
-          </linearGradient>
-        </defs>
-        <rect width="320" height="170" fill="url(#sk-azure)" />
-        <rect y="112" width="320" height="18" fill="#7fa3bf" />
-        <rect y="130" width="320" height="40" fill="#dfe6ea" />
-        <path d="M40 150 V70 Q40 40 110 34 L190 30 V150 Z" fill="#cfd8de" />
-        <path d="M190 30 Q240 36 250 70 V150 H190 Z" fill="#b6c3cc" />
-        <rect x="210" y="132" width="90" height="10" fill="#eef2f4" />
-      </svg>
-    );
-  return (
-    <svg viewBox="0 0 320 170" preserveAspectRatio="xMidYMid slice">
-      <defs>
-        <linearGradient id="sk-gcp" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#d2e0dc" />
-          <stop offset="1" stopColor="#eef3f1" />
-        </linearGradient>
-      </defs>
-      <rect width="320" height="170" fill="url(#sk-gcp)" />
-      <rect y="124" width="320" height="46" fill="#e2e8e5" />
-      <path d="M110 150 V60 Q190 18 300 30 V150 Z" fill="#b9c9c4" />
-      <path d="M150 150 V78 Q210 52 300 56 V150 Z" fill="#cdd9d5" />
-      <polygon points="196,150 260,150 270,140 206,140" fill="#eef3f1" />
-      <rect x="196" y="110" width="64" height="40" fill="#dde6e2" />
-    </svg>
   );
 }
