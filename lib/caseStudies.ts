@@ -831,7 +831,7 @@ export const caseStudies: CaseStudy[] = [
     title: "Azure Landing",
     titleOut: "Zone",
     category: "Azure · Platform · Governance",
-    lede: "The governance foundation a workload subscription inherits before anyone deploys into it, and two workloads that land on top of it: a private AKS plus zone-redundant HA PostgreSQL paved road that leaves only through the hub firewall, and a two-region member portal whose failover was drilled live at 7.3 seconds with zero writes lost.",
+    lede: "The governance foundation a workload subscription inherits before anyone deploys into it, and two workloads that land on top of it: a private AKS plus zone-redundant HA PostgreSQL paved road that leaves only through the hub firewall, and a two-region member portal whose failover was drilled live at 7.3 seconds with zero writes lost. CI now applies and tears down through reviewer gates on federated identities, with no secret stored anywhere.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "Azure, 3 regions" },
@@ -920,8 +920,18 @@ export const caseStudies: CaseStudy[] = [
           "Not proven: warm standby as an LZ-wide capability. The portal's two-region setup was drilled with planned failovers only, and the prod tier has in-region zone HA plus a geo-redundant backup vault.",
         ],
       },
+      {
+        num: "/10",
+        heading: "Gated CI on federated identities",
+        paragraphs: [
+          "Until 2026-10-26 every Azure apply ran from an operator laptop, because the shared pipeline only knew how to sign in to AWS. It now signs in to Azure through GitHub OIDC with two user-assigned identities, and no client secret exists anywhere. The plan identity trusts pull requests and main and holds Reader on the subscription. The apply identity trusts only the prod-apply and destroy environments, so a run has to clear a required reviewer before it can get a token, and it holds Contributor on one resource group and nothing else. It cannot create a role assignment, and both identities live in the operator-applied bootstrap root, so CI can never rewrite its own trust.",
+          "State got the same treatment. Both identities can read every root's state, which plans and the TTL guard need, but an ABAC condition on the storage role limits writes, deletes, and leases to the one state blob CI owns. A pull request that plans hostile Terraform cannot overwrite another root's state.",
+          "The first run failed at sign-in with AADSTS700213. GitHub issues this repo's tokens with the immutable subject, which carries the owner and repo IDs, and Entra matches a federated credential's subject exactly. It is the same mismatch the AWS pipeline found, repeated because the Azure credentials were written from the old name-based pattern. With the subjects corrected, a gated apply built four resources after approval, a gated destroy removed all four and found no hourly resources left, and the TTL guard read all four roots green.",
+          "Scope, stated plainly: CI applies only a small proof root in that resource group. Governance, the workload, and compute stay operator-applied. Moving the workload behind CI needs runner access through its Key Vault firewall and a constrained way to create role assignments, and neither is built.",
+        ],
+      },
     ],
-    stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Front Door", "Container Apps", "Azure SQL", "API Management", "Entra External ID", "Application Insights", "Terraform"],
+    stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Front Door", "Container Apps", "Azure SQL", "API Management", "Entra External ID", "Application Insights", "Terraform", "GitHub Actions"],
     repo: "https://github.com/jordann6/azure-landing-zone/tree/main",
     receipt: {
       rows: [
@@ -931,6 +941,7 @@ export const caseStudies: CaseStudy[] = [
         { k: "Portal smoke", v: "7 of 7 through Front Door: WAF blocked a SQL injection probe (403), partner API 200 with a key and 401 without" },
         { k: "App drill", v: "primary region ingress disabled, Front Door serving entirely from the second region 83.9 s later" },
         { k: "Data drill", v: "planned SQL failover: longest write gap 7.3 s, 0 acknowledged writes lost; failback 7.4 s, 0 of 36 lost" },
+        { k: "CI", v: "Gated apply through GitHub OIDC (4 resources, reviewer-approved), gated destroy to empty with the hourly check clean, TTL guard green on all four roots, 2026-10-26" },
         { k: "Parity session", v: "Flow logs 9/9, observability 4/4, secrets 11/11 on 2026-10-06, then destroyed and teardown-verified. AKS and ACR on azurerm 4.x proven in eastus2 (centralus out of AKS capacity), clean post-apply plan" },
         { k: "Destroy", v: "Demo compute and network removed; backup vault retained during its recovery window, plus soft-deleted Key Vaults" },
       ],
@@ -1995,7 +2006,7 @@ export const caseStudies: CaseStudy[] = [
     title: "AWS",
     titleOut: "Landing Zone",
     category: "AWS · Platform · Governance",
-    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live. The hourly layers now build and tear down through a gated CI pipeline, proven live on the full stack. Standing uptime, backup, and remediation controls were proven by breaking them, real CPU load included.",
+    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live. The hourly layers now build and tear down through a gated CI pipeline, proven live on the full stack, and the organization is checked daily for drift. Standing uptime, backup, and remediation controls were proven by breaking them, real CPU load included.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
@@ -2110,6 +2121,8 @@ export const caseStudies: CaseStudy[] = [
           "The gated job replays the exact plan the reviewer approved. Saved plans freeze variables and provider settings, which would replay the read-only role, so an ephemeral ci_stage variable picks the member role per job without entering the plan. Inputs come from upstream state instead of private var files, and a removed block replaces the manual state rm that kept the EBS encryption default alive through every destroy.",
           "The full stack went through it live: 196 resources in about 35 minutes across three gates, then every root planned again, and the run fails unless the second plan is empty, which catches a perpetual diff the day it appears. The gated destroy ran about 20 minutes and checked each root for surviving hourly resources. The first live runs caught two real defects, and both failed safe. The setup-terraform wrapper reports plan exit code 2 as 0, so every apply was skipped and nothing was built. And the hub flow-log role had re-created its own log group after an earlier teardown, so an apply stopped at 47 of 50; the role lost logs:CreateLogGroup, and the group did not come back after the CI destroy.",
           "One control did not hold up: the hourly TTL alarm never fired on schedule while the stack was up, because GitHub delays or drops scheduled runs. It is written down as a best-effort backstop, and the gated destroy is the control that protected the spend.",
+          "A gated apply proves the code and the cloud agreed at merge time. It says nothing about a console change made afterward, so the permanent accounts root now gets a daily refresh-only plan with the read-only role. Drift opens one issue naming each changed resource and attribute, never the values, and the next clean run closes it. The proof was a hand edit: the Sandbox OU's Owner tag set to drift-test failed the run and opened an issue listing that OU's tags, and reverting the tag closed it on the next run, about three minutes end to end.",
+          "Getting there took two fixes. The first run stopped on a required variable that lives in a gitignored var file, so the shared workflow gained an optional secret, written to the runner's temp directory and passed as a var file. Then the read role could refresh all forty Organizations resources but not the RAM share, whose refresh reads a service-linked role, so it gained iam:GetRole on that one role. Only accounts is checked. The other retained roots reach member accounts through a role the read identity cannot assume, and covering them needs a read role in each account.",
         ],
       },
       {
@@ -2137,6 +2150,7 @@ export const caseStudies: CaseStudy[] = [
         { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0; standing uptime alarm handled notify-only with an Amazon Nova Lite summary" },
         { k: "Standby", v: "us-west-2 warm standby 8/8: encrypted cross-region replica, DNS flip, automated promotion, write accepted after failover" },
         { k: "Pipeline", v: "196 resources applied through CI behind 3 reviewer gates, second plan empty, gated destroy to empty state; first live runs caught 2 defects, both failed safe" },
+        { k: "Drift", v: "daily refresh-only plan on the accounts root; a hand-edited OU tag opened an issue naming the resource and attributes, and reverting it auto-closed the issue, about 3 minutes" },
         { k: "Standing", v: "uptime and empty-bucket alarms fired; heartbeat producer writes to the landing bucket; remediation dry run, reboot, cooldown, untagged skip and circuit breaker on forced alarms; real CPU load raised the alarm on its own, answered in dry run" },
         { k: "Not demonstrated", v: "end-to-end firewall traffic; a reboot from real load; a stale backup object; restore of a real backup" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
