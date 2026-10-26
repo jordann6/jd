@@ -39,3 +39,7 @@ tsconfig.tsbuildinfo
 # Claude Code
 .claude/
 CLAUDE.md
+
+# Terraform plan files can embed state values
+tfplan*
+*.tfplan
