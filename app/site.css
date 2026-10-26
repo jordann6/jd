@@ -386,3 +386,13 @@ html.locked { overflow: hidden; }
   .pgrid { grid-template-columns: minmax(0, 1fr); }
   .arch-frame { max-height: none; }
 }
+
+/* Landing zone card header: the official provider logo */
+.lz-logo { display: grid; place-items: center; border-bottom: 1px solid var(--line); }
+.lz-logo.aws { background: linear-gradient(180deg, color-mix(in srgb, #ff9900 12%, var(--card)), var(--card)); }
+.lz-logo.azure { background: linear-gradient(180deg, color-mix(in srgb, #0078d4 10%, var(--card)), var(--card)); }
+.lz-logo.gcp { background: linear-gradient(180deg, color-mix(in srgb, #4285f4 9%, var(--card)), var(--card)); }
+.lz-logo .lg { width: auto; height: 42%; aspect-ratio: auto; }
+.lz-logo.aws .lg { width: 34%; height: auto; aspect-ratio: 304 / 182; }
+.lz-logo.azure .lg { width: auto; height: 46%; aspect-ratio: 1; }
+.lz-logo.gcp .lg { width: auto; height: 40%; aspect-ratio: 33.2 / 26.3; }
