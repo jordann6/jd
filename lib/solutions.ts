@@ -152,6 +152,8 @@ export const services: Service[] = [
     rel: [
       "Every solution here, written in Terraform; ",
       { slug: "aws-landing-zone", label: "applied through a gated pipeline" },
+      " and ",
+      { slug: "aws-landing-zone", label: "checked daily for drift" },
     ],
   },
   {
