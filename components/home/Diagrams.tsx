@@ -69,6 +69,10 @@ function FlowCol({
       <div className="dcol">
         {nodes.map((n) => (
           <div key={n.label} className={`dnode${n.accent ? " accent" : ""}`}>
+            {n.icon && (
+              // eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer
+              <img className="di" src={`/icons/${n.icon}.png`} width={26} height={26} alt="" loading="lazy" />
+            )}
             <span className="dl">{n.label}</span>
             {n.sub && <span className="ds">{n.sub}</span>}
           </div>

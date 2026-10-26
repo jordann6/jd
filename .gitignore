@@ -35,3 +35,7 @@ next-env.d.ts
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
+
+# Terraform plan files can embed state values
+tfplan*
+*.tfplan
