@@ -281,6 +281,7 @@ html.locked { overflow: hidden; }
 .dcol { flex: 1 1 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .dnode { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
 .dnode.accent { border-color: var(--accent); background: var(--accent-soft); }
+.dnode .di { width: 30px; height: 30px; padding: 2px; margin-bottom: 6px; background: #fff; border-radius: 6px; object-fit: contain; }
 .dnode .dl { font-weight: 700; font-size: 14.5px; line-height: 1.25; }
 .dnode .ds { font-family: var(--f-mono); font-size: 11px; color: var(--muted); line-height: 1.4; }
 .diagram .arrow { color: var(--accent); font-size: 18px; flex: none; }

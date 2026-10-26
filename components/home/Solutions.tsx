@@ -22,7 +22,6 @@ export function LandingZones() {
               </div>
               <div className="lz-body">
                 <span className={`cloud-label ${s.cloud}`}>
-                  <BrandIcon name={s.cloud} />
                   {s.label}
                 </span>
                 <h3>{s.title}</h3>
