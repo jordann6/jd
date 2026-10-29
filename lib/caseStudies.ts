@@ -831,7 +831,7 @@ export const caseStudies: CaseStudy[] = [
     title: "Azure Landing",
     titleOut: "Zone",
     category: "Azure · Platform · Governance",
-    lede: "The governance foundation a workload subscription inherits before anyone deploys into it, and two workloads that land on top of it: a private AKS plus zone-redundant HA PostgreSQL paved road that leaves only through the hub firewall, and a two-region member portal whose failover was drilled live at 7.3 seconds with zero writes lost. CI now applies and tears down through reviewer gates on federated identities, with no secret stored anywhere.",
+    lede: "The governance foundation a workload subscription inherits before anyone deploys into it, and two workloads that land on top of it: a private AKS plus zone-redundant HA PostgreSQL paved road that leaves only through the hub firewall, and a two-region member portal whose failover was drilled live at 7.3 seconds with zero writes lost. CI now applies and tears down through reviewer gates on federated identities, with no secret stored anywhere. On top of the paved road sits an SRE layer, run live: GitOps that reverts hand edits, an SLO that pages on burn rate, and a stateful namespace deleted and restored from backup with the data loss counted.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "Azure, 3 regions" },
@@ -928,10 +928,21 @@ export const caseStudies: CaseStudy[] = [
           "State got the same treatment. Both identities can read every root's state, which plans and the TTL guard need, but an ABAC condition on the storage role limits writes, deletes, and leases to the one state blob CI owns. A pull request that plans hostile Terraform cannot overwrite another root's state.",
           "The first run failed at sign-in with AADSTS700213. GitHub issues this repo's tokens with the immutable subject, which carries the owner and repo IDs, and Entra matches a federated credential's subject exactly. It is the same mismatch the AWS pipeline found, repeated because the Azure credentials were written from the old name-based pattern. With the subjects corrected, a gated apply built four resources after approval, a gated destroy removed all four and found no hourly resources left, and the TTL guard read all four roots green.",
           "Scope, stated plainly: CI applies only a small proof root in that resource group. Governance, the workload, and compute stay operator-applied. Moving the workload behind CI needs runner access through its Key Vault firewall and a constrained way to create role assignments, and neither is built.",
+          "The same root now has drift detection. A daily refresh-only plan runs as the read-only identity and opens one issue naming the changed resource and attributes, never their values, and the next clean run closes it. Its first live run found a bug in the shared check rather than in Azure: on azurerm, Terraform's refresh-only exit code says changes exist when nothing drifted, so every clean run opened an issue listing zero resources. The shared workflow now decides from the drift list itself. On 2026-10-29 a clean run stayed quiet, a tag changed from the CLI opened an issue naming the VNet, and reverting it closed the issue.",
+        ],
+      },
+      {
+        num: "/11",
+        heading: "SRE on the paved road",
+        paragraphs: [
+          "Two flags turn the prod workload into something an on-call engineer would recognise. Flux reconciles a .NET 10 service, its load generator, Grafana, and a Postgres StatefulSet on CMK disks from Git, with every image pinned by digest. Managed Prometheus writes to an Azure Monitor workspace, where recording rules compute the error ratio over four windows and multiwindow burn-rate rules page through the landing zone's action group. Secrets come from Key Vault through the CSI driver, one workload identity per consumer, and none of them enter Git.",
+          "Run live on 2026-10-29 in eastus2. A hand scale from 3 replicas to 1 was reverted by Flux in 29 seconds, and a commit changing the load generator's rate was live in 63 seconds with no kubectl. A 50% fault fired the fast-burn alert 5 minutes 28 seconds later, the page email arrived, and the alert resolved after the fault was removed. Then the Postgres namespace was deleted outright and restored from AKS Backup: the restore job took 219 seconds and writes resumed 405 seconds after the delete. The last durable write before the loss was 3301 and the restore came back at 3007 with no gaps, so 294 writes were lost, counted from the data rather than the backup's timestamp, which turned out to be 2.5 minutes later than the data it held.",
+          "The session found twelve things a plan never shows, and the most useful came at the end. Terraform deleted the hub peerings and the Key Vault private endpoint before the cluster, because nothing said they were related. The nodes lost their route out, went NotReady, and the GitOps and backup deletes hung for 30 minutes. The cluster now depends on its whole network path, and a check over Terraform's dependency graph, run in CI with no credentials, fails if any of 52 ordering rules goes missing. The firewall logs also showed a broad AzureCloud rule carrying 2,874 connections ahead of every domain rule, so it was cut to the one Azure Monitor rule the docs require.",
+          "Stated plainly: the teardown ordering and the narrower egress are built and checked, not yet proven in a live session. The session cost is an estimate, about $7 to $9.50, until Cost Management posts.",
         ],
       },
     ],
-    stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Front Door", "Container Apps", "Azure SQL", "API Management", "Entra External ID", "Application Insights", "Terraform", "GitHub Actions"],
+    stack: ["AKS", "Azure Management Groups", "Azure Policy", "PostgreSQL Flexible Server", "Key Vault CMK", "Workload Identity", "Azure Firewall", "Private Endpoints", "Front Door", "Container Apps", "Azure SQL", "API Management", "Entra External ID", "Application Insights", "Terraform", "GitHub Actions", "Flux", "Managed Prometheus", "Grafana", "AKS Backup"],
     repo: "https://github.com/jordann6/azure-landing-zone/tree/main",
     receipt: {
       rows: [
@@ -941,6 +952,10 @@ export const caseStudies: CaseStudy[] = [
         { k: "Portal smoke", v: "7 of 7 through Front Door: WAF blocked a SQL injection probe (403), partner API 200 with a key and 401 without" },
         { k: "App drill", v: "primary region ingress disabled, Front Door serving entirely from the second region 83.9 s later" },
         { k: "Data drill", v: "planned SQL failover: longest write gap 7.3 s, 0 acknowledged writes lost; failback 7.4 s, 0 of 36 lost" },
+        { k: "GitOps", v: "Flux Compliant on three kustomizations; a hand scale reverted in 29 s, a commit live in 63 s with no kubectl, 2026-10-29" },
+        { k: "SLO", v: "50% fault fired the fast-burn page 5 min 28 s later; resolved after the fault was removed" },
+        { k: "Restore", v: "Namespace deleted and restored from AKS Backup: job 219 s, writes resumed at 405 s, 294 writes lost with no gaps" },
+        { k: "Drift", v: "Daily refresh-only check: clean run quiet, a CLI tag change opened an issue naming the VNet, the revert closed it, 2026-10-29" },
         { k: "CI", v: "Gated apply through GitHub OIDC (4 resources, reviewer-approved), gated destroy to empty with the hourly check clean, TTL guard green on all four roots, 2026-10-26" },
         { k: "Parity session", v: "Flow logs 9/9, observability 4/4, secrets 11/11 on 2026-10-06, then destroyed and teardown-verified. AKS and ACR on azurerm 4.x proven in eastus2 (centralus out of AKS capacity), clean post-apply plan" },
         { k: "Destroy", v: "Demo compute and network removed; backup vault retained during its recovery window, plus soft-deleted Key Vaults" },
