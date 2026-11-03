@@ -5,7 +5,7 @@ import ProjectIndex from "@/components/ProjectIndex";
 export const metadata: Metadata = {
   title: "All work · jordandesigns.io",
   description:
-    "Cloud, platform, security, FinOps, data, and AI engineering across AWS, Azure, and Google Cloud. Filter by cloud or focus area.",
+    "Cloud, platform, security, FinOps, data, and AI engineering across AWS, Azure, and Google Cloud. Filter by focus area, grouped by cloud.",
 };
 
 export default function WorkIndex() {
@@ -21,10 +21,10 @@ export default function WorkIndex() {
           <p>
             Cloud, platform, security, FinOps, data, and AI engineering across
             AWS, Azure, and Google Cloud, all defined as code and deployed for
-            real. Filter by cloud or focus area.
+            real. Pick a focus area; results are grouped by cloud.
           </p>
         </div>
-        <ProjectIndex initial="All" />
+        <ProjectIndex syncUrl />
       </div>
     </section>
   );

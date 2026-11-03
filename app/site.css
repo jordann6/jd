@@ -327,11 +327,22 @@ html.locked { overflow: hidden; }
 .crumbs a { color: var(--accent); font-weight: 600; text-decoration: none; padding: 10px 0; }
 .crumbs a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
-.chip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 15px; font-weight: 600; text-decoration: none; transition: border-color .2s var(--ease); }
+.filters { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.chip { font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 15px; font-weight: 600; text-decoration: none; transition: border-color .2s var(--ease); }
 .chip .lg { font-size: 16px; }
 .chip:hover { border-color: var(--accent); }
-.chip[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.chip:disabled { opacity: .4; cursor: not-allowed; }
+.chip:disabled:hover { border-color: var(--line); }
+.cs-toggle { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.cs-toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.cs-toggle .count { font-family: var(--f-mono); font-size: 12px; font-weight: 500; opacity: .7; }
+.filter-result { font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+.filter-empty { color: var(--muted); margin-top: 8px; }
+.pgroup-h { display: flex; align-items: center; gap: 10px; font-size: 20px; letter-spacing: -.015em; margin: 32px 0 14px; padding-top: 18px; border-top: 1px solid var(--line); }
+.pgroup-h .lg { font-size: 20px; }
+.pgroup-h .count { font-family: var(--f-mono); font-size: 13px; font-weight: 500; color: var(--muted); }
 .chip .count { font-family: var(--f-mono); font-size: 12px; font-weight: 500; opacity: .7; }
 
 .pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -390,3 +401,7 @@ html.locked { overflow: hidden; }
 .lz-logo.aws .lg { width: 34%; height: auto; aspect-ratio: 304 / 182; }
 .lz-logo.azure .lg { width: auto; height: 46%; aspect-ratio: 1; }
 .lz-logo.gcp .lg { width: auto; height: 40%; aspect-ratio: 33.2 / 26.3; }
+@media (max-width: 620px) {
+  .chips { padding-left: 0; }
+    .cs-toggle { margin-left: 0; }
+}

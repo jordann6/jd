@@ -25,7 +25,7 @@ export default function CaseStudiesPage() {
           <h1 className="page-title">Case studies</h1>
           <p>{caseStudyMeta.blurb}</p>
         </div>
-        <ProjectIndex initial="Case Study" />
+        <ProjectIndex initial={{ cloud: null, focus: null, caseStudies: true }} />
       </div>
     </section>
   );

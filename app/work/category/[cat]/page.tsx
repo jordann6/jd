@@ -4,6 +4,7 @@ import {
   CATEGORIES,
   categoryMeta,
   categoryFromSlug,
+  isCloud,
   projectsByCategory,
 } from "@/lib/projects";
 import ProjectIndex from "@/components/ProjectIndex";
@@ -22,7 +23,7 @@ export async function generateMetadata({
   if (!category) return { title: "Work · jordandesigns.io" };
   const m = categoryMeta[category];
   return {
-    title: `${m.title === "GCP" ? "Google Cloud" : m.title} work · jordandesigns.io`,
+    title: `${m.heading} · jordandesigns.io`,
     description: m.blurb,
   };
 }
@@ -38,8 +39,6 @@ export default async function CategoryPage({
   const m = categoryMeta[category];
   const count = projectsByCategory(category).length;
 
-  const name = category === "GCP" ? "Google Cloud" : m.title;
-
   return (
     <section className="sec work">
       <div className="wrap">
@@ -50,12 +49,18 @@ export default async function CategoryPage({
         </nav>
         <div className="sec-head">
           <span className="eyebrow">
-            Focus area · {count} build{count === 1 ? "" : "s"}
+            {isCloud(category) ? "Cloud" : "Focus area"} · {count} build{count === 1 ? "" : "s"}
           </span>
-          <h1 className="page-title">{name} work</h1>
+          <h1 className="page-title">{m.heading}</h1>
           <p>{m.blurb}</p>
         </div>
-        <ProjectIndex initial={category} />
+        <ProjectIndex
+          initial={{
+            cloud: isCloud(category) ? category : null,
+            focus: isCloud(category) ? null : category,
+            caseStudies: false,
+          }}
+        />
       </div>
     </section>
   );
