@@ -42,6 +42,22 @@ export const platformSlug = "multi-cloud-developer-platform";
 
 export const moreSolutions: SolutionCard[] = [
   {
+    slug: "eks-network-segmentation",
+    title: "Kubernetes Network Segmentation",
+    label: "Kubernetes security · AWS",
+    cloud: "aws",
+    summary:
+      "Assumes one service is already compromised and proves, path by path on a live cluster, how little it can reach once network rules are in place.",
+  },
+  {
+    slug: "release-guard",
+    title: "Verified .NET Delivery",
+    label: "Delivery pipeline · AWS",
+    cloud: "aws",
+    summary:
+      "A C# order API shipped to private Kubernetes, where only a check running inside the cluster can mark a release as good. Bad releases block the next one.",
+  },
+  {
     slug: "multi-region-failover",
     title: "Multi-Region Failover",
     label: "Site reliability · AWS",
@@ -50,44 +66,28 @@ export const moreSolutions: SolutionCard[] = [
       "Automatic disaster recovery. When a region fails, traffic moves and the backup database takes over without manual steps.",
   },
   {
-    slug: "secrets-lifecycle",
+    slug: "aws-incident-responder",
+    title: "Incident Responder",
+    label: "Incident response · AWS and Azure",
+    cloud: "aws",
+    summary:
+      "An alarm starts a versioned runbook that alerts the team with an AI-written summary, restarts the failing server, and checks that the problem cleared.",
+  },
+  {
+    slug: "azure-secrets-lifecycle",
     title: "Secrets Lifecycle",
-    label: "Cloud security · AWS",
-    cloud: "aws",
-    summary:
-      "Finds stored passwords and keys that are overdue for rotation and traces why each one was missed.",
-  },
-  {
-    slug: "gpu-platform",
-    title: "GPU Scheduling and FinOps",
-    label: "AI infrastructure and FinOps · AWS",
-    cloud: "aws",
-    summary:
-      "Shows whether expensive GPU hardware is doing useful work, shares it across teams, and runs on lower-cost spare capacity.",
-  },
-  {
-    slug: "azure-finops-dashboard",
-    title: "Azure FinOps Dashboard",
-    label: "FinOps · Azure",
-    cloud: "azure",
-    summary:
-      "Shows who owns the Azure spend, which resources changed behavior, and where money is wasted, with tagging enforced by policy.",
-  },
-  {
-    slug: "azure-aks-runtime-security",
-    title: "Kubernetes Runtime Security",
     label: "Cloud security · Azure",
     cloud: "azure",
     summary:
-      "Layered protection for a running cluster: unsafe deployments are blocked, attacks are detected live, and the security team is alerted.",
+      "Finds passwords and keys that are overdue for rotation, and proves against the live cloud that its own access is read-only.",
   },
   {
-    slug: "gcp-supply-chain-security",
-    title: "Software Supply Chain Security",
-    label: "DevSecOps · Google Cloud",
-    cloud: "gcp",
+    slug: "cost-intelligence-dashboard",
+    title: "Cost Intelligence Dashboard",
+    label: "FinOps · AWS",
+    cloud: "aws",
     summary:
-      "Only software built and signed by the company's own pipeline can run in production. Anything else is refused.",
+      "Shows who owns the spend, where money is wasted, what each request costs, and what next month will cost.",
   },
 ];
 
