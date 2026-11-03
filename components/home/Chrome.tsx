@@ -23,6 +23,7 @@ export function SiteHeader() {
         <nav className="nav" aria-label="Main">
           <a href="/#services">Services</a>
           <a href="/#solutions">Solutions</a>
+          <a href="/work/">Work</a>
           <a href="/#approach">Approach</a>
           <a href="/#about">About</a>
           <a className="btn btn-primary" href="/#contact">

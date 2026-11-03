@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Cloud } from "@/lib/solutions";
 
 // Official provider and social marks, inlined once as an SVG sprite and
@@ -30,9 +31,9 @@ export function BrandIcon({ name }: { name: Cloud | "linkedin" | "github" }) {
 }
 
 // The jd cloud mark. The accent pixel takes the theme's accent color.
-export function JdLogo({ className }: { className?: string }) {
+export function JdLogo(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg className={className} viewBox="0 0 72 48" aria-hidden="true">
+    <svg viewBox="0 0 72 48" aria-hidden="true" {...props}>
       <path
         d="M22 41 C 13 41, 7 34, 9.5 27 C 4.5 22, 9 13, 16.5 14.5 C 18.5 6.5, 29 4.5, 34 11 C 38.5 5.5, 49 8, 49 17 C 56.5 17, 60 26.5, 53 32 C 55.5 38.5, 48.5 43, 42 41 Z"
         fill="none"

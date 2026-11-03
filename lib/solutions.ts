@@ -134,6 +134,18 @@ export const services: Service[] = [
     ],
   },
   {
+    tag: "Kubernetes",
+    title: "Kubernetes",
+    desc: "Clusters on all three clouds, run from Git, with network rules between services, runtime threat detection, and policies that block unsafe workloads before they start.",
+    rel: [
+      { slug: "eks-network-segmentation", label: "EKS network segmentation" },
+      ", ",
+      { slug: "azure-aks-runtime-security", label: "AKS runtime security" },
+      ", ",
+      { slug: "gcp-gke-config-sync", label: "GKE GitOps with Config Sync" },
+    ],
+  },
+  {
     tag: "DevOps",
     title: "CI/CD",
     desc: "Continuous integration and delivery. Every change is tested and deployed automatically, so releases are small and routine.",

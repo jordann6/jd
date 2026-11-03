@@ -187,6 +187,7 @@ h1, h2, h3, h4 { margin: 0; font-family: var(--f-display); font-weight: 700; lin
 .svc { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; display: flex; flex-direction: column; gap: 8px; transition: border-color .25s var(--ease); }
 .svc:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
 .svc-tag { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.svc-grid .svc:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
 .svc h3 { font-size: 19px; letter-spacing: -.015em; }
 .svc p { color: var(--muted); font-size: 15px; line-height: 1.55; }
 .svc .rel { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); line-height: 1.5; }
@@ -308,7 +309,8 @@ html.locked { overflow: hidden; }
   .bene-item:nth-child(3) { border-left: 0; padding-left: 0; }
   .lz-grid, .svc-grid, .sol-grid, .practices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lz-grid .lz:last-child { grid-column: 1 / -1; }
-  .svc-grid .svc:last-child { grid-column: 1 / -1; }
+  .svc-grid .svc:last-child { grid-column: auto; }
+  .svc-grid .svc:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 @media (max-width: 620px) {
   body { font-size: 16px; }
