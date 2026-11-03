@@ -99,6 +99,16 @@ export function featuredProjects(): Project[] {
 
 export const projects: Project[] = [
   {
+    num: "43",
+    title: "Network Segmentation Lab",
+    titleOut: "(EKS + Cilium)",
+    desc: "A measurement of one control on live Amazon EKS: given a pod that is already compromised, how far can it communicate, and how much does identity-based network segmentation shrink that reach. A planted RCE gives the attacker a working foothold with no RBAC, and a scenario runner drives the same probes through it twice, once under an explicit allow-all policy and once under default deny plus Cilium identity policy, with nothing but the policy objects changing between runs. The result is a before/after connectivity matrix: the two legitimate flows (frontend to GET /api/orders, backend to database) stay Allowed, while the frontend reaching a sensitive service, a controlled HTTP exfil receiver, a DNS-channel marker to a controlled authoritative server, and a forbidden POST on the same backend port all go from reachable to Denied. Each denial carries evidence from the layer that enforced it: a Hubble POLICY_DENIED drop between security identities for L3/L4, an HTTP 403 plus an L7 drop for the forbidden operation, and a REFUSED from the Cilium DNS proxy for the DNS channel, with exfil judged at the receiver rather than by client exit codes. Live on EKS the pod's reach to the node's instance metadata service and to the public internet were measured too, both Allowed then Denied. The runner refuses to report a false defense: a timeout without matching evidence is an error, a failed baseline means skipped, and those rules are unit tested. After hardening, every workload is moved to the other node and keeps its Cilium identity with a new IP, and every row holds. The first live run caught a real ENI-mode trap, the node security group silently dropping cross-node UDP before Cilium saw it, and the runner marked that row skipped instead of Denied. Cilium runs as the only CNI with AWS ENI IPAM, the docs claim only what has a receipt (L7, DNS-aware egress, identity across rescheduling, Hubble), and the whole session was deployed, proven and destroyed for about twenty cents.",
+    tags: ["Amazon EKS", "Cilium", "Hubble", "eBPF", "Kubernetes", "Terraform", "Python", "OPA / Rego"],
+    categories: ["AWS", "Platform"],
+    link: "https://github.com/jordann6/eks-network-segmentation",
+    caseStudy: "eks-network-segmentation",
+  },
+  {
     num: "42",
     title: "EKS Attack Range",
     titleOut: "(red + blue)",

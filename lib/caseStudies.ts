@@ -22,6 +22,78 @@ export interface CaseStudy {
 
 export const caseStudies: CaseStudy[] = [
   {
+    slug: "eks-network-segmentation",
+    num: "43",
+    title: "Network Segmentation Lab",
+    titleOut: "(EKS + Cilium)",
+    category: "AWS · Security · Kubernetes",
+    lede: "Assume a pod is already compromised. How far can it talk, and how much does identity-based segmentation shrink that reach? A before/after connectivity matrix answers it on live Amazon EKS with Cilium, where the only thing that changes between the two runs is network policy, and every denial carries a matching Hubble flow as its receipt. The attacker still runs commands after hardening; what changes is what those commands can reach. Proven on EKS, then destroyed in the same sitting.",
+    meta: [
+      { k: "Role", v: "Security / Platform Eng" },
+      { k: "Cloud", v: "AWS (EKS)" },
+      { k: "CNI", v: "Cilium 1.20, ENI IPAM" },
+      { k: "Evidence", v: "Hubble flows" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "\"We have network policies\" usually means a default deny somewhere and no proof of what it stops. Nobody measures the before, so a denied connection proves nothing if it was never possible. Denials are inferred from timeouts, which look the same whether policy dropped the packet, the destination was down, or DNS failed. And DNS egress gets missed: an FQDN allowlist controls where a pod connects, not what it puts in a DNS question, and a lookup for data.attacker.example delivers the data even when the answer is NXDOMAIN.",
+          "This is a deliberate sibling to the EKS Attack Range, and the two do not overlap. Attack Range is about gaining privilege. This lab hands the attacker a working foothold on purpose and measures one control only: network separation and egress control.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "The matrix (live EKS)",
+        bullets: [
+          "Frontend to the permitted backend route (GET /api/orders): Allowed before, Allowed after. Backend to database: Allowed before, Allowed after. Segmentation that breaks the app is not a win, so the legitimate flows are rows too.",
+          "Frontend to the sensitive service: Allowed, then Denied. Hubble shows a DROPPED, POLICY_DENIED flow from the frontend's security identity to the sensitive service's identity.",
+          "Frontend to a controlled HTTP exfil receiver: Received, then Denied. Exfil is judged at the receiver, so a marker that never arrives is the proof, not the client's exit code.",
+          "A synthetic marker hidden in a DNS query to a controlled authoritative server: Received, then Denied. The Cilium DNS proxy answers REFUSED, so the marker never reaches CoreDNS to be forwarded, and a direct query to the receiver is dropped separately.",
+          "A forbidden POST /api/admin/export on the same backend port the GET uses: Allowed, then Denied with an HTTP 403 from the L7 proxy and a matching Hubble L7 drop.",
+          "Supplemental, both measured live: the pod reaching the node's instance metadata service went from Allowed to Denied by an explicit egressDeny, and reaching the public internet went from Allowed to Denied.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "Built so it cannot lie",
+        paragraphs: [
+          "Only policy objects change between runs: same cluster, image, foothold, RBAC, metadata settings and security groups. The baseline is an explicit allow-all policy rather than no policy, so the engine is provably enforcing in both columns. The foothold has no RBAC and no token, and the runner proves with kubectl auth can-i that it cannot edit policy or relabel itself before trusting any result.",
+          "A hardened row only counts as blocked if the same run's baseline reached the target, the destination passed a health check from inside itself, and the denial carries evidence from the layer that enforced it: a policy drop for L3/L4, a 403 plus an L7 drop for HTTP, REFUSED plus a DNS-proxy drop for DNS. A timeout with no evidence is an error, never a defense. Those rules are unit tested.",
+          "The identity claim gets its own receipt. After the hardened run, every workload moves to the other node and gets a new IP, keeps the same Cilium security identity, and every row produces the same result.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "What broke, and why it is the best part",
+        paragraphs: [
+          "The first live run on EKS reported FAIL. The DNS marker never reached the receiver in the baseline, so the runner refused to call the hardened DNS row a defense and marked it skipped. Hubble showed the query leaving one node and never arriving on the other. Under Cilium ENI IPAM, pod addresses sit on ENIs that carry the node security group, and the EKS module only opens selected node-to-node ports, so the VPC dropped UDP 5353 before Cilium ever saw it. A naive harness would have printed Denied in both columns. The fix was a self-referencing node security group rule, identical in both runs, so pod-to-pod filtering is left to the policy under test.",
+          "Two more were caught locally first. A strict DNS allowlist broke the legitimate app, because the resolver tried search-domain expansions first, the proxy correctly refused them, and the resolver gave up at the first refusal; the fix was ndots, not a wider allowlist. And the first reschedule receipt proved nothing, because the new pod got the exact IP its predecessor had just released, so the reschedule now forces a move to the other node.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "Honest about Cilium vs the VPC CNI",
+        paragraphs: [
+          "The VPC CNI has enforced Kubernetes NetworkPolicy since August 2023 and logs its policy decisions, so this lab does not claim it cannot. The default deny is written as plain NetworkPolicy to make that visible. The only Cilium claims are the ones with a row or receipt behind them: L7 HTTP rules, DNS-aware egress, identity that survives rescheduling, and the Hubble flow workflow. Cilium runs as the only CNI with AWS ENI IPAM, not chained on the VPC CNI, because Cilium documents L7 limitations under chaining.",
+        ],
+      },
+    ],
+    stack: ["Amazon EKS", "Cilium", "Hubble", "eBPF", "CiliumNetworkPolicy", "Kubernetes NetworkPolicy", "Envoy", "Terraform", "Python", "kind", "OPA / Rego", "Trivy", "Checkov", "MITRE ATT&CK"],
+    repo: "https://github.com/jordann6/eks-network-segmentation",
+    receipt: {
+      rows: [
+        { k: "Local", v: "Full matrix proven on kind with Cilium first, zero cloud spend, including the error and skipped handling" },
+        { k: "Deploy", v: "EKS 1.34 with Cilium 1.20.4 in ENI mode, VPC CNI switched off, readiness gate on every step" },
+        { k: "Run 1", v: "FAIL: the node security group dropped cross-node UDP in the VPC; runner marked the DNS row skipped, not Denied" },
+        { k: "Run 2", v: "PASS: six rows plus metadata and internet egress, every workload rescheduled to the other node with the same identity, 0 lost Hubble events" },
+        { k: "Destroy", v: "71 resources destroyed, state empty, no cluster, NAT gateway, Cilium ENIs, or log group left" },
+      ],
+      total: { k: "Session cost", v: "About $0.20 (under an hour of EKS, two small nodes, one NAT gateway)" },
+    },
+  },
+  {
     slug: "eks-attack-range",
     num: "42",
     title: "EKS Attack Range",
