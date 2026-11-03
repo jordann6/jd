@@ -99,6 +99,18 @@ export function featuredProjects(): Project[] {
 
 export const projects: Project[] = [
   {
+    num: "42",
+    title: "EKS Attack Range",
+    titleOut: "(red + blue)",
+    desc: "A deliberately-vulnerable Amazon EKS cluster built to prove one point: that a handful of ordinary, individually-defensible Kubernetes and AWS misconfigurations compose into a full compromise. A scripted kill chain mapped to MITRE ATT&CK for Containers runs the whole lifecycle against it. Command injection in the app gives remote code execution in a pod as root. A server-side request forgery reaches the EC2 node's instance metadata service and, because the account enforces IMDSv2, completes the IMDSv2 token handshake through the SSRF to steal the node's IAM role credentials, which works only because the node metadata hop limit is 2. Those credentials read a production database secret out of Secrets Manager. The pod's auto-mounted ServiceAccount token, bound to cluster-admin, drives the Kubernetes API to list secrets in every namespace. The final stage exfiltrates a plaintext API key sitting unencrypted in etcd, so one unauthenticated HTTP request ends in a working production credential. The cluster is built by inverting a hardened paved-road cluster, so every weakness has a one-line hardened counterpart. The blue-team half keeps control-plane audit logging on so the attack stays visible: a CloudWatch Logs Insights query over the EKS audit log catches the app ServiceAccount doing list then get on secrets, GuardDuty EKS Protection and Falco rules cover the runtime side, and a kustomize overlay reverses all five weaknesses, deleting the cluster-admin binding, disabling token automount, enforcing the restricted PodSecurity standard, running the pod non-root, and removing the key entirely. Re-run against the hardened cluster the same chain can no longer escalate, and kubectl auth can-i returns no for the ServiceAccount. The recommended end state is keyless: the app calls Claude through Bedrock over IRSA with short-lived STS credentials, so there is nothing in the cluster for the trophy stage to steal. It wires into the shared platform guardrails, Terraform static analysis, OPA policy, a Checkov baseline and a documented Trivy ignore that accept only the intentional findings, and a destroy guard that counts the control plane as hourly. The whole deploy, attack, detect, harden, destroy cycle ran live in one session for about two dollars, tearing down 64 resources clean with nothing left billable.",
+    tags: ["Amazon EKS", "Kubernetes", "IRSA", "MITRE ATT&CK", "Falco", "GuardDuty", "OPA / Rego", "Trivy", "Terraform", "Python"],
+    categories: ["AWS", "Platform"],
+    link: "https://github.com/jordann6/eks-attack-range",
+    caseStudy: "eks-attack-range",
+    featured: true,
+    featuredRank: 0,
+  },
+  {
     num: "01",
     title: "Cost Intelligence",
     titleOut: "Dashboard",
