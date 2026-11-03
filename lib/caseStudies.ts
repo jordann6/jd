@@ -22,6 +22,77 @@ export interface CaseStudy {
 
 export const caseStudies: CaseStudy[] = [
   {
+    slug: "eks-attack-range",
+    num: "42",
+    title: "EKS Attack Range",
+    titleOut: "(red + blue)",
+    category: "AWS · Security · Kubernetes",
+    lede: "A deliberately-vulnerable Amazon EKS cluster and the scripted attack that chains five ordinary misconfigurations into a full compromise, from one unauthenticated HTTP request to a stolen production API key, then the blue-team work that catches every step in the audit log and reverses it. Built by inverting a hardened paved-road cluster, so each fix is a concrete one-line diff. Deployed, attacked, detected, hardened, and destroyed in one session.",
+    meta: [
+      { k: "Role", v: "Security / Platform Eng" },
+      { k: "Cloud", v: "AWS (EKS)" },
+      { k: "Framework", v: "MITRE ATT&CK for Containers" },
+      { k: "Detection", v: "EKS audit, GuardDuty, Falco" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "Kubernetes security advice is usually a list of settings with no attacker attached, so the individually-small defaults feel safe to wave away: IMDS reachable from a pod, a ServiceAccount token auto-mounted, a slightly-broad node role, an API key in a Secret. Each one is easy to rationalize on its own.",
+          "The lab chains them. It shows that those five minor choices compose into a path from one unauthenticated HTTP request to cluster-admin and a stolen production credential, and that removing any single one of them breaks the chain. The argument is the composition, not any one flaw.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "The attack (red)",
+        bullets: [
+          "Stage 1, foothold: command injection in the app's diagnostic endpoint gives remote code execution inside the pod, as root.",
+          "Stage 2, cloud credentials: a server-side request forgery in the app reaches the EC2 node's instance metadata service. The account enforces IMDSv2, so the attack completes the IMDSv2 token handshake through the SSRF and reads the node's IAM role credentials. It works only because the node metadata hop limit is 2.",
+          "Stage 3, lateral movement: the stolen node role, far broader than a web app should hold, reads a production database credential out of Secrets Manager.",
+          "Stage 4, privilege escalation: the pod's auto-mounted ServiceAccount token is bound to cluster-admin, so it drives the Kubernetes API directly and lists secrets in every namespace.",
+          "Stage 5, the trophy: it reads the plaintext API key out of the Secret, unencrypted in etcd. One unauthenticated request ended in a working production credential. The whole chain is one scripted runner mapped to MITRE ATT&CK for Containers.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "The defense (blue)",
+        paragraphs: [
+          "Control-plane audit logging stays on in the vulnerable build on purpose, because the blue-team half depends on the attack being visible. A CloudWatch Logs Insights query over the EKS audit log shows the privilege escalation directly: the app's ServiceAccount doing list then get on secrets, which a web app's identity has no business doing. GuardDuty EKS Protection and a set of Falco rules cover the runtime side, the shell in the container and the pod's reach for IMDS.",
+          "A kustomize overlay then reverses the five weaknesses: it deletes the cluster-admin binding, stops auto-mounting the token, enforces the restricted PodSecurity standard, runs the pod non-root, and removes the key from the pod entirely. Re-run against the hardened cluster, the same kill chain can no longer escalate: the token is not mounted, the ServiceAccount is denied list secrets, and there is no key to steal. The fix for the stolen key is the keyless path, Bedrock through IRSA with short-lived STS credentials, so stage 5 has nothing left to exfiltrate.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "Built by inverting the paved road",
+        paragraphs: [
+          "Every weakness is the negative of a control in a hardened cluster I also run, so each fix is a one-line diff rather than an abstract tip. That framing surfaced the sharpest finding of the build. The account enforces IMDSv2 at the account level, and the first node group apply was rejected outright because it tried to launch nodes with IMDSv1. Rather than weaken the account default, the lab keeps IMDSv2 required and makes the real weakness the metadata hop limit. The lesson is better for it: IMDSv2 does not protect you if a pod is one hop away and gets code execution. The control that actually matters is the hop limit.",
+          "A second honest catch: once the hardened pod had no token to steal, kubectl silently fell back to the operator's own admin context and returned an empty result that looked like success. The real proof of the fix is kubectl auth can-i returning no for the ServiceAccount, plus showing the token file is gone, not the attack script going quiet.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "Proven live, then destroyed",
+        paragraphs: [
+          "The lab runs in an isolated account with the control-plane endpoint scoped to a single address, and the trophy is a throwaway key revoked at the end. The whole cycle, deploy, attack, detect, harden, destroy, ran in one session. Teardown left nothing: 64 resources destroyed, state empty, no cluster, nodes, NAT gateway, load balancer, or secrets remaining.",
+          "The repository wires into the same shared guardrails as the rest of the fleet: Terraform static analysis, OPA policy, a Checkov baseline and a documented Trivy ignore that accept exactly the intentional findings and nothing else, and a destroy guard that counts the control plane as an hourly resource.",
+        ],
+      },
+    ],
+    stack: ["Amazon EKS", "Kubernetes", "Terraform", "IRSA", "Kustomize", "Falco", "GuardDuty", "CloudWatch Logs Insights", "OPA / Rego", "Trivy", "Checkov", "Python / FastAPI", "MITRE ATT&CK", "GitHub Actions OIDC"],
+    repo: "https://github.com/jordann6/eks-attack-range",
+    receipt: {
+      rows: [
+        { k: "Deploy", v: "Vulnerable EKS cluster and two EC2 nodes in an isolated account, control-plane endpoint scoped to one /32" },
+        { k: "Attack", v: "All five stages landed live: RCE as root, node credentials via the IMDSv2 SSRF handshake, a Secrets Manager read, cluster-admin secret listing, and the API key exfiltrated" },
+        { k: "Detect", v: "EKS audit log caught the ServiceAccount doing list then get on secrets/summarizer-key; GuardDuty and Falco armed" },
+        { k: "Harden", v: "Overlay removed the cluster-admin binding, token automount, root, and the key; re-run kill chain could not escalate, auth can-i returned no" },
+        { k: "Destroy", v: "64 resources destroyed, state empty, hourly guard clean, throwaway key revoked" },
+      ],
+      total: { k: "Session cost", v: "About $2 (a few hours on an EKS control plane plus two small nodes)" },
+    },
+  },
+  {
     slug: "golden-path-finops-copilot",
     num: "36",
     title: "Golden-Path FinOps",

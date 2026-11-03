@@ -18,6 +18,32 @@ export interface Diagram {
 // Hand-authored left-to-right architecture flows, keyed by case-study slug.
 // A column with multiple nodes renders them stacked (a branch / fan-out).
 export const diagrams: Record<string, Diagram> = {
+  "eks-attack-range": {
+    caption: "One request to cluster-admin and a stolen key: five chained misconfigurations, every step caught in the EKS audit log",
+    cols: [
+      { nodes: [{ label: "Attacker", icon: "onprem-client-user", sub: "one HTTP request" }] },
+      { nodes: [{ label: "LoadBalancer", icon: "aws-network-elastic-load-balancing", sub: "public" }] },
+      { nodes: [{ label: "summarizer pod", sub: "cmd injection → RCE as root", accent: true }] },
+      {
+        nodes: [
+          { label: "EC2 node", icon: "aws-compute-ec2", sub: "SSRF → IMDSv2, hop limit 2" },
+          { label: "EKS API", icon: "aws-compute-elastic-kubernetes-service", sub: "cluster-admin SA token" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Secrets Manager", icon: "aws-security-secrets-manager", sub: "read with stolen node creds" },
+          { label: "Secret: API key", icon: "aws-security-identity-and-access-management-iam", sub: "trophy · plaintext in etcd", accent: true },
+        ],
+      },
+      {
+        nodes: [
+          { label: "GuardDuty", icon: "aws-security-guardduty", sub: "EKS Protection + runtime" },
+          { label: "CloudWatch", icon: "aws-management-cloudwatch", sub: "audit log catches the privesc" },
+        ],
+      },
+    ],
+  },
   "multi-region-failover": {
     caption: "One failure, two clocks: DNS shifts traffic in seconds while EventBridge crosses regions to promote the replica",
     cols: [

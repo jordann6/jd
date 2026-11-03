@@ -21,6 +21,7 @@ const sizes: Record<string, [string, number, number]> = {
   "cloud-security-lab": ["svg", 1440, 880],
   "cost-intelligence-dashboard": ["png", 1470, 1596],
   "dbt-analytics-athena": ["png", 1714, 417],
+  "eks-attack-range": ["png", 1701, 1047],
   "gcp-gke-config-sync": ["png", 1860, 1329],
   "gcp-landing-zone": ["png", 2168, 6194],
   "gcp-supply-chain-security": ["png", 1342, 1279],
