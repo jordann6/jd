@@ -18,6 +18,32 @@ export interface Diagram {
 // Hand-authored left-to-right architecture flows, keyed by case-study slug.
 // A column with multiple nodes renders them stacked (a branch / fan-out).
 export const diagrams: Record<string, Diagram> = {
+  "eks-network-segmentation": {
+    caption: "A compromised pod keeps its foothold; identity-based policy decides what it can reach, and Hubble records every verdict",
+    cols: [
+      { nodes: [{ label: "frontend pod", icon: "k8s-compute-pod", sub: "planted RCE · no RBAC", accent: true }] },
+      { nodes: [{ label: "Cilium policy", icon: "cncf-network-cilium", sub: "identity L3/L4 · L7 · DNS proxy" }] },
+      {
+        nodes: [
+          { label: "api", icon: "k8s-compute-pod", sub: "GET /api/orders · allowed" },
+          { label: "api", icon: "k8s-compute-pod", sub: "POST /admin/export · 403" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "sensitive", icon: "k8s-network-netpol", sub: "policy drop" },
+          { label: "exfil + DNS receivers", icon: "k8s-network-netpol", sub: "marker never arrives · REFUSED" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Node IMDS", icon: "aws-compute-ec2", sub: "egressDeny" },
+          { label: "Internet", icon: "aws-network-nat-gateway", sub: "policy drop" },
+        ],
+      },
+      { nodes: [{ label: "Hubble", icon: "cncf-network-cilium", sub: "every verdict, with identities", accent: true }] },
+    ],
+  },
   "eks-attack-range": {
     caption: "One request to cluster-admin and a stolen key: five chained misconfigurations, every step caught in the EKS audit log",
     cols: [
