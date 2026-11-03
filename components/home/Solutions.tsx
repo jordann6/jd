@@ -5,13 +5,19 @@ import {
   platformSlug,
 } from "@/lib/solutions";
 
+const SHORT = { aws: "AWS", azure: "Azure", gcp: "Google Cloud" } as const;
+
 export function LandingZones() {
   return (
     <section className="sec lz-band" id="solutions" aria-labelledby="lz-title">
       <div className="wrap">
         <div className="sec-head">
           <span className="eyebrow">Featured solutions</span>
-          <h2 id="lz-title">Three clouds.</h2>
+          <h2 id="lz-title">A secure foundation on every major cloud.</h2>
+          <p>
+            One landing zone per provider, each built as code, deployed live,
+            and torn down. Select one to see how it was built.
+          </p>
         </div>
 
         <div className="lz-grid">
@@ -27,7 +33,7 @@ export function LandingZones() {
                 <h3>{s.title}</h3>
                 <p>{s.summary}</p>
                 <button type="button" className="link-btn" data-open={s.slug}>
-                  Explore solution <span className="arr" aria-hidden="true">→</span>
+                  See the {SHORT[s.cloud]} build <span className="arr" aria-hidden="true">→</span>
                 </button>
               </div>
             </article>
