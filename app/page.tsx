@@ -4,7 +4,7 @@ import { getArchitecture } from "@/lib/architecture";
 import { dialogSlugs } from "@/lib/solutions";
 import Hero from "@/components/home/Hero";
 import { LandingZones, MoreSolutions } from "@/components/home/Solutions";
-import { About, Approach, Contact, Services } from "@/components/home/Sections";
+import { About, Contact, Services } from "@/components/home/Sections";
 import SolutionDialog, { type SolutionStudy } from "@/components/home/SolutionDialog";
 
 // Only the case studies the homepage links to ship to the client, for the dialog:
@@ -24,11 +24,10 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <About />
       <LandingZones />
       <MoreSolutions />
       <Services />
-      <Approach />
-      <About />
       <Contact />
       <SolutionDialog studies={studies} />
     </>

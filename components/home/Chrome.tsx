@@ -21,11 +21,10 @@ export function SiteHeader() {
       <div className="wrap">
         <BrandLink label="jordandesigns.io home" />
         <nav className="nav" aria-label="Main">
-          <a href="/#services">Services</a>
-          <a href="/#solutions">Solutions</a>
-          <a href="/work/">Work</a>
-          <a href="/#approach">Approach</a>
           <a href="/#about">About</a>
+          <a href="/#solutions">Solutions</a>
+          <a href="/#services">Services</a>
+          <a href="/work/">Work</a>
           <a className="btn btn-primary" href="/#contact">
             Let&apos;s talk
           </a>

@@ -1,4 +1,4 @@
-import { BrandIcon, JdLogo } from "./Brand";
+import { BrandIcon } from "./Brand";
 
 const BENEFITS = [
   {
@@ -79,7 +79,7 @@ export default function Hero() {
             </div>
           </div>
           <div className="hero-art" aria-hidden="true">
-            <Mark />
+            <Slabs />
           </div>
         </div>
 
@@ -110,8 +110,8 @@ export default function Hero() {
   );
 }
 
-// The jd cloud mark set inside the arch, sitting on a soft shadow.
-function Mark() {
+// Three stacked slabs under an arch: the "foundation" metaphor.
+function Slabs() {
   return (
     <svg viewBox="0 0 520 420">
       <defs>
@@ -119,15 +119,27 @@ function Mark() {
           <stop offset="0" stopColor="#ebe5db" />
           <stop offset="1" stopColor="#f3efe8" />
         </linearGradient>
-        <radialGradient id="mark-shadow" cx=".5" cy=".5" r=".5">
-          <stop offset="0" stopColor="#0f2233" stopOpacity=".18" />
+        <radialGradient id="slab-shadow" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stopColor="#0f2233" stopOpacity=".22" />
           <stop offset="1" stopColor="#0f2233" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <path d="M90 400 V200 A170 170 0 0 1 430 200 V400 Z" fill="url(#arch)" />
-      <ellipse cx="260" cy="350" rx="170" ry="18" fill="url(#mark-shadow)" />
-      <g className="slab" style={{ color: "#1c2e3f" }}>
-        <JdLogo x="79" y="100" width="389" height="259" />
+      <path d="M150 400 V190 A170 170 0 0 1 490 190 V400 Z" fill="url(#arch)" />
+      <ellipse cx="270" cy="372" rx="230" ry="26" fill="url(#slab-shadow)" />
+      <g className="slab">
+        <polygon points="60,270 360,270 430,230 130,230" fill="#33485c" />
+        <polygon points="360,270 430,230 430,320 360,360" fill="#132232" />
+        <rect x="60" y="270" width="300" height="90" fill="#1c2e3f" />
+      </g>
+      <g className="slab s2">
+        <polygon points="130,190 350,190 410,156 190,156" fill="#c2dad5" />
+        <polygon points="350,190 410,156 410,236 350,270" fill="#6f9993" />
+        <rect x="130" y="190" width="220" height="80" fill="#8fb5ae" />
+      </g>
+      <g className="slab s3">
+        <polygon points="190,95 340,95 390,67 240,67" fill="#f6f3ee" />
+        <polygon points="340,95 390,67 390,162 340,190" fill="#cdc7bd" />
+        <rect x="190" y="95" width="150" height="95" fill="#e6e1d8" />
       </g>
     </svg>
   );
