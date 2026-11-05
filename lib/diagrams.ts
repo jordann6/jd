@@ -18,6 +18,61 @@ export interface Diagram {
 // Hand-authored left-to-right architecture flows, keyed by case-study slug.
 // A column with multiple nodes renders them stacked (a branch / fan-out).
 export const diagrams: Record<string, Diagram> = {
+  "k8s-self-healing-platform": {
+    caption: "Inject a fault, let the platform detect and act, then judge the heal only against the same run's baseline impact",
+    cols: [
+      {
+        nodes: [
+          {
+            label: "scenario runner",
+            icon: "onprem-client-user",
+            sub: "13 faults · prober outside the app",
+            accent: true,
+          },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Prometheus", icon: "onprem-monitoring-prometheus", sub: "canary analysis · SLOs" },
+          { label: "Falco", icon: "cncf-security-falco", sub: "shell in a pod" },
+          { label: "GuardDuty", icon: "aws-security-guardduty", sub: "runtime finding" },
+          { label: "AWS Config", icon: "aws-management-config", sub: "SG open to internet" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "Argo CD + Rollouts", icon: "onprem-gitops-argocd", sub: "abort · self-heal" },
+          { label: "Cilium", icon: "cncf-network-cilium", sub: "quarantine identity" },
+          {
+            label: "Step Functions",
+            icon: "aws-integration-step-functions",
+            sub: "cordon · isolate · capture",
+          },
+          { label: "Systems Manager", icon: "aws-management-systems-manager", sub: "revoke 0.0.0.0/0" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "workload", icon: "k8s-compute-pod", sub: "serving again" },
+          {
+            label: "evidence",
+            icon: "aws-storage-simple-storage-service-s3",
+            sub: "snapshot · capture · SSE-KMS",
+          },
+        ],
+      },
+      {
+        nodes: [
+          {
+            label: "judge",
+            icon: "programming-language-python",
+            sub: "11 of 13 healed · miss is a miss",
+            accent: true,
+          },
+        ],
+      },
+    ],
+  },
   "eks-network-segmentation": {
     caption: "A compromised pod keeps its foothold; identity-based policy decides what it can reach, and Hubble records every verdict",
     cols: [

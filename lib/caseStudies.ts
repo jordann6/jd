@@ -22,6 +22,114 @@ export interface CaseStudy {
 
 export const caseStudies: CaseStudy[] = [
   {
+    slug: "k8s-self-healing-platform",
+    num: "44",
+    title: "Self-Healing Kubernetes Platform",
+    titleOut: "(EKS + kind)",
+    category: "AWS · Kubernetes · Reliability",
+    lede: "Most clusters claim to self-heal because probes, autoscalers and GitOps are installed. This platform proves it: every failure mode is injected on purpose, once against a baseline profile and once against a hardened profile, and user impact is measured by an independent prober outside the app. Only manifests and policy change between the two runs. Three matrices cover availability, security drift and an active runtime threat, proven first on kind at zero spend and then on live Amazon EKS, then destroyed.",
+    meta: [
+      { k: "Role", v: "Platform / SRE" },
+      { k: "Cloud", v: "AWS (EKS), kind" },
+      { k: "Rows", v: "13 fault experiments" },
+      { k: "Evidence", v: "Baseline vs hardened" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "\"Kubernetes heals itself\" is usually a claim about installed components, not measured behavior. A readiness probe that never failed, a canary that never saw a bad release, and a rotation that never ran under load prove nothing. Worse, a heal is easy to fake: if the baseline never broke, the hardened run looks perfect for free.",
+          "This is the third lab in an arc after the EKS Attack Range (gain access, detect) and the Network Segmentation Lab (contain). This one responds and recovers, and it reports every row that did not heal as exactly that.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "The matrices (live EKS)",
+        bullets: [
+          "Availability: a deadlocked pod served again at 35s with 0.00% errors after detection; a bad release (30% 5xx) was aborted by Argo Rollouts at 67s on measured canary errors; a 4x k6 spike held p95 at 267 ms against a 300 ms bar with 0.00% errors as the HPA scaled 3 to 8; a memory leak was OOMKilled at 10s and serving and paged at 14s.",
+          "Drift: an API key rotated with 0 failed of 1856 requests (External Secrets plus Reloader); an RDS password rotated twice with alternating users, 0 failed queries and the original password rejected; a certificate renewed with 0 TLS errors; a deleted network policy restored at 2s and a hand edit reverted at 4s by Argo CD; a security group opened to 0.0.0.0/0 flagged by AWS Config at 108s and revoked by a custom SSM document at 132s; every workload node replaced for a new AMI in 256s with 0 failed and never more than one disrupted.",
+          "Runtime threat: a GuardDuty Runtime Monitoring finding at 144s drove a Step Functions responder that cordoned the node and isolated the pod and node by 155s and stored a snapshot, a Run Command capture and a manifest in SSE-KMS S3 by 172s, with 0.00% errors to users. A shell in a web pod is caught by Falco and quarantined by Talon and a Cilium identity.",
+          "Not healed, and reported that way: R1 isolated the pod in 34.6s against a 30s bar (16.1s on a rerun), so it is a miss. A4 (the node hosting the most web pods dies) passed every hardened criterion twice, but neither same-run baseline showed impact, so it is inconclusive, not healed.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "Built so it cannot lie",
+        paragraphs: [
+          "Every row states a steady-state hypothesis and an abort condition before the fault. The judge credits a hardened heal only if the same run's baseline showed user impact, rejects a baseline that was already failing before T0, and treats a row it cannot measure as an error, never a skip. Those rules are unit tested, and the runner exits non-zero unless every hardened row healed.",
+          "Thresholds are set per target before the first run and written down. Every fix made after a run was observed is listed in a decision record with the run that prompted it, and no threshold was changed to turn a miss into a pass.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "What broke, and what it taught",
+        paragraphs: [
+          "The best defect was a race. The responder relabeled the compromised pod out of its Service, the Rollout created a replacement at once, and the scheduler bound it to the same node 0.2s before the cordon landed. The security group swap then cut it off while it still reported Ready, because security groups are stateful and the kubelet's connection survived, and a third of requests failed for 100s. The audit log showed the timing; the fix was to cordon first, then relabel.",
+          "Topology spread without minDomains spread nothing: with one workload node, DoNotSchedule saw one domain and a skew of zero, so all three replicas sat on the node a fault then killed. Others: the EKS Terraform module's v21 default installs no CNI, so nodes never went Ready; Managed Prometheus on a customer-managed key needs the caller's KMS permission and served a cached denial for minutes after the fix; GuardDuty's ListFindings lags the EventBridge event; and the organization's SCP refuses to let a member account delete AWS Config, so teardown keeps four Config items on purpose and the verify-gone check names them.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "Portable core, thin cloud modules",
+        paragraphs: [
+          "The same eight rows run unchanged on kind and on EKS; the cloud module adds only what needs a cloud: a node kill through AWS FIS with a CloudWatch stop condition, database rotation, the Config remediation, the AMI roll and the GuardDuty responder. Kind proved the logic at zero spend but could not prove A3 latency on a single node that shares its CPUs with the control plane, so the 300 ms bar stayed and was proven on EKS. Azure and Google Cloud modules come next as a core subset.",
+        ],
+      },
+    ],
+    stack: [
+      "Amazon EKS",
+      "Karpenter",
+      "Cilium",
+      "Hubble",
+      "Falco",
+      "Falco Talon",
+      "Argo CD",
+      "Argo Rollouts",
+      "External Secrets",
+      "Reloader",
+      "cert-manager",
+      "Chaos Mesh",
+      "k6",
+      "Prometheus",
+      "Amazon Managed Prometheus",
+      "Sloth",
+      "GuardDuty",
+      "EventBridge",
+      "Step Functions",
+      "Systems Manager",
+      "AWS Config",
+      "AWS FIS",
+      "RDS",
+      "Secrets Manager",
+      "Terraform",
+      "Python",
+      "kind",
+    ],
+    repo: "https://github.com/jordann6/k8s-self-healing-platform",
+    receipt: {
+      rows: [
+        {
+          k: "Local",
+          v: "Phase 1 on kind, zero cloud spend: two reference runs, every baseline showed impact, hardened A1, A2, A5, S1, S2, S3 and R1 healed in both; A3 latency missed on one shared node and was reported as a FAIL",
+        },
+        {
+          k: "Deploy",
+          v: "EKS 1.34, Cilium in ENI mode, Karpenter with NodeRepair, GuardDuty Runtime Monitoring, Managed Prometheus over SigV4, every apply from a saved plan",
+        },
+        {
+          k: "Live run",
+          v: "11 of 13 hardened rows healed against same-run baseline impact; R1 a miss (34.6s vs 30s), A4 inconclusive",
+        },
+        {
+          k: "Destroy",
+          v: "Four-step teardown and a verify-gone check; four AWS Config items kept on purpose because the organization's SCP denies deleting them (about $1 a month)",
+        },
+      ],
+      total: { k: "Session cost", v: "About $6 for roughly ten hours of EKS" },
+    },
+  },
+  {
     slug: "eks-network-segmentation",
     num: "43",
     title: "Network Segmentation Lab",
