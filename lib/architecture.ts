@@ -32,6 +32,7 @@ const sizes: Record<string, [string, number, number]> = {
   "gpu-index-api": ["png", 1412, 1231],
   "gpu-platform": ["png", 1676, 1596],
   "hpc-slurm-cluster": ["png", 1717, 1274],
+  "k8s-self-healing-platform": ["png", 2897, 2344],
   "multi-agent-coding-orchestrator": ["png", 1551, 1292],
   "multi-cloud-developer-platform": ["png", 1842, 2371],
   "multi-region-failover": ["png", 1301, 2515],
