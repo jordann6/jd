@@ -138,6 +138,8 @@ export const services: Service[] = [
     title: "Kubernetes",
     desc: "Clusters on all three clouds, run from Git, with network rules between services, runtime threat detection, and policies that block unsafe workloads before they start.",
     rel: [
+      { slug: "k8s-self-healing-platform", label: "Self-healing Kubernetes" },
+      ", ",
       { slug: "eks-network-segmentation", label: "EKS network segmentation" },
       ", ",
       { slug: "azure-aks-runtime-security", label: "AKS runtime security" },
@@ -248,7 +250,11 @@ export const services: Service[] = [
     tag: "SRE",
     title: "Incident runbooks",
     desc: "Written, often automated, steps for responding to known problems, so recovery does not depend on one person.",
-    rel: [{ slug: "aws-landing-zone", label: "AWS landing zone" }],
+    rel: [
+      { slug: "k8s-self-healing-platform", label: "Self-healing Kubernetes" },
+      ", ",
+      { slug: "aws-landing-zone", label: "AWS landing zone" },
+    ],
   },
   {
     tag: "SRE",
