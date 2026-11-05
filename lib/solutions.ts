@@ -66,12 +66,12 @@ export const moreSolutions: SolutionCard[] = [
       "Automatic disaster recovery. When a region fails, traffic moves and the backup database takes over without manual steps.",
   },
   {
-    slug: "aws-incident-responder",
-    title: "Incident Responder",
-    label: "Incident response · AWS and Azure",
+    slug: "k8s-self-healing-platform",
+    title: "Self-Healing Kubernetes",
+    label: "Kubernetes reliability · AWS",
     cloud: "aws",
     summary:
-      "An alarm starts a versioned runbook that alerts the team with an AI-written summary, restarts the failing server, and checks that the problem cleared.",
+      "Breaks a live cluster on purpose 13 ways, from bad releases and dead servers to rotated passwords and an active intruder, and measures whether it recovers on its own.",
   },
   {
     slug: "azure-secrets-lifecycle",
@@ -251,6 +251,8 @@ export const services: Service[] = [
     title: "Incident runbooks",
     desc: "Written, often automated, steps for responding to known problems, so recovery does not depend on one person.",
     rel: [
+      { slug: "aws-incident-responder", label: "Incident responder" },
+      ", ",
       { slug: "k8s-self-healing-platform", label: "Self-healing Kubernetes" },
       ", ",
       { slug: "aws-landing-zone", label: "AWS landing zone" },
