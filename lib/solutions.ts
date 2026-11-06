@@ -68,10 +68,10 @@ export const moreSolutions: SolutionCard[] = [
   {
     slug: "k8s-self-healing-platform",
     title: "Self-Healing Kubernetes",
-    label: "Kubernetes reliability · AWS",
+    label: "Kubernetes reliability · AWS + Azure",
     cloud: "aws",
     summary:
-      "Breaks a live cluster on purpose 13 ways, from bad releases and dead servers to rotated passwords and an active intruder, and measures whether it recovers on its own.",
+      "Breaks live clusters on AWS and Azure on purpose, from bad releases and dead servers to rotated passwords and an active intruder, and measures whether they recover on their own.",
   },
   {
     slug: "azure-secrets-lifecycle",
