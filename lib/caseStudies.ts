@@ -25,13 +25,13 @@ export const caseStudies: CaseStudy[] = [
     slug: "k8s-self-healing-platform",
     num: "44",
     title: "Self-Healing Kubernetes Platform",
-    titleOut: "(EKS + kind)",
-    category: "AWS · Kubernetes · Reliability",
-    lede: "Most clusters claim to self-heal because probes, autoscalers and GitOps are installed. This platform proves it: every failure mode is injected on purpose, once against a baseline profile and once against a hardened profile, and user impact is measured by an independent prober outside the app. Only manifests and policy change between the two runs. Three matrices cover availability, security drift and an active runtime threat, proven first on kind at zero spend and then on live Amazon EKS, then destroyed.",
+    titleOut: "(EKS + AKS + kind)",
+    category: "AWS · Azure · Kubernetes · Reliability",
+    lede: "Most clusters claim to self-heal because probes, autoscalers and GitOps are installed. This platform proves it: every failure mode is injected on purpose, once against a baseline profile and once against a hardened profile, and user impact is measured by an independent prober outside the app. Only manifests and policy change between the two runs. Three matrices cover availability, security drift and an active runtime threat, proven first on kind at zero spend, then on live Amazon EKS and live Azure AKS, each destroyed after its run.",
     meta: [
       { k: "Role", v: "Platform / SRE" },
-      { k: "Cloud", v: "AWS (EKS), kind" },
-      { k: "Rows", v: "13 fault experiments" },
+      { k: "Cloud", v: "AWS (EKS), Azure (AKS), kind" },
+      { k: "Rows", v: "13 on EKS, 11 on AKS" },
       { k: "Evidence", v: "Baseline vs hardened" },
     ],
     blocks: [
@@ -55,6 +55,15 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/03",
+        heading: "The same rows on live AKS",
+        bullets: [
+          "Healed: a deadlocked pod serving again at 31s and a bad release aborted at 80s, both with 0.00% errors; a stopped scale set instance with 0.00% errors from NotReady and every replica serving at 172s on a new node, while the same run's baseline hit 100% errors; a memory leak OOMKilled at 9s and paged at 21s; a key rotation with 0 failed of 450; a certificate renewal with 0 TLS errors; a deleted policy restored at 2s; a shell in a web pod isolated at 8s with evidence at 24s.",
+          "An NSG rule opened to 0.0.0.0/0 was rewritten to Deny at 121s by an Azure Policy deployIfNotExists deployment, and the row only counts it when the policy's own deployment did the closing.",
+          "Not healed, and reported that way: A3 held 0.00% errors but missed the 300 ms p95 bar at 320 ms. R2 is blocked: Microsoft's own threat-intelligence test ran three times and Defender for Containers never raised the alert, so the Logic App responder never had anything to act on.",
+        ],
+      },
+      {
+        num: "/04",
         heading: "Built so it cannot lie",
         paragraphs: [
           "Every row states a steady-state hypothesis and an abort condition before the fault. The judge credits a hardened heal only if the same run's baseline showed user impact, rejects a baseline that was already failing before T0, and treats a row it cannot measure as an error, never a skip. Those rules are unit tested, and the runner exits non-zero unless every hardened row healed.",
@@ -62,18 +71,19 @@ export const caseStudies: CaseStudy[] = [
         ],
       },
       {
-        num: "/04",
+        num: "/05",
         heading: "What broke, and what it taught",
         paragraphs: [
           "The best defect was a race. The responder relabeled the compromised pod out of its Service, the Rollout created a replacement at once, and the scheduler bound it to the same node 0.2s before the cordon landed. The security group swap then cut it off while it still reported Ready, because security groups are stateful and the kubelet's connection survived, and a third of requests failed for 100s. The audit log showed the timing; the fix was to cordon first, then relabel.",
           "Topology spread without minDomains spread nothing: with one workload node, DoNotSchedule saw one domain and a skew of zero, so all three replicas sat on the node a fault then killed. Others: the EKS Terraform module's v21 default installs no CNI, so nodes never went Ready; Managed Prometheus on a customer-managed key needs the caller's KMS permission and served a cached denial for minutes after the fix; GuardDuty's ListFindings lags the EventBridge event; and the organization's SCP refuses to let a member account delete AWS Config, so teardown keeps four Config items on purpose and the verify-gone check names them.",
+          "On Azure the policy fired and its own template failed. Azure Policy started the remediation 100 seconds after the rule opened, and ARM rejected the deployment because an empty port list reached an array parameter as a string. A deployment that fails validation never appears in the resource group, so the row saw nothing; the Activity Log held the reason. AKS's managed metrics-server also turned out to be a fixed 60s signal, so the HPA scaled at 69s against 32s on EKS and p95 hit 821 ms; driving the same HPA through the managed KEDA add-on from Prometheus's 10s scrape brought it to 320 ms.",
         ],
       },
       {
-        num: "/05",
+        num: "/06",
         heading: "Portable core, thin cloud modules",
         paragraphs: [
-          "The same eight rows run unchanged on kind and on EKS; the cloud module adds only what needs a cloud: a node kill through AWS FIS with a CloudWatch stop condition, database rotation, the Config remediation, the AMI roll and the GuardDuty responder. Kind proved the logic at zero spend but could not prove A3 latency on a single node that shares its CPUs with the control plane, so the 300 ms bar stayed and was proven on EKS. Azure and Google Cloud modules come next as a core subset.",
+          "The same eight rows run unchanged on kind, EKS and AKS; each cloud module adds only what needs that cloud. On AWS: a node kill through FIS with a CloudWatch stop condition, database rotation, the Config remediation, the AMI roll and the GuardDuty responder. On Azure: a scale set instance stop, Key Vault through workload identity, the Azure Policy rewrite, and Defender to a Logic App that checks ARM's own copy of the alert before an in-cluster worker cordons and relabels. Kind proved the logic at zero spend but could not prove A3 latency on a single node that shares its CPUs with the control plane, so the 300 ms bar stayed and was proven on EKS. Google Cloud comes next.",
         ],
       },
     ],
@@ -102,6 +112,13 @@ export const caseStudies: CaseStudy[] = [
       "AWS FIS",
       "RDS",
       "Secrets Manager",
+      "Azure Kubernetes Service",
+      "KEDA",
+      "Azure Policy",
+      "Defender for Containers",
+      "Logic Apps",
+      "Key Vault",
+      "Azure Monitor",
       "Terraform",
       "Python",
       "kind",
@@ -125,8 +142,16 @@ export const caseStudies: CaseStudy[] = [
           k: "Destroy",
           v: "Four-step teardown and a verify-gone check; four AWS Config items kept on purpose because the organization's SCP denies deleting them (about $1 a month)",
         },
+        {
+          k: "AKS run",
+          v: "AKS 1.34 with Cilium on bring-your-own CNI: 9 of 11 hardened rows healed; A3 a miss (320 ms vs 300), R2 blocked (Defender never alerted)",
+        },
+        {
+          k: "AKS destroy",
+          v: "Three-step teardown, 51 of 51 resources destroyed, and a verify-gone check that compares Defender's footprint with the before-picture: nothing left",
+        },
       ],
-      total: { k: "Session cost", v: "About $6 for roughly ten hours of EKS" },
+      total: { k: "Session cost", v: "About $6 on EKS and $8 on AKS" },
     },
   },
   {
