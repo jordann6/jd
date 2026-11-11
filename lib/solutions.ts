@@ -50,12 +50,12 @@ export const moreSolutions: SolutionCard[] = [
       "Assumes one service is already compromised and proves, path by path on a live cluster, how little it can reach once network rules are in place.",
   },
   {
-    slug: "release-guard",
-    title: "Verified .NET Delivery",
-    label: "Delivery pipeline · AWS",
-    cloud: "aws",
+    slug: "gcp-supply-chain-security",
+    title: "Supply Chain Security",
+    label: "Supply chain security · GCP",
+    cloud: "gcp",
     summary:
-      "A C# order API shipped to private Kubernetes, where only a check running inside the cluster can mark a release as good. Bad releases block the next one.",
+      "A signature over a digest, not a check on where an image came from. An unsigned container gets refused at deploy, even one built by the same pipeline, with the attestor named in the denial.",
   },
   {
     slug: "multi-region-failover",
