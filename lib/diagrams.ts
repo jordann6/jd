@@ -26,7 +26,7 @@ export const diagrams: Record<string, Diagram> = {
           {
             label: "scenario runner",
             icon: "onprem-client-user",
-            sub: "13 faults · prober outside the app",
+            sub: "20 faults · prober outside the app",
             accent: true,
           },
         ],
@@ -66,7 +66,7 @@ export const diagrams: Record<string, Diagram> = {
           {
             label: "judge",
             icon: "programming-language-python",
-            sub: "11 of 13 healed · miss is a miss",
+            sub: "36 of 38 healed · misses stay on record",
             accent: true,
           },
         ],
