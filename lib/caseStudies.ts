@@ -151,7 +151,7 @@ export const caseStudies: CaseStudy[] = [
         },
         {
           k: "EKS, phase 2",
-          v: "EKS 1.36, Cilium in ENI mode, Karpenter with NodeRepair, GuardDuty Runtime Monitoring, Managed Prometheus over SigV4; 11 of 13 hardened rows healed against same-run baseline impact, R1 a miss (34.6s vs 30s), A4 inconclusive",
+          v: "EKS 1.36, Cilium in ENI mode, Karpenter with NodeRepair, GuardDuty Runtime Monitoring, Managed Prometheus over SigV4; 11 of 13 hardened rows healed against same-run baseline impact, R1 a miss (34.6s vs 30s), A4 inconclusive; a rerun then healed A4 conclusively and R1 in 11s, and the miss stays in the evidence",
         },
         {
           k: "AKS run, first pass",
@@ -167,11 +167,11 @@ export const caseStudies: CaseStudy[] = [
         },
         {
           k: "EKS, phase 3",
-          v: "Full twenty-row set live on EKS 1.36; O1, Q3, P1 and D1 passed, the node-encryption row read inconclusive across four separate runs with no root cause found yet",
+          v: "Full twenty-row set live on EKS 1.36; O1, Q3, P1 and D1 passed, the node-encryption row read inconclusive across four separate runs because its baseline never showed impact",
         },
         {
           k: "AKS, phase 3",
-          v: "Same twenty rows live on AKS 1.36.5; O1, Q3, P1, D1 and the node-encryption row all passed, with the node-encryption root cause (a shared allow-all policy overriding one row's deny) found here and confirmed to explain the earlier EKS result too",
+          v: "The eighteen rows that apply to AKS, live on 1.36.5; O1, Q3, P1, D1 and the node-encryption row all passed, with the node-encryption cause (a shared allow-all policy overriding one row's deny) found here and the likely explanation for the EKS result, which was not rerun",
         },
         {
           k: "Destroy",
@@ -271,7 +271,7 @@ export const caseStudies: CaseStudy[] = [
     title: "EKS Attack Range",
     titleOut: "(red + blue)",
     category: "AWS · Security · Kubernetes",
-    lede: "A deliberately-vulnerable Amazon EKS cluster and the scripted attack that chains five ordinary misconfigurations into a full compromise, from one unauthenticated HTTP request to a stolen production API key, then the blue-team work that catches every step in the audit log and reverses it. Built by inverting a hardened paved-road cluster, so each fix is a concrete one-line diff. Deployed, attacked, detected, hardened, and destroyed in one session.",
+    lede: "A deliberately-vulnerable Amazon EKS cluster and the scripted attack that chains five ordinary misconfigurations into a full compromise, from one unauthenticated HTTP request to cluster-admin and a planted canary credential, then the blue-team work that reverses every step and a verify step that proves each control holds. Built by inverting a hardened paved-road cluster, so each fix is a concrete one-line diff. Rerun live on EKS 1.36, where the rerun caught a bug in the lab's own stage 3 and recorded two detection misses. Deployed, attacked, hardened, and destroyed in one session.",
     meta: [
       { k: "Role", v: "Security / Platform Eng" },
       { k: "Cloud", v: "AWS (EKS)" },
@@ -293,17 +293,17 @@ export const caseStudies: CaseStudy[] = [
         bullets: [
           "Stage 1, foothold: command injection in the app's diagnostic endpoint gives remote code execution inside the pod, as root.",
           "Stage 2, cloud credentials: a server-side request forgery in the app reaches the EC2 node's instance metadata service. The account enforces IMDSv2, so the attack completes the IMDSv2 token handshake through the SSRF and reads the node's IAM role credentials. It works only because the node metadata hop limit is 2.",
-          "Stage 3, lateral movement: the stolen node role, far broader than a web app should hold, reads a production database credential out of Secrets Manager.",
+          "Stage 3, lateral movement: the stolen node role, far broader than a web app should hold, reads a decoy production database secret out of Secrets Manager. The runner performs that real read with the stolen credentials.",
           "Stage 4, privilege escalation: the pod's auto-mounted ServiceAccount token is bound to cluster-admin, so it drives the Kubernetes API directly and lists secrets in every namespace.",
-          "Stage 5, the trophy: it reads the plaintext API key out of the Secret, unencrypted in etcd. One unauthenticated request ended in a working production credential. The whole chain is one scripted runner mapped to MITRE ATT&CK for Containers.",
+          "Stage 5, the trophy: it reads a synthetic canary credential out of the Secret, unencrypted in etcd, and an in-cluster receiver confirms it. One unauthenticated request ended in a stolen credential. The whole chain is one scripted runner mapped to MITRE ATT&CK for Containers.",
         ],
       },
       {
         num: "/03",
         heading: "The defense (blue)",
         paragraphs: [
-          "Control-plane audit logging stays on in the vulnerable build on purpose, because the blue-team half depends on the attack being visible. A CloudWatch Logs Insights query over the EKS audit log shows the privilege escalation directly: the app's ServiceAccount doing list then get on secrets, which a web app's identity has no business doing. GuardDuty EKS Protection and a set of Falco rules cover the runtime side, the shell in the container and the pod's reach for IMDS.",
-          "A kustomize overlay then reverses the five weaknesses: it deletes the cluster-admin binding, stops auto-mounting the token, enforces the restricted PodSecurity standard, runs the pod non-root, and removes the key from the pod entirely. Re-run against the hardened cluster, the same kill chain can no longer escalate: the token is not mounted, the ServiceAccount is denied list secrets, and there is no key to steal. The fix for the stolen key is the keyless path, Bedrock through IRSA with short-lived STS credentials, so stage 5 has nothing left to exfiltrate.",
+          "Control-plane audit logging stays on in the vulnerable build on purpose, because the blue-team half depends on the attack being visible. A CloudWatch Logs Insights query over the EKS audit log shows the escalation when the stolen token is really used: the app's ServiceAccount doing list then get on secrets, which a web app's identity has no business doing. The rerun recorded two honest misses. The demo checks stages 4 and 5 with kubectl auth can-i, which EKS's default audit policy does not log, so those queries matched nothing, and GuardDuty's credential-exfiltration finding did not fire inside the session. GuardDuty EKS Protection and a set of Falco rules cover the runtime side.",
+          "A kustomize overlay then reverses the five weaknesses: it deletes the cluster-admin binding, stops auto-mounting the token, enforces the restricted PodSecurity standard, runs the pod non-root, and removes the key from the pod entirely. A separate hardened image validates input and fetches one fixed upstream. Re-run against the hardened cluster, the same kill chain can no longer escalate, and a verify step prints that all five controls hold. Stage 3 reads error rather than blocked on the hardened run, because it needs credentials stage 2 no longer yields. The fix for the stolen key is the keyless path, Bedrock through IRSA with short-lived STS credentials, so stage 5 has nothing left to exfiltrate.",
         ],
       },
       {
@@ -311,14 +311,14 @@ export const caseStudies: CaseStudy[] = [
         heading: "Built by inverting the paved road",
         paragraphs: [
           "Every weakness is the negative of a control in a hardened cluster I also run, so each fix is a one-line diff rather than an abstract tip. That framing surfaced the sharpest finding of the build. The account enforces IMDSv2 at the account level, and the first node group apply was rejected outright because it tried to launch nodes with IMDSv1. Rather than weaken the account default, the lab keeps IMDSv2 required and makes the real weakness the metadata hop limit. The lesson is better for it: IMDSv2 does not protect you if a pod is one hop away and gets code execution. The control that actually matters is the hop limit.",
-          "A second honest catch: once the hardened pod had no token to steal, kubectl silently fell back to the operator's own admin context and returned an empty result that looked like success. The real proof of the fix is kubectl auth can-i returning no for the ServiceAccount, plus showing the token file is gone, not the attack script going quiet.",
+          "The rerun found a bug in the lab itself. Stage 3 was wired to classify with no credentials unconditionally, so it could only ever report an error and looked like a correct hardened result. It now steals the node credentials through the SSRF and performs the real secret read. A second honest catch: once the hardened pod had no token to steal, kubectl silently fell back to the operator's own admin context and returned an empty result that looked like success. The real proof of the fix is kubectl auth can-i returning no for the ServiceAccount, plus showing the token file is gone, not the attack script going quiet.",
         ],
       },
       {
         num: "/05",
         heading: "Proven live, then destroyed",
         paragraphs: [
-          "The lab runs in an isolated account with the control-plane endpoint scoped to a single address, and the trophy is a throwaway key revoked at the end. The whole cycle, deploy, attack, detect, harden, destroy, ran in one session. Teardown left nothing: 64 resources destroyed, state empty, no cluster, nodes, NAT gateway, load balancer, or secrets remaining.",
+          "The lab runs in an isolated account with the control-plane endpoint scoped to a single address, and the trophy is a synthetic canary token accepted only by an in-cluster receiver, so there is nothing real to revoke. The whole cycle, deploy, attack, harden, verify, destroy, ran in one session on EKS 1.36.5. An AKS port is designed, with the metadata control becoming an egress policy and Defender recorded beside Falco, but has not run. Teardown left nothing: 64 resources destroyed, state empty, no cluster, nodes, NAT gateway, load balancer, or secrets remaining.",
           "The repository wires into the same shared guardrails as the rest of the fleet: Terraform static analysis, OPA policy, a Checkov baseline and a documented Trivy ignore that accept exactly the intentional findings and nothing else, and a destroy guard that counts the control plane as an hourly resource.",
         ],
       },
@@ -328,10 +328,10 @@ export const caseStudies: CaseStudy[] = [
     receipt: {
       rows: [
         { k: "Deploy", v: "Vulnerable EKS cluster and two EC2 nodes in an isolated account, control-plane endpoint scoped to one /32" },
-        { k: "Attack", v: "All five stages landed live: RCE as root, node credentials via the IMDSv2 SSRF handshake, a Secrets Manager read, cluster-admin secret listing, and the API key exfiltrated" },
-        { k: "Detect", v: "EKS audit log caught the ServiceAccount doing list then get on secrets/summarizer-key; GuardDuty and Falco armed" },
-        { k: "Harden", v: "Overlay removed the cluster-admin binding, token automount, root, and the key; re-run kill chain could not escalate, auth can-i returned no" },
-        { k: "Destroy", v: "64 resources destroyed, state empty, hourly guard clean, throwaway key revoked" },
+        { k: "Attack", v: "All five stages landed live: RCE as root, node credentials via the IMDSv2 SSRF handshake, a real Secrets Manager read with them, cluster-admin secret listing, and the canary credential exfiltrated" },
+        { k: "Detect", v: "Two recorded misses on the rerun, no GuardDuty exfiltration finding and no audit match for the can-i stages; the earlier real-token run did show the ServiceAccount listing then getting secrets/summarizer-key" },
+        { k: "Harden", v: "Overlay removed the cluster-admin binding, token automount, root, and the key; re-run kill chain could not escalate, all five controls verified" },
+        { k: "Destroy", v: "64 resources destroyed, state empty, hourly guard clean, nothing to revoke" },
       ],
       total: { k: "Session cost", v: "About $2 (a few hours on an EKS control plane plus two small nodes)" },
     },
