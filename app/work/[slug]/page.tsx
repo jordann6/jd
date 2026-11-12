@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { caseStudies, getCaseStudy } from "@/lib/caseStudies";
 import { getDiagram } from "@/lib/diagrams";
-import { getArchitecture } from "@/lib/architecture";
+import { getArchitecture, getExtraArchitectures } from "@/lib/architecture";
 import { projects } from "@/lib/projects";
 import { contact } from "@/lib/solutions";
 import { ArchitectureFigure, FlowDiagram, plain } from "@/components/home/Diagrams";
@@ -42,6 +42,7 @@ export default async function CaseStudyPage({
   if (!cs) notFound();
   const diagram = getDiagram(slug);
   const architecture = getArchitecture(slug);
+  const extraArchitectures = getExtraArchitectures(slug);
   const title = `${cs.title} ${cs.titleOut}`;
   const project = projects.find((p) => p.caseStudy === slug);
   const clouds = CLOUDS.filter((c) => project?.categories.includes(c.key));
@@ -91,6 +92,9 @@ export default async function CaseStudyPage({
         </div>
 
         {architecture && <ArchitectureFigure image={architecture} title={title} />}
+        {extraArchitectures.map((x) => (
+          <ArchitectureFigure key={x.src} image={x} title={title} label={x.label} />
+        ))}
         {diagram && <FlowDiagram diagram={diagram} />}
 
         <div className="cs-blocks">

@@ -46,3 +46,23 @@ export function getArchitecture(slug: string): ArchitectureImage | undefined {
   if (!s) return undefined;
   return { src: `/diagrams/${slug}.${s[0]}`, width: s[1], height: s[2] };
 }
+
+// Extra diagrams shown under the main one on a case study (for example the AKS
+// variant of an EKS lab). Same rule, copy the PNG from the repo's docs/.
+export interface ArchitectureExtra extends ArchitectureImage {
+  label: string;
+}
+
+const extras: Record<string, ArchitectureExtra[]> = {
+  "k8s-self-healing-platform": [
+    { label: "AKS module", src: "/diagrams/k8s-self-healing-platform-aks.png", width: 3009, height: 3007 },
+    { label: "Phase 4 rows on both clouds", src: "/diagrams/k8s-self-healing-platform-phase4.png", width: 1564, height: 2584 },
+  ],
+  "eks-network-segmentation": [
+    { label: "AKS variant", src: "/diagrams/eks-network-segmentation-aks.png", width: 1642, height: 2424 },
+  ],
+};
+
+export function getExtraArchitectures(slug: string): ArchitectureExtra[] {
+  return extras[slug] ?? [];
+}
