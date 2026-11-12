@@ -10,14 +10,16 @@ export function plain(s: string) {
 export function ArchitectureFigure({
   image,
   title,
+  label = "Architecture",
 }: {
   image: ArchitectureImage;
   title: string;
+  label?: string;
 }) {
   return (
     <figure className="arch">
       <div className="diagram-head">
-        <span>Architecture</span>
+        <span>{label}</span>
         <a href={image.src} target="_blank" rel="noopener noreferrer">
           Open full size ↗
         </a>
@@ -28,7 +30,7 @@ export function ArchitectureFigure({
           src={image.src}
           width={image.width}
           height={image.height}
-          alt={`Architecture diagram for ${title}`}
+          alt={`${label} diagram for ${title}`}
           loading="lazy"
           decoding="async"
         />
