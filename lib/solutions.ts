@@ -253,6 +253,8 @@ export const services: Service[] = [
     rel: [
       { slug: "aws-incident-responder", label: "Incident responder" },
       ", ",
+      { slug: "aws-incident-forensics", label: "Incident forensics" },
+      ", ",
       { slug: "k8s-self-healing-platform", label: "Self-healing Kubernetes" },
       ", ",
       { slug: "aws-landing-zone", label: "AWS landing zone" },

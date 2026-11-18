@@ -10,6 +10,7 @@ export interface ArchitectureImage {
 
 const sizes: Record<string, [string, number, number]> = {
   "aws-developer-platform": ["png", 1882, 1911],
+  "aws-incident-forensics": ["png", 1905, 765],
   "aws-incident-responder": ["png", 1593, 1591],
   "aws-landing-zone": ["png", 3247, 4631],
   "aws-serverless-lakehouse": ["png", 896, 874],

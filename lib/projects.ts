@@ -442,6 +442,7 @@ export const projects: Project[] = [
       { label: "Landing zone mode", href: "https://github.com/jordann6/aws-incident-forensics" },
       { label: "Decoy credential tripwire", href: "https://github.com/jordann6/aws-incident-forensics#decoy-credential-tripwire" },
     ],
+    caseStudy: "aws-incident-forensics",
   },
   {
     num: "22",
