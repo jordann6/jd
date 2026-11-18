@@ -286,12 +286,12 @@ export const caseStudies: CaseStudy[] = [
     title: "EKS Attack Range",
     titleOut: "(red + blue)",
     category: "AWS · Security · Kubernetes",
-    lede: "A deliberately-vulnerable Amazon EKS cluster and the scripted attack that chains five ordinary misconfigurations into a full compromise, from one unauthenticated HTTP request to cluster-admin and a planted canary credential, then the blue-team work that reverses every step and a verify step that proves each control holds. Built by inverting a hardened paved-road cluster, so each fix is a concrete one-line diff. Rerun live on EKS 1.36, where the rerun caught a bug in the lab's own stage 3 and recorded two detection misses. Deployed, attacked, hardened, and destroyed in one session.",
+    lede: "A deliberately-vulnerable Amazon EKS cluster and the scripted attack that chains five ordinary misconfigurations into a full compromise, from one unauthenticated HTTP request to cluster-admin and a planted canary credential, then the blue-team work that reverses every step and a verify step that proves each control holds. Built by inverting a hardened paved-road cluster, so each fix is a concrete one-line diff. Rerun live on EKS 1.36, where the rerun caught a bug in the lab's own stage 3 and recorded two detection misses. A second session then closed the detection gap with a deception layer of three planted credentials, each caught and the pod quarantined in seconds, and reported honestly that the decoy is a tripwire, not a shield. Deployed, attacked, hardened, and destroyed in one session.",
     meta: [
       { k: "Role", v: "Security / Platform Eng" },
       { k: "Cloud", v: "AWS (EKS)" },
       { k: "Framework", v: "MITRE ATT&CK for Containers" },
-      { k: "Detection", v: "EKS audit, GuardDuty, Falco" },
+      { k: "Detection", v: "EKS audit, CloudTrail decoys, GuardDuty, Falco" },
     ],
     blocks: [
       {
@@ -337,16 +337,26 @@ export const caseStudies: CaseStudy[] = [
           "The repository wires into the same shared guardrails as the rest of the fleet: Terraform static analysis, OPA policy, a Checkov baseline and a documented Trivy ignore that accept exactly the intentional findings and nothing else, and a destroy guard that counts the control plane as an hourly resource.",
         ],
       },
+      {
+        num: "/06",
+        heading: "Deception layer, from misses to catches",
+        paragraphs: [
+          "A second session turned the two detection misses into measured catches. First it fixed the cause of one miss by rewriting the escalation stages to make real Kubernetes API calls with the stolen ServiceAccount token, so the caller is the ServiceAccount and the documented audit queries finally match, rather than the kubectl auth can-i simulation that EKS never logs. Then it planted three credentials that nothing legitimate ever uses, so any use is an intruder.",
+          "A decoy AWS access key sits in the pod at /root/.aws/credentials, caught from CloudTrail through an EventBridge rule in the all-management-events state, because a plain rule never sees a read-only call like sts:GetCallerIdentity, the first thing anyone does with a found key. A decoy Secret and an unbound ServiceAccount token are caught from the EKS audit log through a CloudWatch Logs subscription filter. One alert function attributes each use to the summarizer pod, by a key-to-Secret map for the AWS key, and by the audit source IP for the Kubernetes decoys, which is the pod's own address because in-VPC traffic to the API server is not source-NATed, verified as the first live check. An in-cluster responder then quarantines the attributed pod with a deny-all NetworkPolicy enforced by the VPC CNI, so the whole response stays inside the cluster with no Lambda reaching the API. Live, each decoy was detected in about two seconds and the pod contained in about four.",
+          "The honest finding is that the decoy is a tripwire, not a shield, and the run proves it both ways. In the realistic order the node role, the token, and the trophy are already stolen by the time the first alarm fires, recorded in a held-before-alert column. Even in the order the original advice assumes, where the attacker tests the planted key first, the quarantine label lands in about three seconds but the VPC CNI dataplane takes a few more seconds to actually deny traffic, so a fast pivot still reaches the metadata service before isolation bites. Revoking the already-stolen node session is the node-level response, left to the incident-forensics project rather than claimed here.",
+        ],
+      },
     ],
-    stack: ["Amazon EKS", "Kubernetes", "Terraform", "IRSA", "Kustomize", "Falco", "GuardDuty", "CloudWatch Logs Insights", "OPA / Rego", "Trivy", "Checkov", "Python / FastAPI", "MITRE ATT&CK", "GitHub Actions OIDC"],
+    stack: ["Amazon EKS", "Kubernetes", "Terraform", "IRSA", "Kustomize", "VPC CNI NetworkPolicy", "EventBridge", "CloudTrail", "AWS Lambda", "Falco", "GuardDuty", "CloudWatch Logs Insights", "OPA / Rego", "Trivy", "Checkov", "Python / FastAPI", "MITRE ATT&CK", "GitHub Actions OIDC"],
     repo: "https://github.com/jordann6/eks-attack-range",
     receipt: {
       rows: [
         { k: "Deploy", v: "Vulnerable EKS cluster and two EC2 nodes in an isolated account, control-plane endpoint scoped to one /32" },
         { k: "Attack", v: "All five stages landed live: RCE as root, node credentials via the IMDSv2 SSRF handshake, a real Secrets Manager read with them, cluster-admin secret listing, and the canary credential exfiltrated" },
-        { k: "Detect", v: "Two recorded misses on the rerun, no GuardDuty exfiltration finding and no audit match for the can-i stages; the earlier real-token run did show the ServiceAccount listing then getting secrets/summarizer-key" },
-        { k: "Harden", v: "Overlay removed the cluster-admin binding, token automount, root, and the key; re-run kill chain could not escalate, all five controls verified" },
-        { k: "Destroy", v: "64 resources destroyed, state empty, hourly guard clean, nothing to revoke" },
+        { k: "Detect", v: "Real-call stages now land in the audit log; the three decoys each detected, D1 from CloudTrail, D3 and D4 from the audit log, about two seconds to alert" },
+        { k: "Contain", v: "Each decoy attributed to the summarizer pod and quarantined with a deny-all NetworkPolicy in about four seconds; honest note that CNI enforcement lags the label by seconds" },
+        { k: "Harden", v: "Overlay removed the cluster-admin binding, token automount, root, and the key; re-run kill chain could not escalate, all five controls verified, decoys unreachable" },
+        { k: "Destroy", v: "Every resource destroyed, the minted decoy key deleted first, verify-gone and an out-of-band sweep clean, nothing to revoke" },
       ],
       total: { k: "Session cost", v: "About $2 (a few hours on an EKS control plane plus two small nodes)" },
     },

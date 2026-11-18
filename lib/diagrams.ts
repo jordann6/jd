@@ -100,10 +100,9 @@ export const diagrams: Record<string, Diagram> = {
     ],
   },
   "eks-attack-range": {
-    caption: "One request to cluster-admin and a stolen key: five chained misconfigurations, every step caught in the EKS audit log",
+    caption: "One request to cluster-admin and a stolen key, then three planted decoys catch the intruder and quarantine the pod in seconds",
     cols: [
       { nodes: [{ label: "Attacker", icon: "onprem-client-user", sub: "one HTTP request" }] },
-      { nodes: [{ label: "LoadBalancer", icon: "aws-network-elastic-load-balancing", sub: "public" }] },
       { nodes: [{ label: "summarizer pod", sub: "cmd injection → RCE as root", accent: true }] },
       {
         nodes: [
@@ -119,8 +118,14 @@ export const diagrams: Record<string, Diagram> = {
       },
       {
         nodes: [
-          { label: "GuardDuty", icon: "aws-security-guardduty", sub: "EKS Protection + runtime" },
-          { label: "CloudWatch", icon: "aws-management-cloudwatch", sub: "audit log catches the privesc" },
+          { label: "CloudTrail", icon: "aws-management-cloudtrail", sub: "D1 decoy AWS key" },
+          { label: "CloudWatch", icon: "aws-management-cloudwatch", sub: "audit log · D3/D4 decoys" },
+        ],
+      },
+      {
+        nodes: [
+          { label: "alert function", icon: "aws-compute-lambda", sub: "attribute to the pod · ~2s" },
+          { label: "responder", sub: "deny-all NetworkPolicy · ~4s", accent: true },
         ],
       },
     ],
