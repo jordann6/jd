@@ -684,6 +684,78 @@ export const caseStudies: CaseStudy[] = [
     },
   },
   {
+    slug: "aws-incident-forensics",
+    num: "21",
+    title: "Incident Forensics",
+    titleOut: "& Decoy Tripwire",
+    category: "AWS · Security · Reliability",
+    lede: "A Step Functions runbook that contains a compromised EC2 instance, captures encrypted evidence, and revokes stolen sessions with no human in the hot path, started by a GuardDuty finding or by the first use of a decoy key planted on the box.",
+    meta: [
+      { k: "Role", v: "Cloud Security / SRE" },
+      { k: "Cloud", v: "AWS" },
+      { k: "Runtime", v: "Step Functions · Lambda" },
+      { k: "Cost", v: "Under $0.25 a run" },
+    ],
+    blocks: [
+      {
+        num: "/01",
+        heading: "Problem",
+        paragraphs: [
+          "When an instance is compromised, the first minutes decide how much damage is done and whether there is evidence left to investigate. Done by hand, containment waits on whoever is on call, the steps run in a different order every time, and nothing records what was changed.",
+          "GuardDuty also only fires on behavior it recognizes. An intruder who quietly reads a credentials file off the box may never trip it.",
+        ],
+      },
+      {
+        num: "/02",
+        heading: "Approach",
+        bullets: [
+          "A High GuardDuty finding against an EC2 instance starts a Step Functions runbook that works in the order a responder would by hand, encoded as state so it runs the same way every time.",
+          "Isolate first. Every network interface moves to a quarantine security group with no ingress and no egress, because stopping active damage outranks a few seconds of forensic completeness.",
+          "Snapshot every EBS volume, then copy each one re-encrypted under a dedicated forensics KMS key, so evidence moves into a custody domain only the pipeline controls.",
+          "Attach a deny-all policy conditioned on aws:TokenIssueTime to the instance role, which kills credentials an attacker already pulled from the metadata service. Isolating the host alone does not do that.",
+          "Write a JSON evidence manifest to an SSE-KMS bucket and delete the unencrypted source snapshots, so only encrypted evidence survives.",
+        ],
+      },
+      {
+        num: "/03",
+        heading: "Decoy credential tripwire",
+        paragraphs: [
+          "A second trigger catches what GuardDuty cannot. Each server gets its own decoy access key in .aws/credentials, owned by an IAM user with zero policies and a believable name, because AccessDenied errors and GetCallerIdentity echo the user ARN back to the caller.",
+          "An EventBridge rule set to receive read-only CloudTrail management events matches any call signed with that key, so even an attacker's first sts:GetCallerIdentity counts. A plain enabled rule never sees read-only calls. A tripwire Lambda looks up which instance the key was planted on and starts the same runbook, once per instance per day however many calls the attacker makes.",
+          "It is a tripwire, not a lock. It works because the decoy is the only static key on the box and real access comes from the instance role, whose sessions the runbook revokes the moment the decoy fires.",
+        ],
+      },
+      {
+        num: "/04",
+        heading: "What broke",
+        bullets: [
+          "Step Functions refused to create the state machine with \"not authorized to access the Log Destination.\" The runbook turns on logging and X-Ray tracing, and only the landing zone version of the role granted them, so standalone mode had been broken since the first commit.",
+          "The landing zone had deleted every default subnet, so the victim had nowhere to launch. The first fix then found its own subnet on the next plan and tried to destroy it, until the lookup was filtered to true default subnets.",
+          "In the earlier landing zone drill, the encrypt step ran while its source snapshot was still pending. A bounded retry fixed it, and because containment runs first, the host was already isolated when capture failed.",
+        ],
+      },
+      {
+        num: "/05",
+        heading: "Outcome",
+        paragraphs: [
+          "Eight single-purpose Lambdas each carry their own least-privilege role, and the one destructive capability, credential revocation, is fenced to a single IAM path both in policy and at runtime. The same runbook also runs as a standing control in the AWS landing zone's security account, acting across accounts on GuardDuty findings.",
+        ],
+      },
+    ],
+    stack: ["GuardDuty", "CloudTrail", "EventBridge", "Step Functions", "Lambda", "KMS", "S3", "IAM", "SSM", "Terraform"],
+    repo: "https://github.com/jordann6/aws-incident-forensics",
+    receipt: {
+      rows: [
+        { k: "Provision", v: "69 resources in Terraform, runbook, eight Lambdas, two EventBridge rules, decoy user and key, forensics KMS key, victim t3.micro" },
+        { k: "Attack", v: "Decoy key used from outside the box, GetCallerIdentity succeeded, ListBuckets denied" },
+        { k: "Detect", v: "Runbook started 4 seconds after the first decoy call, the second call deduplicated into the same run" },
+        { k: "Contain", v: "Isolated, snapshotted, re-encrypted, sessions revoked, manifest written at 155 seconds, 8 of 8 checks passed" },
+        { k: "Destroy", v: "All 69 resources destroyed, evidence snapshot deleted by hand" },
+      ],
+      total: { k: "Run cost", v: "Under a quarter (estimated)" },
+    },
+  },
+  {
     slug: "cost-intelligence-dashboard",
     num: "01",
     title: "Cost Intelligence",
