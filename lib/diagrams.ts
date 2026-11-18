@@ -186,6 +186,27 @@ export const diagrams: Record<string, Diagram> = {
       { nodes: [{ label: "Storage Acct", icon: "azure-storage-storage-accounts", sub: "TLS1.2 · no public", accent: true }] },
     ],
   },
+  "aws-incident-forensics": {
+    caption: "A GuardDuty finding or any use of a planted decoy key starts one runbook that contains first, then captures evidence",
+    cols: [
+      {
+        nodes: [
+          { label: "GuardDuty", icon: "aws-security-guardduty", sub: "finding · severity 7+" },
+          { label: "CloudTrail", icon: "aws-management-cloudtrail", sub: "decoy key used" },
+        ],
+      },
+      { nodes: [{ label: "EventBridge", icon: "aws-integration-eventbridge", sub: "incl. read-only calls" }] },
+      { nodes: [{ label: "Tripwire λ", icon: "aws-compute-lambda", sub: "key → instance · SSM", accent: true }] },
+      { nodes: [{ label: "Step Functions", icon: "aws-integration-step-functions", sub: "isolate before capture", accent: true }] },
+      {
+        nodes: [
+          { label: "Quarantine SG", icon: "aws-compute-ec2", sub: "no ingress · no egress" },
+          { label: "Evidence", icon: "aws-storage-simple-storage-service-s3", sub: "KMS snapshots · manifest" },
+          { label: "Role sessions", icon: "aws-security-identity-and-access-management-iam-role", sub: "revoked" },
+        ],
+      },
+    ],
+  },
   "aws-incident-responder": {
     caption: "Alarm to SNS to n8n runbook, enrich, notify, remediate, then verify",
     cols: [
