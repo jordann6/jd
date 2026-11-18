@@ -56,7 +56,7 @@ export interface ArchitectureExtra extends ArchitectureImage {
 const extras: Record<string, ArchitectureExtra[]> = {
   "k8s-self-healing-platform": [
     { label: "AKS module", src: "/diagrams/k8s-self-healing-platform-aks.png", width: 3009, height: 3007 },
-    { label: "Phase 4 rows on both clouds", src: "/diagrams/k8s-self-healing-platform-phase4.png", width: 1564, height: 2584 },
+    { label: "Phase 4 rows on both clouds, plus G1 and X1 on kind", src: "/diagrams/k8s-self-healing-platform-phase4.png", width: 1607, height: 3623 },
   ],
   "eks-network-segmentation": [
     { label: "AKS variant", src: "/diagrams/eks-network-segmentation-aks.png", width: 1642, height: 2424 },

@@ -31,7 +31,7 @@ export const caseStudies: CaseStudy[] = [
     meta: [
       { k: "Role", v: "Platform / SRE" },
       { k: "Cloud", v: "AWS (EKS), Azure (AKS), kind" },
-      { k: "Rows", v: "20 fault and capability rows" },
+      { k: "Rows", v: "22 rows, 20 on both clouds, 2 on kind" },
       { k: "Evidence", v: "Baseline vs hardened" },
     ],
     blocks: [
@@ -102,6 +102,15 @@ export const caseStudies: CaseStudy[] = [
           "The same rows run unchanged on kind, EKS and AKS; each cloud module adds only what needs that cloud. On AWS: a node kill through FIS with a CloudWatch stop condition, database rotation, the Config remediation, the AMI roll and the GuardDuty responder. On Azure: a scale set instance stop, Key Vault through workload identity, the Azure Policy rewrite, and Defender to a Logic App that checks ARM's own copy of the alert before an in-cluster worker cordons and relabels. Kind proved the logic at zero spend but could not prove every bar, the 300 ms p95 target needed a cloud with its own CPUs to mean anything, so that bar waited for EKS and was confirmed again on AKS.",
         ],
       },
+      {
+        num: "/09",
+        heading: "Two more rows, kind only so far",
+        paragraphs: [
+          "Comparing the platform to a plain Kubernetes ecosystem checklist showed two ideas it had not proven, a north-south entrance and an operator the lab wrote itself. G1 is a Gateway API front door. The first choice, Cilium's own Gateway API, was ruled out by reading its documentation, because it requires kube-proxy replacement, which none of the three targets run, and turning it on would have changed the data plane under every proven row. G1 uses Envoy Gateway instead. The platform namespace owns one listener bound to one hostname and to labelled namespaces, and the app team owns its route. Against a baseline listener that admits any namespace and host, the stray hostname and the route from another namespace were served in the baseline and got a 404 in the hardened run, and the legitimate route stayed up throughout. A route to a deleted backend failed closed and an unrouted path got a 404 in both profiles, because Gateway API isolates a broken route by itself, so only the role split counts as the hardening.",
+          "X1 is a Quarantine custom resource and a controller written for this lab. The controller isolates the named pod without restarting it, waits for evidence bound to that pod's UID, refuses a release asked for too early, and resumes from the resource's status after being killed. It was written with the standard library only, matching the other controllers in the lab, after reading showed a framework would add an unpinned dependency tree to the image. Two consecutive kind runs healed against a baseline where the manual flow released the pod with no evidence and no record. The pod was isolated in under 1.3s, a replacement controller resumed in under 2.5s with exactly one label patch, the controller refused to isolate its own pod, and its role could patch pods but not delete them or read Secrets.",
+          "Both rows have only run on kind, so neither says anything yet about EKS or AKS. The defects were instructive. Argo CD's inclusion list hid the Gateway kinds while reporting the app healthy. The controller ignored SIGTERM as PID 1, so the first controller kill kept the old pod acting for 30 seconds. On Cilium, the pod stayed reachable for 11.9 to 33.2 seconds after the controller had isolated it, past two bounds, with no cause found, so X1 moved to the default CNI and the Cilium result is recorded as unproven.",
+        ],
+      },
     ],
     stack: [
       "Amazon EKS",
@@ -140,6 +149,8 @@ export const caseStudies: CaseStudy[] = [
       "Azure Key Vault",
       "Terraform",
       "Python",
+      "Envoy Gateway",
+      "Gateway API",
       "kind",
     ],
     repo: "https://github.com/jordann6/k8s-self-healing-platform",
@@ -172,6 +183,10 @@ export const caseStudies: CaseStudy[] = [
         {
           k: "AKS, phase 3",
           v: "The eighteen rows that apply to AKS, live on 1.36.5; O1, Q3, P1, D1 and the node-encryption row all passed, with the node-encryption cause (a shared allow-all policy overriding one row's deny) found here and the likely explanation for the EKS result, which was not rerun",
+        },
+        {
+          k: "Local, G1 and X1",
+          v: "Gateway API front door and a Quarantine operator on kind, no cloud yet; G1 healed in one run, X1 healed in two clean runs after a Cilium enforcement delay (11.9 to 33.2s) moved it to the default CNI",
         },
         {
           k: "Destroy",
