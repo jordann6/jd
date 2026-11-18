@@ -22,7 +22,7 @@ const sizes: Record<string, [string, number, number]> = {
   "cloud-security-lab": ["svg", 1440, 880],
   "cost-intelligence-dashboard": ["png", 1470, 1596],
   "dbt-analytics-athena": ["png", 1714, 417],
-  "eks-attack-range": ["png", 1701, 1047],
+  "eks-attack-range": ["png", 2156, 2487],
   "eks-network-segmentation": ["png", 1642, 2107],
   "gcp-gke-config-sync": ["png", 1860, 1329],
   "gcp-landing-zone": ["png", 2168, 6194],
