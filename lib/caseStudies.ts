@@ -25,13 +25,13 @@ export const caseStudies: CaseStudy[] = [
     slug: "k8s-self-healing-platform",
     num: "44",
     title: "Self-Healing Kubernetes Platform",
-    titleOut: "(EKS + AKS + kind)",
-    category: "AWS · Azure · Kubernetes · Reliability",
-    lede: "Most clusters claim to self-heal because probes, autoscalers and GitOps are installed. This platform proves it: every failure mode is injected on purpose, once against a baseline profile and once against a hardened profile, and user impact is measured by an independent prober outside the app. Only manifests and policy change between the two runs. What started as three matrices covering availability, security drift and an active runtime threat, proven on live EKS then live AKS, grew to seven more rows, queue autoscaling, vertical sizing, node encryption, signed-image admission, backup and restore, and an evidence-gated release check, with the full twenty-row set proven on both clouds and destroyed every time.",
+    titleOut: "(EKS + AKS + GKE + kind)",
+    category: "AWS · Azure · GCP · Kubernetes · Reliability",
+    lede: "Most clusters claim to self-heal because probes, autoscalers and GitOps are installed. This platform proves it: every failure mode is injected on purpose, once against a baseline profile and once against a hardened profile, and user impact is measured by an independent prober outside the app. Only manifests and policy change between the two runs. What started as three matrices covering availability, security drift and an active runtime threat, proven on live EKS then live AKS, grew to seven more rows, queue autoscaling, vertical sizing, node encryption, signed-image admission, backup and restore, and an evidence-gated release check, with the full twenty-row set proven on both clouds and destroyed every time. The in-cluster rows then ran on live GKE, with the misses reported as misses.",
     meta: [
       { k: "Role", v: "Platform / SRE" },
-      { k: "Cloud", v: "AWS (EKS), Azure (AKS), kind" },
-      { k: "Rows", v: "22 rows, 20 on both clouds, 2 on kind" },
+      { k: "Cloud", v: "AWS (EKS), Azure (AKS), Google Cloud (GKE), kind" },
+      { k: "Rows", v: "22 rows, 20 on EKS and AKS, 8 in-cluster on GKE" },
       { k: "Evidence", v: "Baseline vs hardened" },
     ],
     blocks: [
@@ -111,10 +111,20 @@ export const caseStudies: CaseStudy[] = [
           "Both rows then ran once on each cloud and healed, G1 behind an internal load balancer with a parity network policy and a hardened-only HTTPS listener from the lab's own certificate authority, ready in about a second. The cloud runs found what kind could not. The first AKS G1 run missed because the load balancer clock read a Gateway condition that resets on every profile switch, 759s against a 300s bar when the real provisioning took 77s, so the clock was fixed, the miss was kept beside the passing rerun, and the bar was left unchanged. The AWS in-tree provider reports a load balancer as ensured while the NLB is still provisioning, so the EKS figure of 4.0s measures the API accepting it, not a served request, and a cold first request was never measured. That provider also creates no security group of its own and opens a NodePort rule to the world, which is noted as a later tightening. Teardown rebuilt a second NLB, because the child Argo CD apps self-heal while their controller was still running, so both teardown scripts now stop the controller first. That fix has not yet run against a cluster. The defects on kind were instructive too. Argo CD's inclusion list hid the Gateway kinds while reporting the app healthy, and the controller ignored SIGTERM as PID 1, so the first controller kill kept the old pod acting for 30 seconds. On Cilium, the pod stayed reachable for 11.9 to 33.2 seconds after the controller had isolated it. Reading the Cilium source found the cause, an identity change grace period of 5s plus a random jitter of up to 30s, confirmed by setting both to 1s. The same jitter explains the spread in the runtime quarantine row's isolation times, and the defaults stay so the delay is reported, not hidden.",
         ],
       },
+      {
+        num: "/10",
+        heading: "The in-cluster rows on live GKE",
+        paragraphs: [
+          "Google Cloud got the same docs-first pass as Azure, one row per AWS misstep, each answered from Google's own documentation before any code. Two findings shaped the module. GKE's managed Cilium, Dataplane V2, documents cluster-wide policies with selectors, ports and CIDRs but not the deny rules and host entity the quarantine policy relies on, so GKE runs the same pinned Cilium on its legacy datapath and the quarantine file stays identical on all four targets. And the GKE cluster autoscaler does not support strict topology spread, the hardened placement for the node-loss row, so the workload pool is four fixed nodes and no autoscaler decision sits in the measured path. GKE runs the eight in-cluster rows; the Google-native responses (secret rotation, an open firewall rule reverted from an org asset feed, a Pub/Sub incident handler) were proven in the GCP landing zone on a different cluster and are not claimed here.",
+          "One live session on GKE 1.36.5, private nodes behind an IAM-only control plane endpoint. Every baseline showed impact. Five hardened rows healed: a deadlocked pod serving again at 36s, a bad release aborted at 70s, a stopped node with 0.07% errors from NotReady and every replica serving at 98s, a certificate renewal with 0 TLS errors, and drift reverted in 2s and 4s. Three missed narrowly and are reported that way: latency at 319 ms against 300, a memory leak at 1.17% errors against 1% although the kill, restart and page all passed, and the shell quarantine at 32s against 30s, the same Cilium identity delay as EKS. The run also showed that GKE's managed instance group starts a stopped node VM again by itself, at 134s, after the replicas had already moved.",
+          "The session found its own tooling bugs before the first row ran: a new project carries three separate CPU limits and counts pd-balanced disks as SSD, a gcloud prompt can wait forever inside a script, and aggregated compute list calls exit 0 when they fail, which made the teardown check print gone for a query that never answered. Each is fixed and recorded. Destroyed in the same sitting, 17 of 17 resources, verified gone.",
+        ],
+      },
     ],
     stack: [
       "Amazon EKS",
       "Azure Kubernetes Service",
+      "Google Kubernetes Engine",
       "Karpenter",
       "KEDA",
       "Vertical Pod Autoscaler",
@@ -189,11 +199,15 @@ export const caseStudies: CaseStudy[] = [
           v: "Gateway API front door and a Quarantine operator, healed on kind, EKS and AKS (G1 twice on kind, X1 twice on kind, once on each cloud); the 11.9 to 33.2s Cilium enforcement delay traced to its identity grace period plus jitter",
         },
         {
+          k: "GKE, phase 5",
+          v: "GKE 1.36.5 with Cilium on bring-your-own CNI over the legacy datapath, a fixed four-node workload pool, KEDA from the chart: 5 of 8 hardened rows healed against same-run baseline impact; A3 (319 ms vs 300), A5 (1.17% vs 1%) and R1 (32s vs 30s) reported as misses",
+        },
+        {
           k: "Destroy",
-          v: "Every cloud session torn down with a verify-gone check; the organization's SCP keeps four AWS Config items on purpose (about $1 a month), the rest reports clean on both clouds",
+          v: "Every cloud session torn down with a verify-gone check; the organization's SCP keeps four AWS Config items on purpose (about $1 a month), the rest reports clean on all three clouds",
         },
       ],
-      total: { k: "Session cost", v: "About $6 on the first EKS session and $8 on the first AKS session; each later session a few dollars to roughly ten, destroyed every time" },
+      total: { k: "Session cost", v: "About $6 on the first EKS session and $8 on the first AKS session; each later session a few dollars to roughly ten, and about $1 for the GKE session, destroyed every time" },
     },
   },
   {
