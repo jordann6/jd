@@ -483,7 +483,7 @@ export const diagrams: Record<string, Diagram> = {
       {
         nodes: [
           { label: "Golden image VM", icon: "gcp-compute-compute-engine", sub: "mirror bake · IAP only" },
-          { label: "Incident handler", icon: "gcp-security-security-command-center", sub: "SCC to quarantine", accent: true },
+          { label: "Incident handler", icon: "gcp-security-security-command-center", sub: "quarantine · remediate · heal", accent: true },
         ],
       },
     ],
