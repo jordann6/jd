@@ -27,11 +27,11 @@ export const caseStudies: CaseStudy[] = [
     title: "Self-Healing Kubernetes Platform",
     titleOut: "(EKS + AKS + GKE + kind)",
     category: "AWS · Azure · GCP · Kubernetes · Reliability",
-    lede: "Most clusters claim to self-heal because probes, autoscalers and GitOps are installed. This platform proves it: every failure mode is injected on purpose, once against a baseline profile and once against a hardened profile, and user impact is measured by an independent prober outside the app. Only manifests and policy change between the two runs. What started as three matrices covering availability, security drift and an active runtime threat, proven on live EKS then live AKS, grew to seven more rows, queue autoscaling, vertical sizing, node encryption, signed-image admission, backup and restore, and an evidence-gated release check, with the full twenty-row set proven on both clouds and destroyed every time. The in-cluster rows then ran on live GKE, with the misses reported as misses.",
+    lede: "Most clusters claim to self-heal because probes, autoscalers and GitOps are installed. This platform proves it: every failure mode is injected on purpose, once against a baseline profile and once against a hardened profile, and user impact is measured by an independent prober outside the app. Only manifests and policy change between the two runs. What started as three matrices covering availability, security drift and an active runtime threat, proven on live EKS then live AKS, grew to seven more rows, queue autoscaling, vertical sizing, node encryption, signed-image admission, backup and restore, and an evidence-gated release check, with all twenty rows run on EKS and the eighteen that apply to AKS run there, destroyed every time. The in-cluster rows then ran on live GKE, with the misses reported as misses.",
     meta: [
       { k: "Role", v: "Platform / SRE" },
       { k: "Cloud", v: "AWS (EKS), Azure (AKS), Google Cloud (GKE), kind" },
-      { k: "Rows", v: "22 rows, 20 on EKS and AKS, 8 in-cluster on GKE" },
+      { k: "Rows", v: "22 on EKS, 20 on AKS, 8 on GKE (50 hardened, 45 healed)" },
       { k: "Evidence", v: "Baseline vs hardened" },
     ],
     blocks: [
@@ -90,7 +90,7 @@ export const caseStudies: CaseStudy[] = [
         num: "/07",
         heading: "The bug both clouds shared",
         paragraphs: [
-          "The full twenty-row set, the original thirteen plus the seven new ones, ran live on both clouds, same baseline-then-hardened discipline, same independent prober, each row run alone where the platform requires it (a node-labeling step and the node-encryption row both only take effect on a focused run, never a batch). Most rows healed on both clouds on the first or second try. The node-encryption row is the clearest example of a bug a single cloud could not have surfaced on its own. On EKS, the baseline profile kept reaching a pod it should have been denied from, across four separate live runs, with no obvious cause. The AKS run hit the identical symptom and, because the two clouds share the same policy profile, the comparison pointed straight at it: a cluster-wide allow-all policy from an earlier row was still in effect and, because Cilium policies are additive rather than replacing each other, it silently overrode the one row's specific deny on both clouds at once. Scoping the allow-all away from that row's pods fixed it, and the fix explains the EKS result that four runs had not.",
+          "The twenty-row set, the original thirteen plus the seven new ones, ran live on EKS, and the eighteen that apply to AKS ran there, same baseline-then-hardened discipline, same independent prober, each row run alone where the platform requires it (a node-labeling step and the node-encryption row both only take effect on a focused run, never a batch). Most rows healed on both clouds on the first or second try. The node-encryption row is the clearest example of a bug a single cloud could not have surfaced on its own. On EKS, the baseline profile kept reaching a pod it should have been denied from, across four separate live runs, with no obvious cause. The AKS run hit the identical symptom and, because the two clouds share the same policy profile, the comparison pointed straight at it: a cluster-wide allow-all policy from an earlier row was still in effect and, because Cilium policies are additive rather than replacing each other, it silently overrode the one row's specific deny on both clouds at once. Scoping the allow-all away from that row's pods fixed it, and the fix explains the EKS result that four runs had not.",
           "Backup and restore surfaced its own cloud-specific gaps before it passed: an upload path needed to read the blob's version id from a different field than expected, and the Azure CLI has no equivalent of deleting a specific object version by id the way the AWS CLI does, so the restore-resistance check had to become a plain delete on that cloud. Both are kept as recorded misses beside the runs that fixed them, not edited out of the history.",
           "An integrated adversarial proof is designed and accepted next: one cluster running this platform's containment and recovery against a live attack simulation and the network segmentation lab's own controls together, to catch the class of bug a single-control test cannot, exactly the kind the allow-all policy turned out to be. It needs the attack simulation's own AKS port finished first and has not been built yet.",
         ],
@@ -201,6 +201,10 @@ export const caseStudies: CaseStudy[] = [
         {
           k: "GKE, phase 5",
           v: "GKE 1.36.5 with Cilium on bring-your-own CNI over the legacy datapath, a fixed four-node workload pool, KEDA from the chart: 5 of 8 hardened rows healed against same-run baseline impact; A3 (319 ms vs 300), A5 (1.17% vs 1%) and R1 (32s vs 30s) reported as misses",
+        },
+        {
+          k: "All three clouds",
+          v: "50 hardened rows, 45 healed against same-run baseline impact; 3 missed (A3, A5 and R1 on GKE), 1 inconclusive (N1 on EKS, its baseline never showed impact), 1 blocked (R2 on AKS, Defender never alerted)",
         },
         {
           k: "Destroy",
