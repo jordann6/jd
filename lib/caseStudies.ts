@@ -1689,7 +1689,7 @@ export const caseStudies: CaseStudy[] = [
     title: "GCP",
     titleOut: "Landing Zone",
     category: "GCP · Platform · Governance",
-    lede: "An organization built as code to parity with the AWS and Azure landing zones: org-root constraints, no standing prod access, a VPC Service Controls perimeter, a private GKE plus HA Cloud SQL paved road, a hardened golden-image management VM, and an incident handler that quarantines it. Deployed live in seven roots, proven suite by suite, and destroyed. CI now applies and tears down through reviewer gates on Workload Identity Federation, with no key anywhere and no path to the org admin identity.",
+    lede: "An organization built as code to parity with the AWS and Azure landing zones: org-root constraints, no standing prod access, a VPC Service Controls perimeter, a private GKE plus HA Cloud SQL paved road, a hardened golden-image management VM, and an incident handler that quarantines it. Deployed live in seven roots, proven suite by suite, and destroyed. CI now applies and tears down through reviewer gates on Workload Identity Federation, with no key anywhere and no path to the org admin identity. A second session added secret rotation, a failover write probe, a Cloud Armor edge, self-heal, event-driven remediation and a burn-rate SLO, each proven live and destroyed.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "GCP" },
@@ -1780,13 +1780,32 @@ export const caseStudies: CaseStudy[] = [
       },
       {
         num: "/10",
+        heading: "Rotation, failover, edge and remediation, proven live",
+        paragraphs: [
+          "A rotator on Cloud Run, inside the perimeter on Direct VPC egress, receives the secret's own SECRET_ROTATE notification through Pub/Sub and mints a new database password version. It rotated 1 second after the scheduled time, left exactly one enabled version, the app reconnected over TLS with it, and the new value appears in none of 11 state objects (10 of 10). A failover drill kept writing to Cloud SQL through an HA failover from us-central1-c to us-central1-f and measured what a client sees, not what the control plane reports. The operation took 36 seconds, the longest client write outage was 14.5 seconds, and 0 of 723 acknowledged writes were lost (7 of 7).",
+          "A Cloud Armor policy fronts the private GKE workload through a GKE Ingress. SQL injection, cross-site scripting and local file inclusion probes got 403, a benign request got 200, and a 180-request burst against a 60 per minute limit was served 59 times and throttled 121 times (11 of 11). When the edge was broken on purpose, the uptime check alerted at 163 seconds and the handler scaled the app from 0 back to 2, serving 200 again at 173 seconds (8 of 8).",
+          "Event-driven remediation runs on the Cloud Asset feed through Pub/Sub to the private handler. A firewall rule opened to 0.0.0.0/0 was disabled 22 seconds after it was created, and a standing human editor grant was removed after 15 seconds while a viewer grant was left alone (9 of 9). The first disable attempts hit resource not ready while the rule was still being created, returned 500, and Pub/Sub redelivered until the disable succeeded. A Cloud Monitoring SLO on a Cloud Run service paged on fast burn 6 minutes 44 seconds into a 50% fault and closed 447 seconds after the fault was removed, and FinOps views now run over the live billing export.",
+        ],
+      },
+      {
+        num: "/11",
+        heading: "What the second session found",
+        bullets: [
+          "A write in flight during the failover hung for over 10 minutes. connect_timeout only bounds opening a connection, so an INSERT on a connection whose server had gone away waited on TCP. Every write now has a 3 second ceiling, and an application with no statement or socket timeout would hang the same way.",
+          "The GKE DNS endpoint needs container.clusters.connect. Without it every call from the handler was refused with a 403 before the API server saw it, so the first self-heal took 388 seconds. The rerun with the permission in place healed at 173.",
+          "Cloud Run's Direct VPC egress reserves an internal address on the Shared VPC subnet that nobody can delete and that outlives the service, so the subnet delete waited 42 minutes for Google to release it. The teardown then verified 14 of 14 with every root's state empty.",
+          "IAM stores a user in the account's canonical casing, so a case-sensitive match reported a grant as removed while it was still there. Matches are case-insensitive now. 11 issues in all, each fixed or documented in the repo.",
+        ],
+      },
+      {
+        num: "/12",
         heading: "Honest limits",
         paragraphs: [
-          "Security Command Center is not activated for the organization (console-only), so that path was proven by publishing a sample finding to the topic it would publish to. The first live incident run failed Cloud SQL over by mistake, because the script claimed a dry-run gate the handler did not have; failover is now a separate, off-by-default switch. Cloud SQL failover through the handler, a real secret rotation, and deleting a backup vault that holds backups are not proven. An earlier run in August measured a zonal failover in 37 seconds on the same private IP; the final session skipped that step.",
+          "Security Command Center is not activated for the organization (console-only), so that path was proven by publishing a sample finding to the topic it would publish to. The failover drill calls Cloud SQL directly. Failing over through the incident handler is still not proven, because the first live incident run failed the primary over by mistake and that runbook has stayed behind an off-by-default switch since. Deleting a backup vault that holds backups is not proven. The SLO script was stopped by a quoting bug, so its page times come from the Monitoring alerts API and the revision timestamps, and the fixed script has not been re-run end to end. The edge container's read-only root filesystem was verified locally, not in a second live session.",
         ],
       },
     ],
-    stack: ["Org Policy", "VPC Service Controls", "Privileged Access Manager", "Workforce Identity Federation", "Shared VPC", "Cloud NGFW", "Private Service Connect", "GKE", "Binary Authorization", "Cloud SQL", "Backup and DR", "Cloud KMS", "Packer", "Artifact Registry", "OS Config", "Cloud Asset Inventory", "Cloud Run", "Terraform", "GitHub Actions"],
+    stack: ["Org Policy", "VPC Service Controls", "Privileged Access Manager", "Workforce Identity Federation", "Shared VPC", "Cloud NGFW", "Private Service Connect", "GKE", "Binary Authorization", "Cloud SQL", "Backup and DR", "Cloud KMS", "Packer", "Artifact Registry", "OS Config", "Cloud Asset Inventory", "Cloud Run", "Pub/Sub", "Secret Manager", "Cloud Armor", "Cloud Monitoring SLOs", "BigQuery", "Terraform", "GitHub Actions"],
     repo: "https://github.com/jordann6/gcp-landing-zone/tree/main",
     receipt: {
       rows: [
@@ -1795,11 +1814,12 @@ export const caseStudies: CaseStudy[] = [
         { k: "Paved road", v: "15 passed, 0 failed with the failover step skipped; an earlier run measured failover in 37s on the same private IP" },
         { k: "Compute", v: "20 passed, 0 failed: image policy, golden boot, live hardening, mirror-only apt, patch job SUCCEEDED" },
         { k: "Detect and respond", v: "observability 15/0, asset history 9/0, incident 15/0 dry-run and 24/0 live, secrets 30/0, handler 22 unit tests" },
+        { k: "2026-11-18 additions", v: "rotation 10/0, failover 7/0 (0 of 723 acknowledged writes lost), edge 11/0, self-heal 8/0 (healed at 173s), remediation 9/0 (open rule disabled in 22s), SLO fast-burn page at 6m44s" },
         { k: "CI", v: "Gated apply through Workload Identity Federation (3 resources, reviewer-approved), gated destroy to empty with the hourly check clean, TTL guard green on four roots, 2026-10-26" },
-        { k: "Not proven", v: "Cloud SQL failover through the handler, a real secret rotation, a populated backup vault delete; SCC activation is console-only" },
-        { k: "Destroy", v: "every root's state empty; only the seed project remains ACTIVE" },
+        { k: "Not proven", v: "Cloud SQL failover through the handler, a populated backup vault delete, an end-to-end rerun of the fixed SLO script; SCC activation is console-only" },
+        { k: "Destroy", v: "every root's state empty after both sessions, the 2026-11-18 teardown verified 14 of 14; only the seed project remains ACTIVE" },
       ],
-      total: { k: "Standing cost", v: "$0 after teardown" },
+      total: { k: "Standing cost", v: "about $0, the seed project with its state bucket and FinOps datasets" },
     },
   },
   {
