@@ -25,7 +25,7 @@ const sizes: Record<string, [string, number, number]> = {
   "eks-attack-range": ["png", 2156, 2487],
   "eks-network-segmentation": ["png", 1642, 2107],
   "gcp-gke-config-sync": ["png", 1860, 1329],
-  "gcp-landing-zone": ["png", 2168, 6194],
+  "gcp-landing-zone": ["png", 2713, 6360],
   "gcp-supply-chain-security": ["png", 1342, 1279],
   "gcp-workload-identity-federation": ["png", 1578, 1617],
   "gcp-zero-trust-access": ["png", 1464, 1377],
