@@ -491,10 +491,10 @@ export const diagrams: Record<string, Diagram> = {
   "aws-landing-zone": {
     caption: "Guardrails live above the account, so a workload inherits them and cannot switch them off, and its only way out is the inspected hub",
     cols: [
-      { nodes: [{ label: "Organization", icon: "aws-management-organizations", sub: "8 accounts · 4 OUs", accent: true }] },
+      { nodes: [{ label: "Organization", icon: "aws-management-organizations", sub: "8 accounts · 6 OUs", accent: true }] },
       {
         nodes: [
-          { label: "SCPs", icon: "aws-management-organizations-organizational-unit", sub: "region · S3 · detective" },
+          { label: "SCPs at the root", icon: "aws-management-organizations-organizational-unit", sub: "trail · Config · S3 · region" },
           { label: "Identity Center", icon: "aws-security-single-sign-on", sub: "personas · short sessions" },
         ],
       },
@@ -502,12 +502,14 @@ export const diagrams: Record<string, Diagram> = {
         nodes: [
           { label: "Org CloudTrail", icon: "aws-management-cloudtrail", sub: "Object Lock · KMS" },
           { label: "Security acct", icon: "aws-security-guardduty", sub: "GuardDuty · forensics · secrets scan" },
+          { label: "Config aggregator", icon: "aws-management-config", sub: "recorder in every account" },
         ],
       },
       {
         nodes: [
           { label: "Transit Gateway", icon: "aws-network-transit-gateway", sub: "RAM-shared hub" },
           { label: "Network Firewall", icon: "aws-network-network-firewall", sub: "domain allowlist", accent: true },
+          { label: "WAF + ALB", icon: "aws-security-waf", sub: "ingress edge · logs to archive" },
         ],
       },
       {

@@ -2483,12 +2483,12 @@ export const caseStudies: CaseStudy[] = [
     title: "AWS",
     titleOut: "Landing Zone",
     category: "AWS · Platform · Governance",
-    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live. The hourly layers now build and tear down through a gated CI pipeline, proven live on the full stack, and the organization is checked daily for drift. Standing uptime, backup, and remediation controls were proven by breaking them, real CPU load included.",
+    lede: "A multi-account AWS organization built as code to parity with the Azure and GCP zones: inherited SCP guardrails, an immutable org audit trail, one inspected path to the internet, a central monitoring account, and a private EKS plus Multi-AZ PostgreSQL paved road. Deployed live, verified, and the hourly layers destroyed with the foundation kept. A compute baseline then baked a STIG plus CIS golden AMI and proved a private, SSM-only management instance live. The hourly layers now build and tear down through a gated CI pipeline, proven live on the full stack, and the organization is checked daily for drift. Standing uptime, backup, and remediation controls were proven by breaking them, real CPU load included. A review against an enterprise reference architecture then closed the gaps it found, with SCPs moved to the root, Suspended and Deployments OUs, a WAF-protected ingress edge, and AWS Config in every account, each proven live.",
     meta: [
       { k: "Role", v: "Cloud / Platform" },
       { k: "Cloud", v: "AWS" },
       { k: "Roots", v: "14, split by lifecycle" },
-      { k: "Accounts", v: "8 members, 4 OUs" },
+      { k: "Accounts", v: "8 members, 6 OUs" },
     ],
     blocks: [
       {
@@ -2515,7 +2515,7 @@ export const caseStudies: CaseStudy[] = [
         num: "/03",
         heading: "Guardrails a workload cannot turn off",
         bullets: [
-          "SCPs on the OUs deny root use, leaving the organization, unapproved regions, public or unencrypted S3, and disabling GuardDuty, Config, or CloudTrail. The management account is SCP-exempt by design, so its root hardening is a separate step: a strict password policy and an EventBridge alarm on any root sign-in.",
+          "SCPs deny root use, leaving the organization, unapproved regions, public or unencrypted S3, and disabling GuardDuty, Config, or CloudTrail. The organization-wide ones sit at the root and the region and encryption rules on the OUs. The management account is SCP-exempt by design, so its root hardening is a separate step: a strict password policy and an EventBridge alarm on any root sign-in.",
           "An organization CloudTrail writes to a KMS-encrypted, GOVERNANCE-mode Object Lock bucket in log-archive, with log-file validation, so the record of what happened is safe from the account that did it.",
           "GuardDuty, Security Hub with CIS AWS Foundations 1.4.0, and AWS Config are delegated to the security account, so security operations run outside the account that can change the org.",
           "People sign in through IAM Identity Center personas (admin, platform engineer, junior engineer, manager, FinOps, security, break-glass) with permission boundaries and short sessions. No persona has standing write in prod; a prod change is a one-hour admin elevation, backed in CI by the reviewer-gated apply.",
@@ -2613,12 +2613,23 @@ export const caseStudies: CaseStudy[] = [
           "Not proven: a real reboot caused by real load, since dry run stayed on. The stale backup alarm was proven last: with the alarm on, the heartbeat was paused for about 41 hours, the daily check read 41.1 against a 30 hour limit, and the alarm raised and notified the ops topic. The prod EC2 policy also refused the first, arm64, proof instance as an unapproved image, which is the guardrail doing its job.",
         ],
       },
+      {
+        num: "/14",
+        heading: "Closing the gaps against a reference architecture",
+        paragraphs: [
+          "Held against an enterprise AWS reference diagram, the zone matched it on the core and fell short in a few places. The first was the zone's own claim. A code comment said nothing in the org could tamper with the trail, but the CloudTrail deny was attached to Prod alone, and so was the public S3 deny. AWS allows five SCPs on a target and the root already held four, so the trail statements joined the existing detective-services policy instead of becoming a sixth. The S3 policy also denied every change to the account-level public access block, which would have stopped any account from turning it on, so that call is now denied to everyone but the break-glass role. The IAM policy simulator on a dev Identity Center role shows the before and after, with every trail action and the block change moving from allowed to an explicit organization deny while break-glass stays allowed.",
+          "The organization and governance roots, where all of that lives, had been applied from a laptop. They now plan on every pull request and apply only behind their own reviewer-gated environment, and the run fails unless a second plan comes back empty. Two lifecycle OUs followed. Suspended carries a deny-all SCP, proven by moving sandbox into it, watching an S3 list fail, and moving it back sixteen seconds later. Deployments is ready for a CI/CD account kept off by quota. The eight accounts became one map with moved blocks, and the gated apply changed nothing, zero added, zero changed, zero destroyed.",
+          "An internet-facing edge now sits in two DMZ subnets of the hub. A load balancer answers HTTPS at a jordandesigns.io subdomain with a fixed response and no backend, behind a WAF web ACL with Amazon's IP reputation list, a per-IP rate limit, and the Common and known-bad-input rule groups. Live, a clean request returned 200, while a path traversal, a Log4Shell header, and an empty User-Agent each returned 403, and a burst was cut off by the rate rule after about 180 requests. All 237 log records reached the log-archive bucket from the network account, including real scanners probing for .env files and sources on the IP reputation list, blocked within minutes of the edge going live.",
+          "AWS Config had recorded only in the security account, so an aggregator would have listed eight empty accounts. A service-managed StackSet now puts a narrow recorder in every member account, including new ones, and the security account's organization aggregator reports all nine. Our own root SCP protected the old lab recorders the StackSet had to replace, since an account holds one, so the Config statement gained the same break-glass exemption. Firewall Manager is administered from the security account with its org-wide WAF policy written and switched off, because it bills about a hundred dollars per policy per region per month.",
+          "The proof session found one more defect. The first gated bring-up with the secret-rotation functions applied 223 resources, then failed the empty second plan. The read-only plan role denied kms:Decrypt everywhere, and Lambda decrypts a function's environment with the caller's permissions, so every plan saw the variables as missing. Decrypt is now allowed only through Lambda, the rerun planned all three roots empty, and the gated destroy plus a sweep of all eight accounts found nothing billable left. Hybrid connectivity and an external identity provider are designed and not built, with Direct Connect primary, VPN failover and on-premises traffic through the same firewall in one ADR, and Entra ID over SAML and SCIM, with break-glass kept outside it, in the access model.",
+        ],
+      },
     ],
-    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "EventBridge", "DynamoDB", "SNS", "SQS", "Amazon Bedrock", "n8n", "Secrets Manager", "Ansible", "Terraform", "GitHub Actions", "Infracost"],
+    stack: ["AWS Organizations", "SCPs", "IAM Identity Center", "CloudTrail", "S3 Object Lock", "GuardDuty", "Security Hub", "AWS Config", "CloudFormation StackSets", "AWS WAF", "Elastic Load Balancing", "Firewall Manager", "Transit Gateway", "Network Firewall", "CloudWatch OAM", "EKS", "RDS PostgreSQL", "AWS Backup", "ECR", "EC2 Image Builder", "Systems Manager", "Lambda", "EventBridge", "DynamoDB", "SNS", "SQS", "Amazon Bedrock", "n8n", "Secrets Manager", "Ansible", "Terraform", "GitHub Actions", "Infracost"],
     repo: "https://github.com/jordann6/aws-landing-zone",
     receipt: {
       rows: [
-        { k: "Foundation", v: "8 member accounts in 4 OUs, SCPs and tag policy in a permanent root; 28 resources moved into it live with zero changes" },
+        { k: "Foundation", v: "8 member accounts in 6 OUs, organization-wide SCPs at the root, accounts as one map; 28 resources moved into the root live with zero changes" },
         { k: "Provision", v: "50 network + 85 workload resources in us-east-1: TGW, inspection VPC, Network Firewall, private EKS 1.35, Multi-AZ PostgreSQL 16.14, Vault Lock, ECR" },
         { k: "Verified", v: "Firewall READY and IN_SYNC, RAM ASSOCIATED, TGW egress through inspection, both EKS nodes ACTIVE, RDS private and encrypted" },
         { k: "Observability", v: "GuardDuty sample finding published, 15 prod and 9 network metrics visible centrally, forced alarm action succeeded" },
@@ -2626,13 +2637,15 @@ export const caseStudies: CaseStudy[] = [
         { k: "Secrets", v: "scanner in the security account assumed into all 7 targets; sandbox positive control flagged, age alarm OK to ALARM, value reads explicitly denied" },
         { k: "Incident", v: "forensics drill isolated a prod instance and wrote encrypted evidence; forced alarm remediated and failed RDS over in about 35 seconds, DLQ 0; standing uptime alarm handled notify-only with an Amazon Nova Lite summary" },
         { k: "Standby", v: "us-west-2 warm standby 8/8: encrypted cross-region replica, DNS flip, automated promotion, write accepted after failover" },
-        { k: "Pipeline", v: "196 resources applied through CI behind 3 reviewer gates, second plan empty, gated destroy to empty state; first live runs caught 2 defects, both failed safe" },
+        { k: "Pipeline", v: "223 resources applied through CI behind 3 reviewer gates on 2026-11-20, second plan empty after one fix, gated destroy and an 8-account sweep to zero; organization and governance roots gated too" },
+        { k: "Edge", v: "WAF in front of the ingress ALB returned 403 to path traversal, Log4Shell and a burst over the rate limit; 237 records logged cross-account, real scanners blocked" },
+        { k: "Governance", v: "trail and S3 denies moved to the root and proven in the policy simulator; Suspended deny-all proven; Config aggregator reports all 9 accounts" },
         { k: "Drift", v: "daily refresh-only plan on the accounts root; a hand-edited OU tag opened an issue naming the resource and attributes, and reverting it auto-closed the issue, about 3 minutes" },
         { k: "Standing", v: "uptime and empty-bucket alarms fired; heartbeat producer writes to the landing bucket; paused heartbeat raised the stale backup alarm at 41.1 hours; remediation dry run, reboot, cooldown, untagged skip and circuit breaker on forced alarms; real CPU load raised the alarm on its own, answered in dry run" },
-        { k: "Not demonstrated", v: "end-to-end firewall traffic; a reboot from real load; restore of a real backup" },
+        { k: "Not demonstrated", v: "end-to-end firewall traffic; a reboot from real load; restore of a real backup; hybrid connectivity and IdP federation are designed only" },
         { k: "Destroy", v: "85 workload + 50 network resources destroyed; live checks show zero hourly resources, all accounts ACTIVE" },
       ],
-      total: { k: "Retained", v: "accounts, audit trail, monitoring plane, secrets scanner, standing controls" },
+      total: { k: "Retained", v: "accounts, audit trail, monitoring plane, Config aggregator, WAF logs, secrets scanner, standing controls" },
     },
   },
   {
